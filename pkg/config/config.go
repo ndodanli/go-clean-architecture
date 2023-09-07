@@ -2,15 +2,11 @@ package config
 
 import (
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/spf13/viper"
 	"log"
 	"os"
 	"path"
-	"path/filepath"
-	"runtime"
-
-	"github.com/davecgh/go-spew/spew"
-
-	"github.com/spf13/viper"
 )
 
 type config struct {
@@ -37,8 +33,7 @@ func ReadConfig() {
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("yml")
-	rootDir := rootDir()
-	viper.AddConfigPath(filepath.Join(rootDir, "config"))
+	viper.AddConfigPath(configDir())
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
@@ -54,8 +49,11 @@ func ReadConfig() {
 	spew.Dump(C)
 }
 
-func rootDir() string {
-	_, b, _, _ := runtime.Caller(0)
-	d := path.Join(path.Dir(b))
-	return filepath.Dir(d)
+func configDir() string {
+	currentDir, err := os.Getwd()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return path.Join(currentDir, "configs")
 }

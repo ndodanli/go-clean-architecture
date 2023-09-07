@@ -1,0 +1,16 @@
+{
+  "version": "2",
+  "sql": [
+    {
+      "queries": "/pkg/infrastructure/db/postgresql/queries.sql",
+      "schema": "/pkg/infrastructure/db/postgresql/entities.sql",
+      "engine": "postgresql",
+      "gen": {
+        "go": {
+          "package": "user_entity",
+          "out": "/pkg/infrastructure/db/postgresql"
+        }
+      }
+    }
+  ]
+}

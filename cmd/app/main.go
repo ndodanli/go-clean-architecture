@@ -1,31 +1,30 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"github.com/ndodanli/go-clean-architecture/pkg/config"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/datastore"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/router"
-	"github.com/ndodanli/go-clean-architecture/pkg/registry"
-	"log"
+	"github.com/jackc/pgx/v4/pgxpool"
 
-	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/labstack/echo"
+	_ "github.com/lib/pq"
+	httprouter "github.com/ndodanli/go-clean-architecture/internal/server/http/router"
+	"os"
 )
 
 func main() {
-	config.ReadConfig()
-
-	db := datastore.NewDB()
-	db.LogMode(true)
-	defer db.Close()
-
-	r := registry.NewRegistry(db)
+	//ctx := context.Background()
+	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s", "localhost", 5432, "postgres", "qweq", "postgres")
+	conn, err := pgxpool.Connect(context.Background(), connStr)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		os.Exit(1)
+	}
+	defer conn.Close()
 
 	e := echo.New()
-	e = router.NewRouter(e, r.NewAppController())
 
-	fmt.Println("Server listen at http://localhost" + ":" + config.C.Server.Address)
-	if err := e.Start(":" + config.C.Server.Address); err != nil {
-		log.Fatalln(err)
-	}
+	httprouter.NewRouter(e, conn)
+
+	e.Logger.Fatal(e.Start("127.0.0.1:1323"))
+
 }
