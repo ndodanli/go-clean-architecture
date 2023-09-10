@@ -1,0 +1,128 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a server for authentication and authorization",
+        "title": "Swagger Auth API",
+        "contact": {
+            "email": "ndodanli14@gmail.com"
+        },
+        "version": "1.0"
+    },
+    "host": "127.0.0.1:5005",
+    "paths": {
+        "/v1/auth/user": {
+            "get": {
+                "description": "get string by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Show an account",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Account ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK. On success.",
+                        "schema": {
+                            "$ref": "#/definitions/res.SwaggerSuccessRes-httpctrl_GetUserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request. On any validation error.",
+                        "schema": {
+                            "$ref": "#/definitions/res.SwaggerValidationErrRes"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error.",
+                        "schema": {
+                            "$ref": "#/definitions/res.SwaggerInternalErrRes"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "httpctrl.GetUserResponse": {
+            "type": "object",
+            "properties": {
+                "age": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "res.SwaggerInternalErrRes": {
+            "type": "object",
+            "properties": {
+                "m": {
+                    "type": "string",
+                    "example": "Internal Server Error"
+                },
+                "s": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "res.SwaggerSuccessRes-httpctrl_GetUserResponse": {
+            "type": "object",
+            "properties": {
+                "d": {
+                    "$ref": "#/definitions/httpctrl.GetUserResponse"
+                },
+                "m": {
+                    "type": "string",
+                    "example": "XXX Created/Updated/Deleted Successfully"
+                },
+                "s": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "res.SwaggerValidationErrRes": {
+            "type": "object",
+            "properties": {
+                "s": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "v": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/res.ValidationError"
+                    }
+                }
+            }
+        },
+        "res.ValidationError": {
+            "type": "object",
+            "properties": {
+                "e": {
+                    "type": "string",
+                    "example": "age must be greater than 0"
+                },
+                "f": {
+                    "type": "string",
+                    "example": "age"
+                }
+            }
+        }
+    }
+}

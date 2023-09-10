@@ -3,22 +3,19 @@ package repos
 import (
 	"context"
 	"errors"
-	"fmt"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
-	res "github.com/ndodanli/go-clean-architecture/pkg/core/respose"
+	res "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	sqlresponses "github.com/ndodanli/go-clean-architecture/pkg/domain/ports/sql_responses"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
 )
 
 type UserRepo struct {
-	db         *pgxpool.Pool
-	txSessions *postgresql.TxSessions
+	db *pgxpool.Pool
 }
 
-func NewAppUserRepo(db *pgxpool.Pool, txSessions *postgresql.TxSessions) *UserRepo {
-	return &UserRepo{db: db, txSessions: txSessions}
+func NewAppUserRepo(db *pgxpool.Pool, txSessions *postgresql.TxSessionManager) *UserRepo {
+	return &UserRepo{db: db}
 }
 
 func (ur *UserRepo) GetOneWithId(ctx context.Context, id int64) (sqlresponses.GetUserWithId, error) {
@@ -79,61 +76,55 @@ type TestTxResult struct {
 
 func (ur *UserRepo) TestTx(ctx context.Context) *res.Result[TestTxResult, error, any] {
 
-	data, _ := postgresql.ExecTx(ctx, ur.txSessions, uuid.Nil, func(tx pgx.Tx) *res.Result[TestTxResult, error, any] {
-		result := res.NewResult[TestTxResult, error, any]()
-		query := `
-select * from test_function($1); 
-`
-		rows, err := tx.Query(ctx, query, "1")
-		//rows.Close()
+	//	data, _ := postgresql.ExecTx(ctx, ur.txSessions, uuid.Nil, func(tx pgx.Tx) *res.Result[TestTxResult, error, any] {
+	//		result := res.NewResult[TestTxResult, error, any]()
+	//		query := `
+	//select * from test_function($1);
+	//`
+	//		rows, err := tx.Query(ctx, query, "1")
+	//		//rows.Close()
+	//
+	//		if err != nil {
+	//			return result.Err(err)
+	//		}
+	//
+	//		for rows.Next() {
+	//			var row struct {
+	//				id   int64
+	//				name string
+	//			}
+	//
+	//			err = rows.Scan(&row.id, &row.name)
+	//			if err != nil {
+	//				fmt.Printf("error: %v\n", err)
+	//			}
+	//
+	//			result.Data.ResultArray = append(result.Data.ResultArray, row)
+	//		}
+	//
+	//		if rows.Err() != nil {
+	//			fmt.Printf("error: %v\n", rows.Err())
+	//		}
+	//
+	//		rows, err = tx.Query(ctx, "SELECT * FROM test_function2($1)", "2")
+	//
+	//		if err != nil {
+	//			fmt.Printf("error: %v\n", err)
+	//		}
+	//		rows.Close()
+	//		if rows.Err() != nil {
+	//			fmt.Printf("error: %v\n", rows.Err())
+	//		}
+	//
+	//		err = tx.Commit(ctx)
+	//
+	//		if err != nil {
+	//			fmt.Printf("error: %v\n", err)
+	//		}
+	//
+	//		return result.Ok()
+	//	})
 
-		if err != nil {
-			return result.Err(err)
-		}
-
-		for rows.Next() {
-			var row struct {
-				id   int64
-				name string
-			}
-
-			err = rows.Scan(&row.id, &row.name)
-			if err != nil {
-				fmt.Printf("Error: %v\n", err)
-			}
-
-			result.Data.ResultArray = append(result.Data.ResultArray, row)
-		}
-
-		if rows.Err() != nil {
-			fmt.Printf("Error: %v\n", rows.Err())
-		}
-
-		rows, err = tx.Query(ctx, "SELECT * FROM test_function2($1)", "2")
-
-		if err != nil {
-			fmt.Printf("Error: %v\n", err)
-		}
-		rows.Close()
-		if rows.Err() != nil {
-			fmt.Printf("Error: %v\n", rows.Err())
-		}
-
-		err = tx.Commit(ctx)
-
-		if err != nil {
-			fmt.Printf("Error: %v\n", err)
-		}
-
-		return result.Ok()
-	})
-
-	return data
-
-}
-
-func Te(tx pgx.Tx) any {
-	result := res.NewResult[TestTxResult, error, any]()
-
-	return result
+	//return data
+	return nil
 }

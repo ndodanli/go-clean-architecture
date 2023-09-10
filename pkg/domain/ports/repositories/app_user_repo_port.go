@@ -2,7 +2,7 @@ package repoports
 
 import (
 	"context"
-	res "github.com/ndodanli/go-clean-architecture/pkg/core/respose"
+	res "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	sqlresponses "github.com/ndodanli/go-clean-architecture/pkg/domain/ports/sql_responses"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/app_user/repos"
 )

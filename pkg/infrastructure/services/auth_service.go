@@ -1,39 +1,20 @@
 package services
 
 import (
-	"context"
 	"crypto/rand"
-	"fmt"
 	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/unit_of_work"
 	"math/big"
 )
 
 type AuthServiceInterface interface {
-	GetUser(ctx context.Context) string
-	UpdateTestString() string
 }
 
 type AuthService struct {
-	uow        uow.UnitOfWorkInterface
-	testString string
+	uow uow.UnitOfWorkInterface
 }
 
 func NewAuthService(uow uow.UnitOfWorkInterface) *AuthService {
-	str, _ := GenerateRandomString(10)
-	return &AuthService{uow: uow, testString: str}
-}
-
-func (as *AuthService) GetUser(ctx context.Context) string {
-	r := as.uow.UserRepo().TestTx(ctx)
-	fmt.Println(r)
-	return as.testString
-}
-
-func (as *AuthService) UpdateTestString() string {
-	str, _ := GenerateRandomString(10)
-	as.testString = str
-
-	return as.testString
+	return &AuthService{uow: uow}
 }
 
 func GenerateRandomString(length int) (string, error) {

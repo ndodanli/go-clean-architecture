@@ -10,23 +10,22 @@ import (
 type UnitOfWorkInterface interface {
 	GetDB() *pgxpool.Pool
 	UserRepo() repoports.AppUserRepoInterface
-	AcquireAllTxSessions() *postgresql.TxSessions
+	AcquireAllTxSessions() *postgresql.TxSessionManager
 }
 
 type UnitOfWork struct {
-	db         *pgxpool.Pool
-	txSessions *postgresql.TxSessions
+	db               *pgxpool.Pool
+	txSessionManager *postgresql.TxSessionManager
 }
 
 func NewUnitOfWork(db *pgxpool.Pool) *UnitOfWork {
 	return &UnitOfWork{
-		db:         db,
-		txSessions: postgresql.NewTxSessions(db),
+		db: db,
 	}
 }
 
-func (uow UnitOfWork) AcquireAllTxSessions() *postgresql.TxSessions {
-	return uow.txSessions
+func (uow UnitOfWork) AcquireAllTxSessions() *postgresql.TxSessionManager {
+	return uow.txSessionManager
 }
 
 func (uow UnitOfWork) GetDB() *pgxpool.Pool {
@@ -34,5 +33,5 @@ func (uow UnitOfWork) GetDB() *pgxpool.Pool {
 }
 
 func (uow UnitOfWork) UserRepo() repoports.AppUserRepoInterface {
-	return repos.NewAppUserRepo(uow.db, uow.txSessions)
+	return repos.NewAppUserRepo(uow.db, uow.txSessionManager)
 }

@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="5248fcac-8d16-4c53-b413-fbb980562ea9" name="Changes" comment="update">
+      <change afterPath="$PROJECT_DIR$/Makefile" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmd/app/grpc/main.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/configs/config.example.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/configs/config.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/configs/models.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/docs.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/swagger.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/swagger.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/environments/prod.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/internal/server/http/controller/auth/auth_controller.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/internal/server/http/controller/auth/req/test_req_dto.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/internal/server/http/controller/auth/res/test_res_dto.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/core/response/swagger_response.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/core/validator/custom_validator.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/errors/http_errors.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/hello.proto" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/infrastructure/constants/general.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/pgsql.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/infrastructure/grpc/proto/hello.pb.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/infrastructure/services/constants/service_constants.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/logger/zap_logger.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/servers/grpc_server.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/servers/http_server.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/servers/server.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/utils/gracefulexit/graceful_exit.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/go-clean-architecture.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/go-clean-architecture.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/app/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/app/http/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/configs/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/environments/dev.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/configs/config.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/server/http/controller/auth_controller.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/server/http/controller/register.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/server/http/controller/register.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/server/http/router/router.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/server/http/router/router.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/config/config.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/core/respose/result.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/core/response/result.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/domain/ports/repositories/app_user_repo_port.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/domain/ports/repositories/app_user_repo_port.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/app_user/repos/app_user_repo.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/app_user/repos/app_user_repo.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/tx_sessions.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/tx_session_manager.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/unit_of_work/unit_of_work.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/unit_of_work/unit_of_work.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/infrastructure/services/auth_service.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/infrastructure/services/auth_service.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/infrastructure/services/services.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/infrastructure/services/services.go" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go File" />
+      </list>
+    </option>
+  </component>
+  <component name="GOROOT" url="file:///opt/homebrew/Cellar/go/1.21.0/libexec" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="2Uod4uCLrZ0iw3snHqAljvZRMuH" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="autoscrollFromSource" value="true" />
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "DefaultGoTemplateProperty": "Go File",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.go.formatter.settings.were.checked": "true",
+    "RunOnceActivity.go.migrated.go.modules.settings": "true",
+    "RunOnceActivity.go.modules.automatic.dependencies.download": "true",
+    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "main",
+    "go.import.settings.migrated": "true",
+    "go.sdk.automatically.set": "true",
+    "last_opened_file_path": "/Users/ndodanli/GolandProjects/go-clean-architecture/pkg/errors",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.pluginManager"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "postgresql"
+    ]
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/pkg/errors" />
+      <recent name="$PROJECT_DIR$/pkg/utils" />
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/environments" />
+      <recent name="$PROJECT_DIR$/configs" />
+    </key>
+    <key name="GoExtractInterfaceDialog.RECENT_KEY">
+      <recent name="$PROJECT_DIR$/pkg/domain/ports/repositories" />
+      <recent name="$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/app_user/repositories" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/pkg/core" />
+      <recent name="$PROJECT_DIR$/internal/server/http/controller/auth" />
+      <recent name="$PROJECT_DIR$/pkg/servers" />
+      <recent name="$PROJECT_DIR$/pkg/server" />
+      <recent name="$PROJECT_DIR$/configs" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Go Build.Http Debug">
+    <configuration name="Http Debug" type="GoApplicationRunConfiguration" factoryName="Go Application">
+      <module name="go-clean-architecture" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/ndodanli/go-clean-architecture/cmd/app/http" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <method v="2">
+        <option name="RunConfigurationTask" enabled="true" run_configuration_name="Make-Swag" run_configuration_type="MAKEFILE_TARGET_RUN_CONFIGURATION" />
+      </method>
+    </configuration>
+    <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
+      <module name="go-clean-architecture" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="FILE" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
+      <module name="go-clean-architecture" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="DIRECTORY" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Make-Swag" type="MAKEFILE_TARGET_RUN_CONFIGURATION" factoryName="Makefile">
+      <makefile filename="$PROJECT_DIR$/Makefile" target="swag" workingDirectory="$PROJECT_DIR$" arguments="">
+        <envs />
+      </makefile>
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Go Build.Http Debug" />
+      <item itemvalue="Makefile Target.Make-Swag" />
+    </list>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+    <MESSAGE value="update" />
+    <option name="LAST_COMMIT_MESSAGE" value="update" />
+  </component>
+  <component name="VgoProject">
+    <settings-migrated>true</settings-migrated>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/pkg/adapter/controller/app.go</url>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/pkg/infrastructure/db/db_postgresql/query.sql.go</url>
+          <line>62</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/tx_session_manager.go</url>
+          <line>95</line>
+          <option name="timeStamp" value="68" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/tx_session_manager.go</url>
+          <line>98</line>
+          <option name="timeStamp" value="69" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/cmd/app/grpc/main.go</url>
+          <line>46</line>
+          <option name="timeStamp" value="80" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

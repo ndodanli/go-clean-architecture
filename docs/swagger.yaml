@@ -1,0 +1,85 @@
+definitions:
+  httpctrl.GetUserResponse:
+    properties:
+      age:
+        type: integer
+      name:
+        type: string
+    type: object
+  res.SwaggerInternalErrRes:
+    properties:
+      m:
+        example: Internal Server Error
+        type: string
+      s:
+        example: false
+        type: boolean
+    type: object
+  res.SwaggerSuccessRes-httpctrl_GetUserResponse:
+    properties:
+      d:
+        $ref: '#/definitions/httpctrl.GetUserResponse'
+      m:
+        example: XXX Created/Updated/Deleted Successfully
+        type: string
+      s:
+        example: true
+        type: boolean
+    type: object
+  res.SwaggerValidationErrRes:
+    properties:
+      s:
+        example: false
+        type: boolean
+      v:
+        items:
+          $ref: '#/definitions/res.ValidationError'
+        type: array
+    type: object
+  res.ValidationError:
+    properties:
+      e:
+        example: age must be greater than 0
+        type: string
+      f:
+        example: age
+        type: string
+    type: object
+host: 127.0.0.1:5005
+info:
+  contact:
+    email: ndodanli14@gmail.com
+  description: This is a server for authentication and authorization
+  title: Swagger Auth API
+  version: "1.0"
+paths:
+  /v1/auth/user:
+    get:
+      consumes:
+      - application/json
+      description: get string by ID
+      parameters:
+      - description: Account ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK. On success.
+          schema:
+            $ref: '#/definitions/res.SwaggerSuccessRes-httpctrl_GetUserResponse'
+        "400":
+          description: Bad Request. On any validation error.
+          schema:
+            $ref: '#/definitions/res.SwaggerValidationErrRes'
+        "500":
+          description: Internal Server Error.
+          schema:
+            $ref: '#/definitions/res.SwaggerInternalErrRes'
+      summary: Show an account
+      tags:
+      - accounts
+swagger: "2.0"
