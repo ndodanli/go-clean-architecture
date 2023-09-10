@@ -52,10 +52,67 @@
                         }
                     }
                 }
+            },
+            "post": {
+                "description": "get string by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Show an account",
+                "parameters": [
+                    {
+                        "description": "Account ID",
+                        "name": "id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/httpctrl.GetUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK. On success.",
+                        "schema": {
+                            "$ref": "#/definitions/res.SwaggerSuccessRes-httpctrl_GetUserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request. On any validation error.",
+                        "schema": {
+                            "$ref": "#/definitions/res.SwaggerValidationErrRes"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error.",
+                        "schema": {
+                            "$ref": "#/definitions/res.SwaggerInternalErrRes"
+                        }
+                    }
+                }
             }
         }
     },
     "definitions": {
+        "httpctrl.GetUserRequest": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "maximum": 20,
+                    "minimum": 10
+                }
+            }
+        },
         "httpctrl.GetUserResponse": {
             "type": "object",
             "properties": {

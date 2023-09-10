@@ -24,13 +24,11 @@ type Logger interface {
 	Fatalf(template string, args ...interface{})
 }
 
-// Logger
 type ApiLogger struct {
 	cfg         *configs.Config
 	sugarLogger *zap.SugaredLogger
 }
 
-// App Logger constructor
 func NewApiLogger(cfg *configs.Config) *ApiLogger {
 	return &ApiLogger{cfg: cfg}
 }
@@ -55,26 +53,19 @@ func (l *ApiLogger) getLoggerLevel(cfg *configs.Config) zapcore.Level {
 	return level
 }
 
-// Init logger
 func (l *ApiLogger) InitLogger() {
 	logLevel := l.getLoggerLevel(l.cfg)
 
 	logWriter := zapcore.AddSync(os.Stderr)
 
 	var encoderCfg zapcore.EncoderConfig
-	if l.cfg.Server.APP_ENV == "Development" {
+	if l.cfg.Server.APP_ENV == "dev" {
 		encoderCfg = zap.NewDevelopmentEncoderConfig()
 	} else {
 		encoderCfg = zap.NewProductionEncoderConfig()
 	}
 
 	var encoder zapcore.Encoder
-	encoderCfg.LevelKey = "LEVEL"
-	encoderCfg.CallerKey = "CALLER"
-	encoderCfg.TimeKey = "TIME"
-	encoderCfg.NameKey = "NAME"
-	encoderCfg.MessageKey = "MESSAGE"
-
 	if l.cfg.Logger.ENCODING == "console" {
 		encoder = zapcore.NewConsoleEncoder(encoderCfg)
 	} else {

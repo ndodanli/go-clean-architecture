@@ -2,14 +2,14 @@ package main
 
 import (
 	"context"
+	_ "github.com/lib/pq"
 	"github.com/ndodanli/go-clean-architecture/configs"
+	"github.com/ndodanli/go-clean-architecture/internal/auth"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/ndodanli/go-clean-architecture/pkg/servers"
 	"github.com/ndodanli/go-clean-architecture/pkg/utils/gracefulexit"
 	"log"
-
-	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -30,10 +30,15 @@ func main() {
 	conn := postgresql.InitPgxPool(cfg, appLogger)
 	defer conn.Close()
 
-	servers := servers.NewServer(cfg, &ctx, appLogger)
+	newServer := servers.NewServer(cfg, &ctx, appLogger)
 
-	servers.NewHttpServer(conn)
-	appLogger.Debug("TEST")
+	a, err := auth.NewAuth(cfg)
+
+	if err != nil {
+		log.Fatalf("error: auth: %s", err)
+	}
+
+	newServer.NewHttpServer(conn, appLogger, a)
 
 	// Exit from application gracefully
 	gracefulexit.TerminateApp(ctx)

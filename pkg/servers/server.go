@@ -11,9 +11,9 @@ const (
 	keyFile         = "ssl/server.pem"
 	maxHeaderBytes  = 1 << 20
 	gzipLevel       = 5
-	stackSize       = 1 << 10 // 1 KB
+	stackSize       = 4 << 10 // 4 KB
 	csrfTokenHeader = "X-CSRF-Token"
-	bodyLimit       = "2M"
+	bodyLimit       = "3M"
 )
 
 // server

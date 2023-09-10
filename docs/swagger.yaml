@@ -1,4 +1,13 @@
 definitions:
+  httpctrl.GetUserRequest:
+    properties:
+      id:
+        maximum: 20
+        minimum: 10
+        type: integer
+    required:
+    - id
+    type: object
   httpctrl.GetUserResponse:
     properties:
       age:
@@ -64,6 +73,35 @@ paths:
         name: id
         required: true
         type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK. On success.
+          schema:
+            $ref: '#/definitions/res.SwaggerSuccessRes-httpctrl_GetUserResponse'
+        "400":
+          description: Bad Request. On any validation error.
+          schema:
+            $ref: '#/definitions/res.SwaggerValidationErrRes'
+        "500":
+          description: Internal Server Error.
+          schema:
+            $ref: '#/definitions/res.SwaggerInternalErrRes'
+      summary: Show an account
+      tags:
+      - accounts
+    post:
+      consumes:
+      - application/json
+      description: get string by ID
+      parameters:
+      - description: Account ID
+        in: body
+        name: id
+        required: true
+        schema:
+          $ref: '#/definitions/httpctrl.GetUserRequest'
       produces:
       - application/json
       responses:
