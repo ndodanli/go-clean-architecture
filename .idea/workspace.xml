@@ -5,81 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5248fcac-8d16-4c53-b413-fbb980562ea9" name="Changes" comment="update">
-      <change afterPath="$PROJECT_DIR$/internal/auth/auth.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/internal/auth/rbac_model.conf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/.releaserc.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/.travis.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/CONTRIBUTING.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/LICENSE" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/Makefile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/casbin-logo.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/config/config.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/constant/constants.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/effector/default_effector.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/effector/effector.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/enforcer.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/enforcer_cached.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/enforcer_cached_synced.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/enforcer_distributed.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/enforcer_interface.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/enforcer_synced.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/errors/rbac_errors.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/frontend.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/frontend_old.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/internal_api.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/log/default_logger.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/log/log_util.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/log/logger.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/management_api.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/model/assertion.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/model/function.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/model/model.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/model/policy.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/persist/adapter.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/persist/adapter_context.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/persist/adapter_filtered.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/persist/batch_adapter.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/persist/cache/cache.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/persist/cache/cache_sync.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/persist/cache/default-cache.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/persist/dispatcher.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/persist/file-adapter/adapter.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/persist/file-adapter/adapter_filtered.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/persist/file-adapter/adapter_mock.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/persist/update_adapter.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/persist/watcher.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/persist/watcher_ex.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/persist/watcher_update.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/rbac/context_role_manager.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/rbac/default-role-manager/role_manager.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/rbac/role_manager.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/rbac_api.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/rbac_api_synced.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/rbac_api_with_domains.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/rbac_api_with_domains_synced.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/util/builtin_operators.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/casbin/v2/util/util.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/xorm-adapter/v2/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/xorm-adapter/v2/.releaserc.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/xorm-adapter/v2/LICENSE" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/xorm-adapter/v2/Makefile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/xorm-adapter/v2/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/xorm-adapter/v2/adapter.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/6605536b-74c7-4267-9d4c-79f4f9f084e1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/6605536b-74c7-4267-9d4c-79f4f9f084e1.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/app/http/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/app/http/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/docs.go" beforeDir="false" afterPath="$PROJECT_DIR$/docs/docs.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/swagger.json" beforeDir="false" afterPath="$PROJECT_DIR$/docs/swagger.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/swagger.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/docs/swagger.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/server/http/controller/auth/auth_controller.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/server/http/controller/auth/auth_controller.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/server/http/router/router.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/logger/zap_logger.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/logger/zap_logger.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pkg/servers/http_server.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/servers/http_server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/servers/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/servers/server.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -117,32 +46,32 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_ADD_EXTERNAL_FILES": "true",
-    "DefaultGoTemplateProperty": "Go File",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.go.formatter.settings.were.checked": "true",
-    "RunOnceActivity.go.migrated.go.modules.settings": "true",
-    "RunOnceActivity.go.modules.automatic.dependencies.download": "true",
-    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "git-widget-placeholder": "main",
-    "go.import.settings.migrated": "true",
-    "go.sdk.automatically.set": "true",
-    "last_opened_file_path": "/Users/ndodanli/GolandProjects/go-clean-architecture/pkg",
-    "node.js.detected.package.eslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.pluginManager"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;DefaultGoTemplateProperty&quot;: &quot;Go File&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.modules.automatic.dependencies.download&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.modules.go.list.on.any.changes.was.set&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
+    &quot;go.sdk.automatically.set&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/ndodanli/GolandProjects/go-clean-architecture/pkg&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
   },
-  "keyToStringList": {
-    "DatabaseDriversLRU": [
-      "postgresql"
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;postgresql&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/pkg" />
@@ -264,9 +193,19 @@
           <option name="timeStamp" value="101" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$USER_HOME$/go/pkg/mod/github.com/labstack/echo-jwt@v0.0.0-20221127215225-c84d41a71003/jwt.go</url>
+          <line>185</line>
+          <option name="timeStamp" value="117" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$USER_HOME$/go/pkg/mod/github.com/labstack/echo-jwt@v0.0.0-20221127215225-c84d41a71003/jwt.go</url>
+          <line>128</line>
+          <option name="timeStamp" value="119" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/pkg/servers/http_server.go</url>
-          <line>76</line>
-          <option name="timeStamp" value="115" />
+          <line>119</line>
+          <option name="timeStamp" value="120" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

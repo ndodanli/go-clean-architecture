@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v4/pgxpool"
+	echojwt "github.com/labstack/echo-jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/ndodanli/go-clean-architecture/docs"
@@ -68,22 +69,25 @@ func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger, auth *aut
 	//Versioning
 	versionGroup := e.Group("/v1")
 
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			sub := "user1" // the user that wants to access a resource.
-			obj := "data1" // the resource that is going to be accessed.
-			act := "read"  // the operation that the user performs on the resource.
-			dom := "tenant1"
-			ok, err := auth.Enforcer().Enforce(sub, obj, act, dom)
-			if err != nil {
-				return err
-			}
-			if !ok {
-				return echo.ErrForbidden
-			}
-			return next(c)
-		}
-	})
+	//e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+	//	return func(c echo.Context) error {
+	//		sub := "user1" // the user that wants to access a resource.
+	//		obj := "data1" // the resource that is going to be accessed.
+	//		act := "read"  // the operation that the user performs on the resource.
+	//		dom := "tenant1"
+	//		ok, err := auth.Enforcer().Enforce(sub, obj, act, dom)
+	//		if err != nil {
+	//			return err
+	//		}
+	//		if !ok {
+	//			return echo.ErrForbidden
+	//		}
+	//		return next(c)
+	//	}
+	//})
+
+	// Authentication setup
+	versionGroup.Use(echojwt.WithConfig(NewJWTConfig()))
 
 	// Register scoped instances(instances that are created per request)
 	e.Use(registerScopedInstances(db))
@@ -101,6 +105,21 @@ func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger, auth *aut
 	}()
 
 	return
+}
+
+func NewJWTConfig() echojwt.Config {
+	return echojwt.Config{
+		Skipper: func(c echo.Context) bool {
+			if strings.Contains(c.Request().URL.Path, "swagger") {
+				return true
+			}
+			return false
+		},
+		SigningKey: []byte("secret"),
+		ErrorHandler: func(c echo.Context, err error) error {
+			return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+		},
+	}
 }
 
 func NewRecoverConfig() middleware.RecoverConfig {
