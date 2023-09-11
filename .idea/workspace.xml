@@ -5,9 +5,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5248fcac-8d16-4c53-b413-fbb980562ea9" name="Changes" comment="update">
+      <change afterPath="$PROJECT_DIR$/pkg/utils/request_utils.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/app/http/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/app/http/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/configs/models.go" beforeDir="false" afterPath="$PROJECT_DIR$/configs/models.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/docs.go" beforeDir="false" afterPath="$PROJECT_DIR$/docs/docs.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/swagger.json" beforeDir="false" afterPath="$PROJECT_DIR$/docs/swagger.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/swagger.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/docs/swagger.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/environments/dev.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/environments/dev.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/server/http/controller/auth/auth_controller.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/server/http/controller/auth/auth_controller.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/server/http/controller/auth/req/test_req_dto.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/server/http/controller/auth/req/test_req_dto.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/server/http/controller/register.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/server/http/controller/register.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/core/response/result.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/core/response/result.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/core/response/swagger_response.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/core/response/swagger_response.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/errors/http_errors.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/errors/http_errors.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/infrastructure/services/auth_service.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/infrastructure/services/auth_service.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pkg/servers/http_server.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/servers/http_server.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -92,8 +104,8 @@
       <recent name="$PROJECT_DIR$/pkg/server" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Build.Http Debug">
-    <configuration name="Http Debug" type="GoApplicationRunConfiguration" factoryName="Go Application">
+  <component name="RunManager" selected="Go Build.Http Debug-Swag">
+    <configuration name="Http Debug-Swag" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="go-clean-architecture" />
       <working_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />
@@ -103,6 +115,15 @@
       <method v="2">
         <option name="RunConfigurationTask" enabled="true" run_configuration_name="Make-Swag" run_configuration_type="MAKEFILE_TARGET_RUN_CONFIGURATION" />
       </method>
+    </configuration>
+    <configuration name="Http-Debug" type="GoApplicationRunConfiguration" factoryName="Go Application">
+      <module name="go-clean-architecture" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/ndodanli/go-clean-architecture/cmd/app/http" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="github.com/ndodanli/go-clean-architecture/cmd/app/http" />
+      <method v="2" />
     </configuration>
     <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="go-clean-architecture" />
@@ -128,7 +149,8 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Go Build.Http Debug" />
+      <item itemvalue="Go Build.Http-Debug" />
+      <item itemvalue="Go Build.Http Debug-Swag" />
       <item itemvalue="Makefile Target.Make-Swag" />
     </list>
   </component>
@@ -194,18 +216,8 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$USER_HOME$/go/pkg/mod/github.com/labstack/echo-jwt@v0.0.0-20221127215225-c84d41a71003/jwt.go</url>
-          <line>185</line>
-          <option name="timeStamp" value="117" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$USER_HOME$/go/pkg/mod/github.com/labstack/echo-jwt@v0.0.0-20221127215225-c84d41a71003/jwt.go</url>
           <line>128</line>
           <option name="timeStamp" value="119" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/pkg/servers/http_server.go</url>
-          <line>119</line>
-          <option name="timeStamp" value="120" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

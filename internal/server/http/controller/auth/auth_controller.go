@@ -5,13 +5,9 @@ import (
 	httpctrl "github.com/ndodanli/go-clean-architecture/internal/server/http/controller/auth/req"
 	_ "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
+	"github.com/ndodanli/go-clean-architecture/pkg/utils"
 	"net/http"
 )
-
-type AuthControllerInterface interface {
-	GetUser(c echo.Context) error
-	PostUser(c echo.Context) error
-}
 
 type AuthController struct {
 	echo            *echo.Group
@@ -21,7 +17,7 @@ type AuthController struct {
 	testString      string
 }
 
-func NewAuthController(group *echo.Group, requiredServices *services.AppServices) AuthControllerInterface {
+func NewAuthController(group *echo.Group, requiredServices *services.AppServices) *AuthController {
 	ac := &AuthController{
 		echo:            group,
 		controllerGroup: group.Group("/auth"),
@@ -29,7 +25,6 @@ func NewAuthController(group *echo.Group, requiredServices *services.AppServices
 	}
 
 	ac.controllerGroup.GET("/user", ac.GetUser)
-	ac.controllerGroup.POST("/user", ac.PostUser)
 
 	return ac
 }
@@ -43,41 +38,20 @@ func NewAuthController(group *echo.Group, requiredServices *services.AppServices
 // @Param        id   query      int  true  "Account ID"
 // @Success      200  {object}   res.SwaggerSuccessRes[GetUserResponse] "OK. On success."
 // @Failure      400  {object}   res.SwaggerValidationErrRes "Bad Request. On any validation error."
+// @Failure      401  {object}   res.SwaggerUnauthorizedErrRes "Unauthorized."
 // @Failure      500  {object}   res.SwaggerInternalErrRes "Internal Server Error."
 // @Router       /v1/auth/user [get]
 func (ac *AuthController) GetUser(c echo.Context) error {
+	c.Response().Header().Set("Test-Header-Controller", "Test-Value Controller")
 	var reqParams httpctrl.GetUserRequest
-	if err := c.Bind(&reqParams); err != nil {
+	if err := utils.BindAndValidate(c, &reqParams); err != nil {
 		return err
 	}
 
-	if err := c.Validate(&reqParams); err != nil {
-		return err
+	result := ac.authService.GetUser(1)
+
+	if result.IsError() {
+		//return result.GetError()
 	}
-
-	return c.String(200, "")
-}
-
-// PostUser godoc
-// @Summary      Show an account
-// @Description  get string by ID
-// @Tags         accounts
-// @Accept       json
-// @Produce      json
-// @Param        id  body  GetUserRequest  true  "Account ID"
-// @Success      200  {object}   res.SwaggerSuccessRes[GetUserResponse] "OK. On success."
-// @Failure      400  {object}   res.SwaggerValidationErrRes "Bad Request. On any validation error."
-// @Failure      500  {object}   res.SwaggerInternalErrRes "Internal Server Error."
-// @Router       /v1/auth/user [post]
-func (ac *AuthController) PostUser(c echo.Context) error {
-	var reqParams httpctrl.GetUserRequest
-	if err := c.Bind(&reqParams); err != nil {
-		return err
-	}
-
-	if err := c.Validate(&reqParams); err != nil {
-		return err
-	}
-
-	return c.String(200, "")
+	return c.JSON(http.StatusOK, reqParams)
 }

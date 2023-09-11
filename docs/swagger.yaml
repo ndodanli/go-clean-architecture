@@ -1,13 +1,4 @@
 definitions:
-  httpctrl.GetUserRequest:
-    properties:
-      id:
-        maximum: 20
-        minimum: 10
-        type: integer
-    required:
-    - id
-    type: object
   httpctrl.GetUserResponse:
     properties:
       age:
@@ -17,41 +8,50 @@ definitions:
     type: object
   res.SwaggerInternalErrRes:
     properties:
-      m:
+      M:
         example: Internal Server Error
         type: string
-      s:
+      S:
         example: false
         type: boolean
     type: object
   res.SwaggerSuccessRes-httpctrl_GetUserResponse:
     properties:
-      d:
+      D:
         $ref: '#/definitions/httpctrl.GetUserResponse'
-      m:
+      M:
         example: XXX Created/Updated/Deleted Successfully
         type: string
-      s:
+      S:
         example: true
+        type: boolean
+    type: object
+  res.SwaggerUnauthorizedErrRes:
+    properties:
+      M:
+        example: Unauthorized
+        type: string
+      S:
+        example: false
         type: boolean
     type: object
   res.SwaggerValidationErrRes:
     properties:
-      s:
+      S:
         example: false
         type: boolean
-      v:
+      V:
         items:
           $ref: '#/definitions/res.ValidationError'
         type: array
     type: object
   res.ValidationError:
     properties:
-      e:
-        example: age must be greater than 0
+      E:
+        example: Age must be greater than 0
         type: string
-      f:
-        example: age
+      F:
+        example: Age
         type: string
     type: object
 host: 127.0.0.1:5005
@@ -84,35 +84,10 @@ paths:
           description: Bad Request. On any validation error.
           schema:
             $ref: '#/definitions/res.SwaggerValidationErrRes'
-        "500":
-          description: Internal Server Error.
+        "401":
+          description: Unauthorized.
           schema:
-            $ref: '#/definitions/res.SwaggerInternalErrRes'
-      summary: Show an account
-      tags:
-      - accounts
-    post:
-      consumes:
-      - application/json
-      description: get string by ID
-      parameters:
-      - description: Account ID
-        in: body
-        name: id
-        required: true
-        schema:
-          $ref: '#/definitions/httpctrl.GetUserRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK. On success.
-          schema:
-            $ref: '#/definitions/res.SwaggerSuccessRes-httpctrl_GetUserResponse'
-        "400":
-          description: Bad Request. On any validation error.
-          schema:
-            $ref: '#/definitions/res.SwaggerValidationErrRes'
+            $ref: '#/definitions/res.SwaggerUnauthorizedErrRes'
         "500":
           description: Internal Server Error.
           schema:

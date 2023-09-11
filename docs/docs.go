@@ -52,48 +52,10 @@ const docTemplate = `{
                             "$ref": "#/definitions/res.SwaggerValidationErrRes"
                         }
                     },
-                    "500": {
-                        "description": "Internal Server Error.",
+                    "401": {
+                        "description": "Unauthorized.",
                         "schema": {
-                            "$ref": "#/definitions/res.SwaggerInternalErrRes"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "get string by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "accounts"
-                ],
-                "summary": "Show an account",
-                "parameters": [
-                    {
-                        "description": "Account ID",
-                        "name": "id",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/httpctrl.GetUserRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK. On success.",
-                        "schema": {
-                            "$ref": "#/definitions/res.SwaggerSuccessRes-httpctrl_GetUserResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request. On any validation error.",
-                        "schema": {
-                            "$ref": "#/definitions/res.SwaggerValidationErrRes"
+                            "$ref": "#/definitions/res.SwaggerUnauthorizedErrRes"
                         }
                     },
                     "500": {
@@ -107,19 +69,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "httpctrl.GetUserRequest": {
-            "type": "object",
-            "required": [
-                "id"
-            ],
-            "properties": {
-                "id": {
-                    "type": "integer",
-                    "maximum": 20,
-                    "minimum": 10
-                }
-            }
-        },
         "httpctrl.GetUserResponse": {
             "type": "object",
             "properties": {
@@ -134,11 +83,11 @@ const docTemplate = `{
         "res.SwaggerInternalErrRes": {
             "type": "object",
             "properties": {
-                "m": {
+                "M": {
                     "type": "string",
                     "example": "Internal Server Error"
                 },
-                "s": {
+                "S": {
                     "type": "boolean",
                     "example": false
                 }
@@ -147,27 +96,40 @@ const docTemplate = `{
         "res.SwaggerSuccessRes-httpctrl_GetUserResponse": {
             "type": "object",
             "properties": {
-                "d": {
+                "D": {
                     "$ref": "#/definitions/httpctrl.GetUserResponse"
                 },
-                "m": {
+                "M": {
                     "type": "string",
                     "example": "XXX Created/Updated/Deleted Successfully"
                 },
-                "s": {
+                "S": {
                     "type": "boolean",
                     "example": true
+                }
+            }
+        },
+        "res.SwaggerUnauthorizedErrRes": {
+            "type": "object",
+            "properties": {
+                "M": {
+                    "type": "string",
+                    "example": "Unauthorized"
+                },
+                "S": {
+                    "type": "boolean",
+                    "example": false
                 }
             }
         },
         "res.SwaggerValidationErrRes": {
             "type": "object",
             "properties": {
-                "s": {
+                "S": {
                     "type": "boolean",
                     "example": false
                 },
-                "v": {
+                "V": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/res.ValidationError"
@@ -178,13 +140,13 @@ const docTemplate = `{
         "res.ValidationError": {
             "type": "object",
             "properties": {
-                "e": {
+                "E": {
                     "type": "string",
-                    "example": "age must be greater than 0"
+                    "example": "Age must be greater than 0"
                 },
-                "f": {
+                "F": {
                     "type": "string",
-                    "example": "age"
+                    "example": "Age"
                 }
             }
         }

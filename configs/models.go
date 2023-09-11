@@ -5,6 +5,7 @@ import "time"
 // Config of application
 type Config struct {
 	Server     Server     `mapstructure:"server,omitempty"`
+	Auth       Auth       `mapstructure:"auth,omitempty"`
 	Swagger    Swagger    `mapstructure:"swagger,omitempty"`
 	Http       Http       `mapstructure:"http,omitempty"`
 	Grpc       Grpc       `mapstructure:"grpc,omitempty"`
@@ -29,18 +30,21 @@ type Swagger struct {
 
 // Server config
 type Server struct {
-	PROJECT_NAME          string        `mapstructure:"PROJECT_NAME,omitempty"`
-	SERVICE_NAME          string        `mapstructure:"SERVICE_NAME,omitempty"`
-	APP_ENV               string        `mapstructure:"APP_ENV,omitempty"`
-	APP_DEBUG             bool          `mapstructure:"APP_DEBUG,omitempty"`
-	TIMEOUT               int           `mapstructure:"TIMEOUT,omitempty"`
-	APP_SECRET            string        `mapstructure:"APP_SECRET,omitempty"`
-	JWT_TOKEN_EXPIRE_TIME int           `mapstructure:"JWT_TOKEN_EXPIRE_TIME,omitempty"`
-	APP_VERSION           string        `mapstructure:"APP_VERSION,omitempty"`
-	READ_TIMEOUT          time.Duration `mapstructure:"READ_TIMEOUT,omitempty"`
-	WRITE_TIMEOUT         time.Duration `mapstructure:"WRITE_TIMEOUT,omitempty"`
-	MAX_CONN_IDLE         time.Duration `mapstructure:"MAX_CONN_IDLE,omitempty"`
-	MAX_CONN_AGE          time.Duration `mapstructure:"MAX_CONN_AGE,omitempty"`
+	PROJECT_NAME  string        `mapstructure:"PROJECT_NAME,omitempty"`
+	SERVICE_NAME  string        `mapstructure:"SERVICE_NAME,omitempty"`
+	APP_ENV       string        `mapstructure:"APP_ENV,omitempty"`
+	APP_DEBUG     bool          `mapstructure:"APP_DEBUG,omitempty"`
+	TIMEOUT       int           `mapstructure:"TIMEOUT,omitempty"`
+	APP_VERSION   string        `mapstructure:"APP_VERSION,omitempty"`
+	READ_TIMEOUT  time.Duration `mapstructure:"READ_TIMEOUT,omitempty"`
+	WRITE_TIMEOUT time.Duration `mapstructure:"WRITE_TIMEOUT,omitempty"`
+	MAX_CONN_IDLE time.Duration `mapstructure:"MAX_CONN_IDLE,omitempty"`
+	MAX_CONN_AGE  time.Duration `mapstructure:"MAX_CONN_AGE,omitempty"`
+}
+
+type Auth struct {
+	JWT_SECRET            string `mapstructure:"JWT_SECRET,omitempty"`
+	JWT_TOKEN_EXPIRE_TIME int    `mapstructure:"JWT_TOKEN_EXPIRE_TIME,omitempty"`
 }
 
 // Http config

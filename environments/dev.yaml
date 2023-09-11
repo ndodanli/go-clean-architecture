@@ -12,6 +12,10 @@ server:
   MAX_CONN_IDLE: 5
   MAX_CONN_AGE: 5
 
+auth:
+  JWT_SECRET: "qwertyuiopasdfghjklzxcvbnm123456"
+  JWT_TOKEN_EXPIRE_TIME: 600 # 10 minutes
+
 swagger:
   SWAGGER_BASIC_AUTH_USERNAME:
   SWAGGER_BASIC_AUTH_PASSWORD:

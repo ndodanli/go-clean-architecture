@@ -5,15 +5,15 @@ type ErrorType error
 type metadataType any
 
 type ValidationError struct {
-	Field string `json:"f,omitempty" example:"age"`
-	Error string `json:"e,omitempty" example:"age must be greater than 0"`
+	Field string `json:"F,omitempty" example:"Age"`
+	Error string `json:"E,omitempty" example:"Age must be greater than 0"`
 }
 
 type Result[D resultType, E ErrorType, M metadataType] struct {
-	Success          bool              `json:"s"`
-	Message          string            `json:"m,omitempty"`
-	Data             D                 `json:"d,omitempty"`
-	ValidationErrors []ValidationError `json:"v,omitempty"`
+	Success          bool              `json:"S"`
+	Message          string            `json:"M,omitempty"`
+	Data             D                 `json:"D,omitempty"`
+	ValidationErrors []ValidationError `json:"V,omitempty"`
 	error            ErrorType
 	metadata         metadataType
 }
@@ -28,6 +28,10 @@ func (r *Result[D, E, M]) IsError() bool {
 
 func (r *Result[D, E, M]) GetError() ErrorType {
 	return r.error
+}
+
+func (r *Result[D, E, M]) GetErrorMessage() string {
+	return r.error.Error()
 }
 
 func (r *Result[D, E, M]) GetMessage() string {
@@ -70,6 +74,9 @@ func (r *Result[D, E, M]) OkWithMetadata(metadata metadataType) *Result[D, E, M]
 func (r *Result[D, E, M]) Err(error E) *Result[D, E, M] {
 	r.Success = false
 	r.error = error
+	if r.Message == "" {
+		r.Message = error.Error()
+	}
 	return r
 }
 

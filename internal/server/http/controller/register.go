@@ -9,7 +9,7 @@ import (
 )
 
 type AppController struct {
-	AuthController httpctrl.AuthControllerInterface
+	AuthController *httpctrl.AuthController
 	echo           *echo.Echo
 }
 

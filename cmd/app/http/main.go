@@ -5,6 +5,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/ndodanli/go-clean-architecture/configs"
 	"github.com/ndodanli/go-clean-architecture/internal/auth"
+	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/ndodanli/go-clean-architecture/pkg/servers"
@@ -37,6 +38,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("error: auth: %s", err)
 	}
+
+	// Initialize http errors
+	httperr.Init()
 
 	newServer.NewHttpServer(conn, appLogger, a)
 

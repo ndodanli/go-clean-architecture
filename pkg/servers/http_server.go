@@ -1,16 +1,20 @@
 package servers
 
 import (
+	"errors"
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v4/pgxpool"
 	echojwt "github.com/labstack/echo-jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/ndodanli/go-clean-architecture/configs"
 	_ "github.com/ndodanli/go-clean-architecture/docs"
 	"github.com/ndodanli/go-clean-architecture/internal/auth"
 	httpctrl "github.com/ndodanli/go-clean-architecture/internal/server/http/controller"
+	res "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	cstmvalidator "github.com/ndodanli/go-clean-architecture/pkg/core/validator"
+	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
 	serviceconstants "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services/constants"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
@@ -35,17 +39,23 @@ const (
 func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger, auth *auth.Auth) (e *echo.Echo) {
 	e = echo.New()
 
+	// Request-Response middleware
+	e.Use(getRequestResponseMiddleware(logger))
+
+	// Global error handler
+	e.HTTPErrorHandler = getGlobalErrorHandler(logger)
+
 	// Recover from panics
-	e.Use(middleware.RecoverWithConfig(NewRecoverConfig()))
+	e.Use(middleware.RecoverWithConfig(getRecoverConfig()))
 
 	// Gzip compression
-	e.Use(middleware.GzipWithConfig(NewGzipConfig()))
+	e.Use(middleware.GzipWithConfig(getGzipConfig()))
 
 	// CSRF protection
 	e.Use(middleware.CSRF())
 
 	// CQRS setup
-	e.Use(middleware.CORSWithConfig(NewCorsConfig()))
+	e.Use(middleware.CORSWithConfig(getCorsConfig()))
 
 	// Set body limit
 	e.Use(middleware.BodyLimit(bodyLimit))
@@ -54,10 +64,10 @@ func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger, auth *aut
 	e.Use(middleware.RequestID())
 
 	// Logger setup
-	e.Use(middleware.RequestLoggerWithConfig(NewLoggerConfig(logger)))
+	e.Use(middleware.RequestLoggerWithConfig(getLoggerConfig(logger)))
 
 	// Security setup
-	e.Use(middleware.SecureWithConfig(NewSecureConfig()))
+	e.Use(middleware.SecureWithConfig(getSecureConfig()))
 
 	// Validator setup
 	e.Validator = cstmvalidator.NewCustomValidator(validator.New())
@@ -69,25 +79,8 @@ func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger, auth *aut
 	//Versioning
 	versionGroup := e.Group("/v1")
 
-	//e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-	//	return func(c echo.Context) error {
-	//		sub := "user1" // the user that wants to access a resource.
-	//		obj := "data1" // the resource that is going to be accessed.
-	//		act := "read"  // the operation that the user performs on the resource.
-	//		dom := "tenant1"
-	//		ok, err := auth.Enforcer().Enforce(sub, obj, act, dom)
-	//		if err != nil {
-	//			return err
-	//		}
-	//		if !ok {
-	//			return echo.ErrForbidden
-	//		}
-	//		return next(c)
-	//	}
-	//})
-
 	// Authentication setup
-	versionGroup.Use(echojwt.WithConfig(NewJWTConfig()))
+	versionGroup.Use(echojwt.WithConfig(getJWTConfig(s.cfg)))
 
 	// Register scoped instances(instances that are created per request)
 	e.Use(registerScopedInstances(db))
@@ -107,7 +100,56 @@ func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger, auth *aut
 	return
 }
 
-func NewJWTConfig() echojwt.Config {
+func getGlobalErrorHandler(logger logger.Logger) func(err error, c echo.Context) {
+	return func(err error, c echo.Context) {
+		var he *echo.HTTPError
+		if errors.As(err, &he) {
+			errorData, ok := he.Message.(*httperr.ErrorData)
+			if ok {
+				baseHttpApiResult := res.NewResult[any, *echo.HTTPError, any]()
+				baseHttpApiResult.SetErrorMessage(errorData.Message)
+				if errorData.ShouldLog {
+					logger.Error(err)
+				}
+				jsonError := c.JSON(he.Code, baseHttpApiResult)
+				if jsonError != nil {
+					logger.Error(err)
+				}
+			} else {
+				jsonError := c.JSON(he.Code, he.Message)
+				if jsonError != nil {
+					logger.Error(err)
+				}
+			}
+		} else {
+			logger.Error(err)
+			result := res.NewResult[any, *echo.HTTPError, any]()
+			result.SetErrorMessage("Internal Server Error")
+			jsonError := c.JSON(http.StatusInternalServerError, result)
+			if jsonError != nil {
+				logger.Error(err)
+			}
+		}
+	}
+}
+
+func getRequestResponseMiddleware(logger logger.Logger) func(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			//logger.Info("Incoming request")
+
+			if err := next(c); err != nil { //exec main process
+				c.Error(err)
+			}
+
+			//logger.Info("Outgoing response")
+
+			return nil
+		}
+	}
+}
+
+func getJWTConfig(cfg *configs.Config) echojwt.Config {
 	return echojwt.Config{
 		Skipper: func(c echo.Context) bool {
 			if strings.Contains(c.Request().URL.Path, "swagger") {
@@ -115,14 +157,14 @@ func NewJWTConfig() echojwt.Config {
 			}
 			return false
 		},
-		SigningKey: []byte("secret"),
+		SigningKey: []byte(cfg.Auth.JWT_SECRET),
 		ErrorHandler: func(c echo.Context, err error) error {
-			return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+			return httperr.UnauthorizedError
 		},
 	}
 }
 
-func NewRecoverConfig() middleware.RecoverConfig {
+func getRecoverConfig() middleware.RecoverConfig {
 	return middleware.RecoverConfig{
 		Skipper:           middleware.DefaultSkipper,
 		StackSize:         stackSize,
@@ -133,7 +175,7 @@ func NewRecoverConfig() middleware.RecoverConfig {
 	}
 }
 
-func NewGzipConfig() middleware.GzipConfig {
+func getGzipConfig() middleware.GzipConfig {
 	return middleware.GzipConfig{
 		Skipper: func(c echo.Context) bool {
 			if strings.Contains(c.Request().URL.Path, "swagger") {
@@ -146,7 +188,7 @@ func NewGzipConfig() middleware.GzipConfig {
 	}
 }
 
-func NewCorsConfig() middleware.CORSConfig {
+func getCorsConfig() middleware.CORSConfig {
 	return middleware.CORSConfig{
 		Skipper:      middleware.DefaultSkipper,
 		AllowOrigins: []string{"*"},
@@ -154,7 +196,7 @@ func NewCorsConfig() middleware.CORSConfig {
 	}
 }
 
-func NewLoggerConfig(logger logger.Logger) middleware.RequestLoggerConfig {
+func getLoggerConfig(logger logger.Logger) middleware.RequestLoggerConfig {
 	return middleware.RequestLoggerConfig{
 		Skipper:      middleware.DefaultSkipper,
 		LogURI:       true,
@@ -169,7 +211,7 @@ func NewLoggerConfig(logger logger.Logger) middleware.RequestLoggerConfig {
 	}
 }
 
-func NewSecureConfig() middleware.SecureConfig {
+func getSecureConfig() middleware.SecureConfig {
 	return middleware.SecureConfig{
 		Skipper:            middleware.DefaultSkipper,
 		XSSProtection:      "1; mode=block",
