@@ -4,16 +4,17 @@ import (
 	"context"
 	"github.com/ndodanli/go-clean-architecture/configs"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
+	"time"
 )
 
 const (
-	certFile        = "ssl/server.crt"
-	keyFile         = "ssl/server.pem"
-	maxHeaderBytes  = 1 << 20
-	gzipLevel       = 5
-	stackSize       = 4 << 10 // 4 KB
-	csrfTokenHeader = "X-CSRF-Token"
-	bodyLimit       = "3M"
+	certFile       = "ssl/server.crt"
+	keyFile        = "ssl/server.pem"
+	maxHeaderBytes = 1 << 20
+	gzipLevel      = 5
+	stackSize      = 4 << 10 // 4 KB
+	bodyLimit      = "3M"
+	timeout        = 30 * time.Second
 )
 
 // server

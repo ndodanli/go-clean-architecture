@@ -58,7 +58,7 @@ host: 127.0.0.1:5005
 info:
   contact:
     email: ndodanli14@gmail.com
-  description: This is a server for authentication and authorization
+  description: This is an example server
   title: Swagger Auth API
   version: "1.0"
 paths:

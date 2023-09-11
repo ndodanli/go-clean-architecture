@@ -24,13 +24,9 @@ import (
 	"time"
 )
 
-const (
-	ctxTimeout = 3
-)
-
 // @title Swagger Auth API
 // @version 1.0
-// @description This is a server for authentication and authorization
+// @description This is an example server
 
 // @contact.email ndodanli14@gmail.com
 
@@ -38,6 +34,12 @@ const (
 
 func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger, auth *auth.Auth) (e *echo.Echo) {
 	e = echo.New()
+
+	// Handle ip extraction
+	handleIpExtraction(e, s.cfg)
+
+	// Timeout settings
+	e.Use(middleware.TimeoutWithConfig(getTimeoutConfig()))
 
 	// Request-Response middleware
 	e.Use(getRequestResponseMiddleware(logger))
@@ -51,10 +53,13 @@ func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger, auth *aut
 	// Gzip compression
 	e.Use(middleware.GzipWithConfig(getGzipConfig()))
 
+	// Decompress http requests if Content-Encoding header is set to gzip
+	e.Use(middleware.DecompressWithConfig(getGzipDecompressConfig()))
+
 	// CSRF protection
 	e.Use(middleware.CSRF())
 
-	// CQRS setup
+	// CQRS settings
 	e.Use(middleware.CORSWithConfig(getCorsConfig()))
 
 	// Set body limit
@@ -63,23 +68,23 @@ func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger, auth *aut
 	// Add request id to context
 	e.Use(middleware.RequestID())
 
-	// Logger setup
+	// Request logger
 	e.Use(middleware.RequestLoggerWithConfig(getLoggerConfig(logger)))
 
-	// Security setup
+	// Security settings
 	e.Use(middleware.SecureWithConfig(getSecureConfig()))
 
-	// Validator setup
+	// Validator settings
 	e.Validator = cstmvalidator.NewCustomValidator(validator.New())
 
-	// Swagger setup
+	// Swagger settings
 	url := echoSwagger.URL("http://localhost:5005/swagger/doc.json")
 	e.GET("/swagger/*", echoSwagger.EchoWrapHandler(url))
 
 	//Versioning
 	versionGroup := e.Group("/v1")
 
-	// Authentication setup
+	// Authentication settings
 	versionGroup.Use(echojwt.WithConfig(getJWTConfig(s.cfg)))
 
 	// Register scoped instances(instances that are created per request)
@@ -90,8 +95,8 @@ func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger, auth *aut
 	go func() {
 		address := fmt.Sprintf("%s:%s", s.cfg.Http.HOST, s.cfg.Http.PORT)
 		go func() {
-			// Wait for 300 ms
 			time.Sleep(100 * time.Millisecond)
+			fmt.Printf("Routes:\n")
 			printRoutes(e.Routes())
 		}()
 		e.Logger.Fatal(e.Start(address))
@@ -220,6 +225,20 @@ func getSecureConfig() middleware.SecureConfig {
 	}
 }
 
+func getGzipDecompressConfig() middleware.DecompressConfig {
+	return middleware.DecompressConfig{
+		Skipper: middleware.DefaultSkipper,
+	}
+}
+
+func getTimeoutConfig() middleware.TimeoutConfig {
+	return middleware.TimeoutConfig{
+		Skipper:      middleware.DefaultSkipper,
+		Timeout:      timeout,
+		ErrorMessage: "Request timed out. Please try again later.",
+	}
+}
+
 func registerScopedInstances(db *pgxpool.Pool) func(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -227,6 +246,19 @@ func registerScopedInstances(db *pgxpool.Pool) func(next echo.HandlerFunc) echo.
 			c.Set(serviceconstants.TxSessionManagerKey, txSessionManager)
 			return next(c)
 		}
+	}
+}
+
+func handleIpExtraction(e *echo.Echo, cfg *configs.Config) {
+	switch strings.ToLower(cfg.Http.IP_EXTRACTION) {
+	case "forwarded-for":
+		e.IPExtractor = echo.ExtractIPFromXFFHeader()
+	case "real-ip":
+		e.IPExtractor = echo.ExtractIPFromRealIPHeader()
+	case "no-proxy":
+		e.IPExtractor = echo.ExtractIPDirect()
+	default:
+		e.IPExtractor = echo.ExtractIPDirect()
 	}
 }
 

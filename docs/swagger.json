@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This is a server for authentication and authorization",
+        "description": "This is an example server",
         "title": "Swagger Auth API",
         "contact": {
             "email": "ndodanli14@gmail.com"

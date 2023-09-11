@@ -58,6 +58,7 @@ type Http struct {
 	SESSION_COOKIE_NAME string        `mapstructure:"SESSION_COOKIE_NAME,omitempty"`
 	SSL_CERT_PATH       string        `mapstructure:"SSL_CERT_PATH,omitempty"`
 	SSL_CERT_KEY        string        `mapstructure:"SSL_CERT_KEY,omitempty"`
+	IP_EXTRACTION       string        `mapstructure:"IP_EXTRACTION,omitempty"` //forwarded-for, real-ip, no-proxy
 }
 
 // Http config

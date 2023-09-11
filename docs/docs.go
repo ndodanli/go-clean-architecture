@@ -160,7 +160,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "Swagger Auth API",
-	Description:      "This is a server for authentication and authorization",
+	Description:      "This is an example server",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
