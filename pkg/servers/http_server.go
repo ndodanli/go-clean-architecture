@@ -27,10 +27,12 @@ import (
 // @title Swagger Auth API
 // @version 1.0
 // @description This is an example server
-
 // @contact.email ndodanli14@gmail.com
-
 // @host 127.0.0.1:5005
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 
 func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger, auth *auth.Auth) (e *echo.Echo) {
 	e = echo.New()

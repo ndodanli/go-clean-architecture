@@ -19,6 +19,11 @@ const docTemplate = `{
     "paths": {
         "/v1/auth/user": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "get string by ID",
                 "consumes": [
                     "application/json"
@@ -43,7 +48,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK. On success.",
                         "schema": {
-                            "$ref": "#/definitions/res.SwaggerSuccessRes-httpctrl_GetUserResponse"
+                            "$ref": "#/definitions/res.SwaggerSuccessRes-authctrl_GetUserResponse"
                         }
                     },
                     "400": {
@@ -69,7 +74,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "httpctrl.GetUserResponse": {
+        "authctrl.GetUserResponse": {
             "type": "object",
             "properties": {
                 "age": {
@@ -93,11 +98,11 @@ const docTemplate = `{
                 }
             }
         },
-        "res.SwaggerSuccessRes-httpctrl_GetUserResponse": {
+        "res.SwaggerSuccessRes-authctrl_GetUserResponse": {
             "type": "object",
             "properties": {
                 "D": {
-                    "$ref": "#/definitions/httpctrl.GetUserResponse"
+                    "$ref": "#/definitions/authctrl.GetUserResponse"
                 },
                 "M": {
                     "type": "string",
@@ -149,6 +154,13 @@ const docTemplate = `{
                     "example": "Age"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

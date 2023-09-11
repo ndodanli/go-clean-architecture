@@ -43,6 +43,8 @@ func parseValidationMessages(fe validator.FieldError) string {
 		return "Invalid email"
 	case "min":
 		return "Minimum length is " + fe.Param()
+	case "max":
+		return "Maximum length is " + fe.Param()
 	}
 	return fe.Error()
 }

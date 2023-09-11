@@ -1,25 +1,21 @@
-package httpctrl
+package authctrl
 
 import (
 	"github.com/labstack/echo/v4"
-	httpctrl "github.com/ndodanli/go-clean-architecture/internal/server/http/controller/auth/req"
-	_ "github.com/ndodanli/go-clean-architecture/pkg/core/response"
+	res "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
 	"github.com/ndodanli/go-clean-architecture/pkg/utils"
 	"net/http"
 )
 
 type AuthController struct {
-	echo            *echo.Group
 	controllerGroup *echo.Group
 	httpClient      *http.Client
 	authService     services.AuthServiceInterface
-	testString      string
 }
 
 func NewAuthController(group *echo.Group, requiredServices *services.AppServices) *AuthController {
 	ac := &AuthController{
-		echo:            group,
 		controllerGroup: group.Group("/auth"),
 		authService:     requiredServices.AuthService,
 	}
@@ -30,6 +26,7 @@ func NewAuthController(group *echo.Group, requiredServices *services.AppServices
 }
 
 // GetUser godoc
+// @Security BearerAuth
 // @Summary      Show an account
 // @Description  get string by ID
 // @Tags         accounts
@@ -43,7 +40,7 @@ func NewAuthController(group *echo.Group, requiredServices *services.AppServices
 // @Router       /v1/auth/user [get]
 func (ac *AuthController) GetUser(c echo.Context) error {
 	c.Response().Header().Set("Test-Header-Controller", "Test-Value Controller")
-	var reqParams httpctrl.GetUserRequest
+	var reqParams GetUserRequest
 	if err := utils.BindAndValidate(c, &reqParams); err != nil {
 		return err
 	}
@@ -53,5 +50,8 @@ func (ac *AuthController) GetUser(c echo.Context) error {
 	if result.IsError() {
 		//return result.GetError()
 	}
-	return c.JSON(http.StatusOK, reqParams)
+	r := res.NewResult[GetUserResponse, error, string]()
+	r.Data.Age = 11
+	r.Data.Name = "Test"
+	return c.JSON(http.StatusOK, r)
 }

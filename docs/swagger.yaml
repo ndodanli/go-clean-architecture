@@ -1,5 +1,5 @@
 definitions:
-  httpctrl.GetUserResponse:
+  authctrl.GetUserResponse:
     properties:
       age:
         type: integer
@@ -15,10 +15,10 @@ definitions:
         example: false
         type: boolean
     type: object
-  res.SwaggerSuccessRes-httpctrl_GetUserResponse:
+  res.SwaggerSuccessRes-authctrl_GetUserResponse:
     properties:
       D:
-        $ref: '#/definitions/httpctrl.GetUserResponse'
+        $ref: '#/definitions/authctrl.GetUserResponse'
       M:
         example: XXX Created/Updated/Deleted Successfully
         type: string
@@ -79,7 +79,7 @@ paths:
         "200":
           description: OK. On success.
           schema:
-            $ref: '#/definitions/res.SwaggerSuccessRes-httpctrl_GetUserResponse'
+            $ref: '#/definitions/res.SwaggerSuccessRes-authctrl_GetUserResponse'
         "400":
           description: Bad Request. On any validation error.
           schema:
@@ -92,7 +92,14 @@ paths:
           description: Internal Server Error.
           schema:
             $ref: '#/definitions/res.SwaggerInternalErrRes'
+      security:
+      - BearerAuth: []
       summary: Show an account
       tags:
       - accounts
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
