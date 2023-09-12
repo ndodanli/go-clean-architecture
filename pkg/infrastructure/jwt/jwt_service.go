@@ -49,3 +49,5 @@ func (js *JwtService) ValidateToken(token string) (*jwt.Token, error) {
 		return js.secret, nil
 	})
 }
+
+// TODO: Add refresh token generation and validation
