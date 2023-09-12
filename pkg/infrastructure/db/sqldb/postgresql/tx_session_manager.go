@@ -94,10 +94,10 @@ func ExecTx[T any](ctx context.Context, ts *TxSessionManager, correlationID uuid
 
 func handleTransaction(txSession pgx.Tx, ctx context.Context, err error) {
 	if p := recover(); p != nil {
-		txSession.Rollback(ctx)
+		_ = txSession.Rollback(ctx)
 		panic(p)
 	} else if err != nil {
-		txSession.Rollback(ctx)
+		_ = txSession.Rollback(ctx)
 		panic("error")
 	} else {
 		err = txSession.Commit(ctx)

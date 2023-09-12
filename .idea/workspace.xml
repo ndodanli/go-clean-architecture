@@ -5,11 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5248fcac-8d16-4c53-b413-fbb980562ea9" name="Changes" comment="update">
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/server/http/controller/register.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/server/http/controller/register.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/app_user/repos/app_user_repo.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/app_user/repos/app_user_repo.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/tx_session_manager.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/tx_session_manager.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/unit_of_work/unit_of_work.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/unit_of_work/unit_of_work.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -177,11 +175,6 @@
           <url>file://$PROJECT_DIR$/pkg/infrastructure/db/db_postgresql/query.sql.go</url>
           <line>62</line>
           <option name="timeStamp" value="4" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/tx_session_manager.go</url>
-          <line>96</line>
-          <option name="timeStamp" value="68" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/tx_session_manager.go</url>
