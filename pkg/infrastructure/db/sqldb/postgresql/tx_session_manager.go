@@ -85,6 +85,7 @@ func ExecTx[T any](ctx context.Context, ts *TxSessionManager, correlationID uuid
 	}
 
 	defer handleTransaction(txSession, ctx, err)
+	defer ts.ReleaseTxSession(correlationID)
 
 	data := txFunc(txSession)
 

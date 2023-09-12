@@ -5,16 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5248fcac-8d16-4c53-b413-fbb980562ea9" name="Changes" comment="update">
-      <change afterPath="$PROJECT_DIR$/internal/server/http/controller/auth/auth_res.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/docs.go" beforeDir="false" afterPath="$PROJECT_DIR$/docs/docs.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/swagger.json" beforeDir="false" afterPath="$PROJECT_DIR$/docs/swagger.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/swagger.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/docs/swagger.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/server/http/controller/auth/auth_controller.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/server/http/controller/auth/auth_controller.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/server/http/controller/auth/req/test_req_dto.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/server/http/controller/auth/auth_req.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/server/http/controller/auth/res/test_res_dto.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/core/validator/custom_validator.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/core/validator/custom_validator.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/servers/http_server.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/servers/http_server.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/server/http/controller/register.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/server/http/controller/register.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/app_user/repos/app_user_repo.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/app_user/repos/app_user_repo.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/tx_session_manager.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/tx_session_manager.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/unit_of_work/unit_of_work.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/unit_of_work/unit_of_work.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -185,12 +180,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/tx_session_manager.go</url>
-          <line>95</line>
+          <line>96</line>
           <option name="timeStamp" value="68" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/pkg/infrastructure/db/sqldb/postgresql/tx_session_manager.go</url>
-          <line>98</line>
+          <line>99</line>
           <option name="timeStamp" value="69" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">

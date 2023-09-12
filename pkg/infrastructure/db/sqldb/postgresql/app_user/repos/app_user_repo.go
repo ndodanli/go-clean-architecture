@@ -7,14 +7,13 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	res "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	sqlresponses "github.com/ndodanli/go-clean-architecture/pkg/domain/ports/sql_responses"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
 )
 
 type UserRepo struct {
 	db *pgxpool.Pool
 }
 
-func NewAppUserRepo(db *pgxpool.Pool, txSessions *postgresql.TxSessionManager) *UserRepo {
+func NewAppUserRepo(db *pgxpool.Pool) *UserRepo {
 	return &UserRepo{db: db}
 }
 
