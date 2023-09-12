@@ -3,4 +3,11 @@
 *.iws
 .idea/
 .DS_Store
-environments/
+
+# Environments
+/environments/*
+env.*
+*.env
+
+# keep environments dir itself
+!environments/.gitkeep
