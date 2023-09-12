@@ -11,12 +11,21 @@ type ErrorData struct {
 }
 
 var (
-	UserNotFoundError         *echo.HTTPError
-	UnauthorizedError         *echo.HTTPError
-	UnAuthorizedAudienceError *echo.HTTPError
+	InternalServerError *echo.HTTPError
+)
+
+var (
+	UserNotFoundError           *echo.HTTPError
+	UnauthorizedError           *echo.HTTPError
+	UnAuthorizedAudienceError   *echo.HTTPError
+	UsernameOrPasswordIncorrect *echo.HTTPError
 )
 
 func Init() {
+	InternalServerError = echo.NewHTTPError(http.StatusInternalServerError, &ErrorData{
+		Message:   "Internal server error",
+		ShouldLog: true,
+	})
 	UnauthorizedError = echo.NewHTTPError(http.StatusUnauthorized, &ErrorData{
 		Message:   "Unauthorized",
 		ShouldLog: false,
@@ -27,6 +36,10 @@ func Init() {
 	})
 	UnAuthorizedAudienceError = echo.NewHTTPError(http.StatusUnauthorized, &ErrorData{
 		Message:   "Unauthorized audience",
+		ShouldLog: false,
+	})
+	UsernameOrPasswordIncorrect = echo.NewHTTPError(http.StatusUnauthorized, &ErrorData{
+		Message:   "Username or password is incorrect",
 		ShouldLog: false,
 	})
 }

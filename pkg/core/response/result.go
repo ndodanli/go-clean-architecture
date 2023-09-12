@@ -1,19 +1,19 @@
-package res
+package baseres
 
 type resultType any
 type ErrorType error
 type metadataType any
 
 type ValidationError struct {
-	Field string `json:"F,omitempty" example:"Age"`
-	Error string `json:"E,omitempty" example:"Age must be greater than 0"`
+	Field string `json:"f,omitempty" example:"age"`
+	Error string `json:"e,omitempty" example:"age must be greater than 0"`
 }
 
 type Result[D resultType, E ErrorType, M metadataType] struct {
-	Success          bool              `json:"S"`
-	Message          string            `json:"M,omitempty"`
-	Data             D                 `json:"D,omitempty"`
-	ValidationErrors []ValidationError `json:"V,omitempty"`
+	Success          bool              `json:"s"`
+	Message          string            `json:"m,omitempty"`
+	Data             D                 `json:"d,omitempty"`
+	ValidationErrors []ValidationError `json:"v,omitempty"`
 	error            ErrorType
 	metadata         metadataType
 }

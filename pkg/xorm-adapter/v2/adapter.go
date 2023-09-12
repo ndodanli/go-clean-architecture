@@ -85,7 +85,7 @@ func finalizer(a *Adapter) {
 // dbSpecified is an optional bool parameter. The default value is false.
 // It's up to whether you have specified an existing DB in dataSourceName.
 // If dbSpecified == true, you need to make sure the DB in dataSourceName exists.
-// If dbSpecified == false, the adapter will automatically create a DB named "auth".
+// If dbSpecified == false, the adapter will automatically create a DB named "app_user".
 func NewAdapter(driverName string, dataSourceName string, dbSpecified ...bool) (*Adapter, error) {
 	a := &Adapter{
 		driverName:     driverName,
@@ -191,7 +191,7 @@ func (a *Adapter) createDatabase() error {
 	}
 
 	if a.driverName == "postgres" {
-		if _, err = engine.Exec("CREATE DATABASE auth"); err != nil {
+		if _, err = engine.Exec("CREATE DATABASE app_user"); err != nil {
 			// 42P04 is	duplicate_database
 			if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == "42P04" {
 				_ = engine.Close()
@@ -199,7 +199,7 @@ func (a *Adapter) createDatabase() error {
 			}
 		}
 	} else if a.driverName != "sqlite3" {
-		_, err = engine.Exec("CREATE DATABASE IF NOT EXISTS auth")
+		_, err = engine.Exec("CREATE DATABASE IF NOT EXISTS app_user")
 	}
 	if err != nil {
 		_ = engine.Close()
@@ -224,11 +224,11 @@ func (a *Adapter) open() error {
 		}
 
 		if a.driverName == "postgres" {
-			engine, err = xorm.NewEngine(a.driverName, a.dataSourceName+" dbname=auth")
+			engine, err = xorm.NewEngine(a.driverName, a.dataSourceName+" dbname=app_user")
 		} else if a.driverName == "sqlite3" {
 			engine, err = xorm.NewEngine(a.driverName, a.dataSourceName)
 		} else {
-			engine, err = xorm.NewEngine(a.driverName, a.dataSourceName+"auth")
+			engine, err = xorm.NewEngine(a.driverName, a.dataSourceName+"app_user")
 		}
 		if err != nil {
 			return err

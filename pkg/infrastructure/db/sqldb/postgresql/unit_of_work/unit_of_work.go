@@ -1,14 +1,14 @@
 package uow
 
 import (
-	"github.com/jackc/pgx/v4/pgxpool"
-	repoports "github.com/ndodanli/go-clean-architecture/pkg/domain/ports/repositories"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/app_user/repos"
+	"context"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/app_user/repos/app_user"
 )
 
 type UnitOfWorkInterface interface {
 	GetDB() *pgxpool.Pool
-	UserRepo() repoports.AppUserRepoInterface
+	AppUserRepo(ctx context.Context) appuserrepo.IAppUserRepo
 }
 
 type UnitOfWork struct {
@@ -25,6 +25,6 @@ func (uow UnitOfWork) GetDB() *pgxpool.Pool {
 	return uow.db
 }
 
-func (uow UnitOfWork) UserRepo() repoports.AppUserRepoInterface {
-	return repos.NewAppUserRepo(uow.db)
+func (uow UnitOfWork) AppUserRepo(ctx context.Context) appuserrepo.IAppUserRepo {
+	return appuserrepo.NewAppUserRepo(uow.db, ctx)
 }

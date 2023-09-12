@@ -2,8 +2,11 @@ package authctrl
 
 import (
 	"github.com/labstack/echo/v4"
-	res "github.com/ndodanli/go-clean-architecture/pkg/core/response"
+	_ "github.com/ndodanli/go-clean-architecture/pkg/core/response"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/req"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
+	srvcns "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services/constants"
 	"github.com/ndodanli/go-clean-architecture/pkg/utils"
 	"net/http"
 )
@@ -20,38 +23,35 @@ func NewAuthController(group *echo.Group, requiredServices *services.AppServices
 		authService:     requiredServices.AuthService,
 	}
 
-	ac.controllerGroup.GET("/user", ac.GetUser)
+	ac.controllerGroup.POST("/login", ac.Login)
 
 	return ac
 }
 
-// GetUser godoc
+// Login godoc
 // @Security BearerAuth
-// @Summary      Show an account
-// @Description  get string by ID
-// @Tags         accounts
+// @Summary      Login
+// @Description  Login
+// @Tags         app_user
 // @Accept       json
 // @Produce      json
-// @Param        id   query      int  true  "Account ID"
-// @Success      200  {object}   res.SwaggerSuccessRes[GetUserResponse] "OK. On success."
-// @Failure      400  {object}   res.SwaggerValidationErrRes "Bad Request. On any validation error."
-// @Failure      401  {object}   res.SwaggerUnauthorizedErrRes "Unauthorized."
-// @Failure      500  {object}   res.SwaggerInternalErrRes "Internal Server Error."
-// @Router       /v1/auth/user [get]
-func (ac *AuthController) GetUser(c echo.Context) error {
+// @Param        loginReq body req.LoginRequest true "Username"
+// @Success      200  {object}   baseres.SwaggerSuccessRes[res.LoginRes] "OK. On success."
+// @Failure      400  {object}   baseres.SwaggerValidationErrRes "Bad Request. On any validation error."
+// @Failure      401  {object}   baseres.SwaggerUnauthorizedErrRes "Unauthorized."
+// @Failure      500  {object}   baseres.SwaggerInternalErrRes "Internal Server Error."
+// @Router       /v1/auth/login [post]
+func (ac *AuthController) Login(c echo.Context) error {
 	c.Response().Header().Set("Test-Header-Controller", "Test-Value Controller")
-	var reqParams GetUserRequest
-	if err := utils.BindAndValidate(c, &reqParams); err != nil {
+	var payload req.LoginRequest
+	if err := utils.BindAndValidate(c, &payload); err != nil {
 		return err
 	}
 
-	result := ac.authService.GetUser(1)
-
+	result := ac.authService.Login(c.Request().Context(), payload, c.Get(srvcns.TxSessionManagerKey).(*postgresql.TxSessionManager))
 	if result.IsError() {
-		//return result.GetError()
+		return result.GetError()
 	}
-	r := res.NewResult[GetUserResponse, error, string]()
-	r.Data.Age = 11
-	r.Data.Name = "Test"
-	return c.JSON(http.StatusOK, r)
+
+	return c.JSON(http.StatusOK, result)
 }

@@ -530,7 +530,7 @@ func (e *Enforcer) EnableAutoBuildRoleLinks(autoBuildRoleLinks bool) {
 	e.autoBuildRoleLinks = autoBuildRoleLinks
 }
 
-// EnableAcceptJsonRequest controls whether to accept json as a request parameter
+// EnableAcceptJsonRequest controls whether to accept json as a req parameter
 func (e *Enforcer) EnableAcceptJsonRequest(acceptJsonRequest bool) {
 	e.acceptJsonRequest = acceptJsonRequest
 }
@@ -659,7 +659,7 @@ func (e *Enforcer) enforce(matcher string, explains *[]string, rvals ...interfac
 
 	if len(e.model["r"][rType].Tokens) != len(rvals) {
 		return false, fmt.Errorf(
-			"invalid request size: expected %d, got %d, rvals: %v",
+			"invalid req size: expected %d, got %d, rvals: %v",
 			len(e.model["r"][rType].Tokens),
 			len(rvals),
 			rvals)
@@ -799,9 +799,9 @@ func (e *Enforcer) enforce(matcher string, explains *[]string, rvals ...interfac
 var requestObjectRegex = regexp.MustCompile(`r[_.][A-Za-z_0-9]+\.[A-Za-z_0-9.]+[A-Za-z_0-9]`)
 var requestObjectRegexPrefix = regexp.MustCompile(`r[_.][A-Za-z_0-9]+\.`)
 
-// requestJsonReplace used to support request parameters of type json
-// It will replace the access of the request object in matchers or policy with the actual value in the request json parameter
-// For example: request sub = `{"Owner": "alice", "Age": 30}`
+// requestJsonReplace used to support req parameters of type json
+// It will replace the access of the req object in matchers or policy with the actual value in the req json parameter
+// For example: req sub = `{"Owner": "alice", "Age": 30}`
 // policy: p, r.sub.Age > 18, /data1, read  ==>  p, 30 > 18, /data1, read
 // matchers: m = r.sub == r.obj.Owner  ==>  m = r.sub == "alice"
 func requestJsonReplace(str string, rTokens map[string]int, rvals []interface{}) string {

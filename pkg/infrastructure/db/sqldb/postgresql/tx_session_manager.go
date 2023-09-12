@@ -3,8 +3,8 @@ package postgresql
 import (
 	"context"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type TxSessionManager struct {
@@ -61,7 +61,7 @@ func (ts *TxSessionManager) beginAndSetTxSession(ctx context.Context, correlatio
 	return newTx, nil
 }
 
-func ExecTx[T any](ctx context.Context, ts *TxSessionManager, correlationID uuid.UUID, txFunc func(tx pgx.Tx) T) (T, uuid.UUID) {
+func ExecTx[T any](ctx context.Context, ts *TxSessionManager, correlationID uuid.UUID, txFunc func(tx pgx.Tx) (T, error)) (T, error) {
 	var err error
 	var txSession pgx.Tx
 	var exists bool
@@ -87,9 +87,44 @@ func ExecTx[T any](ctx context.Context, ts *TxSessionManager, correlationID uuid
 	defer handleTransaction(txSession, ctx, err)
 	defer ts.ReleaseTxSession(correlationID)
 
-	data := txFunc(txSession)
+	var data T
+	var dataErr error
+	data, dataErr = txFunc(txSession)
 
-	return data, correlationID
+	return data, dataErr
+}
+
+func ExecTxReturnSID[T any](ctx context.Context, ts *TxSessionManager, correlationID uuid.UUID, txFunc func(tx pgx.Tx) (T, error)) (T, error, uuid.UUID) {
+	var err error
+	var txSession pgx.Tx
+	var exists bool
+
+	if correlationID == uuid.Nil {
+		correlationID = uuid.New()
+		txSession, err = ts.beginAndSetTxSession(ctx, correlationID)
+		if err != nil {
+			// TODO: handle error, return 500 res to client
+			panic(err)
+		}
+	} else {
+		txSession, exists = ts.sessions[correlationID]
+		if !exists {
+			txSession, err = ts.beginAndSetTxSession(ctx, correlationID)
+			if err != nil {
+				// TODO: handle error, return 500 res to client
+				panic(err)
+			}
+		}
+	}
+
+	defer handleTransaction(txSession, ctx, err)
+	defer ts.ReleaseTxSession(correlationID)
+
+	var data T
+	var dataErr error
+	data, dataErr = txFunc(txSession)
+
+	return data, dataErr, correlationID
 }
 
 func handleTransaction(txSession pgx.Tx, ctx context.Context, err error) {

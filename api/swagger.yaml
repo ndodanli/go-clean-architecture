@@ -1,57 +1,69 @@
 definitions:
-  authctrl.GetUserResponse:
+  baseres.SwaggerInternalErrRes:
     properties:
-      age:
-        type: integer
-      name:
-        type: string
-    type: object
-  res.SwaggerInternalErrRes:
-    properties:
-      M:
+      m:
         example: Internal Server Error
         type: string
-      S:
+      s:
         example: false
         type: boolean
     type: object
-  res.SwaggerSuccessRes-authctrl_GetUserResponse:
+  baseres.SwaggerSuccessRes-res_LoginRes:
     properties:
-      D:
-        $ref: '#/definitions/authctrl.GetUserResponse'
-      M:
+      d:
+        $ref: '#/definitions/res.LoginRes'
+      m:
         example: XXX Created/Updated/Deleted Successfully
         type: string
-      S:
+      s:
         example: true
         type: boolean
     type: object
-  res.SwaggerUnauthorizedErrRes:
+  baseres.SwaggerUnauthorizedErrRes:
     properties:
-      M:
+      m:
         example: Unauthorized
         type: string
-      S:
+      s:
         example: false
         type: boolean
     type: object
-  res.SwaggerValidationErrRes:
+  baseres.SwaggerValidationErrRes:
     properties:
-      S:
+      s:
         example: false
         type: boolean
-      V:
+      v:
         items:
-          $ref: '#/definitions/res.ValidationError'
+          $ref: '#/definitions/baseres.ValidationError'
         type: array
     type: object
-  res.ValidationError:
+  baseres.ValidationError:
     properties:
-      E:
-        example: Age must be greater than 0
+      e:
+        example: age must be greater than 0
         type: string
-      F:
-        example: Age
+      f:
+        example: age
+        type: string
+    type: object
+  req.LoginRequest:
+    properties:
+      password:
+        maxLength: 20
+        minLength: 6
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  res.LoginRes:
+    properties:
+      accessToken:
+        type: string
+      refreshToken:
         type: string
     type: object
 host: 127.0.0.1:5005
@@ -62,41 +74,42 @@ info:
   title: Swagger Auth API
   version: "1.0"
 paths:
-  /v1/auth/user:
-    get:
+  /v1/auth/login:
+    post:
       consumes:
       - application/json
-      description: get string by ID
+      description: Login
       parameters:
-      - description: Account ID
-        in: query
-        name: id
+      - description: Username
+        in: body
+        name: loginReq
         required: true
-        type: integer
+        schema:
+          $ref: '#/definitions/req.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK. On success.
           schema:
-            $ref: '#/definitions/res.SwaggerSuccessRes-authctrl_GetUserResponse'
+            $ref: '#/definitions/baseres.SwaggerSuccessRes-res_LoginRes'
         "400":
           description: Bad Request. On any validation error.
           schema:
-            $ref: '#/definitions/res.SwaggerValidationErrRes'
+            $ref: '#/definitions/baseres.SwaggerValidationErrRes'
         "401":
           description: Unauthorized.
           schema:
-            $ref: '#/definitions/res.SwaggerUnauthorizedErrRes'
+            $ref: '#/definitions/baseres.SwaggerUnauthorizedErrRes'
         "500":
           description: Internal Server Error.
           schema:
-            $ref: '#/definitions/res.SwaggerInternalErrRes'
+            $ref: '#/definitions/baseres.SwaggerInternalErrRes'
       security:
       - BearerAuth: []
-      summary: Show an account
+      summary: Login
       tags:
-      - accounts
+      - app_user
 securityDefinitions:
   BearerAuth:
     in: header

@@ -173,7 +173,7 @@ Note: you can also initialize an enforcer with policy in DB instead of file, see
     if res, _ := e.Enforce(sub, obj, act); res {
         // permit alice to read data1
     } else {
-        // deny the request, show an error
+        // deny the req, show an error
     }
     ```
 

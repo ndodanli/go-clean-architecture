@@ -21,7 +21,7 @@ func (a *Auth) Enforcer() *casbin.Enforcer {
 }
 
 func NewAuth(cfg *configs.Config) (*Auth, error) {
-	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=auth sslmode=disable", cfg.Postgresql.HOST, cfg.Postgresql.PORT, cfg.Postgresql.USER, cfg.Postgresql.PASS)
+	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=app_user sslmode=disable", cfg.Postgresql.HOST, cfg.Postgresql.PORT, cfg.Postgresql.USER, cfg.Postgresql.PASS)
 
 	a, err := xormadapter.NewAdapter("postgres", connStr)
 	if err != nil {
@@ -34,7 +34,7 @@ func NewAuth(cfg *configs.Config) (*Auth, error) {
 		return nil, err
 	}
 
-	m, err := model.NewModelFromFile(currentPath + "/internal/auth/rbac_model.conf")
+	m, err := model.NewModelFromFile(currentPath + "/internal/app_user/rbac_model.conf")
 
 	e, err := casbin.NewEnforcer(m, a)
 	if err != nil {

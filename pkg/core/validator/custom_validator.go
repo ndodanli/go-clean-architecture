@@ -5,6 +5,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	res "github.com/ndodanli/go-clean-architecture/pkg/core/response"
+	"github.com/ndodanli/go-clean-architecture/pkg/utils"
 	"net/http"
 )
 
@@ -26,7 +27,7 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 
 			out := make([]res.ValidationError, len(ve))
 			for j, fe := range ve {
-				out[j] = res.ValidationError{Field: fe.Field(), Error: parseValidationMessages(fe)}
+				out[j] = res.ValidationError{Field: utils.LowercaseFirstLetter(fe.Field()), Error: parseValidationMessages(fe)}
 			}
 			result.SetValidationErrors(out)
 			return echo.NewHTTPError(http.StatusBadRequest, result)

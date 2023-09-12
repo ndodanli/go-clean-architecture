@@ -4,19 +4,17 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-playground/validator/v10"
-	"github.com/golang-jwt/jwt/v4"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/ndodanli/go-clean-architecture/api"
 	"github.com/ndodanli/go-clean-architecture/configs"
-	"github.com/ndodanli/go-clean-architecture/internal/auth"
 	httpctrl "github.com/ndodanli/go-clean-architecture/internal/server/http/controller"
 	res "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	cstmvalidator "github.com/ndodanli/go-clean-architecture/pkg/core/validator"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
-	jwtsvc "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/jwt"
+	mw "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/middleware"
 	srvcns "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services/constants"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/swaggo/echo-swagger"
@@ -35,7 +33,7 @@ import (
 // @in header
 // @name Authorization
 
-func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger, auth *auth.Auth) (e *echo.Echo) {
+func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger) (e *echo.Echo) {
 	e = echo.New()
 
 	// Handle ip extraction
@@ -60,7 +58,7 @@ func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger, auth *aut
 	e.Use(middleware.DecompressWithConfig(getGzipDecompressConfig()))
 
 	// CSRF protection
-	e.Use(middleware.CSRF())
+	//e.Use(middleware.CSRFWithConfig(getCsrfConfig()))
 
 	// CQRS settings
 	e.Use(middleware.CORSWithConfig(getCorsConfig()))
@@ -68,7 +66,7 @@ func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger, auth *aut
 	// Set body limit
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	// Add request id to context
+	// Add req id to context
 	e.Use(middleware.RequestID())
 
 	// Request logger
@@ -84,17 +82,16 @@ func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger, auth *aut
 	url := echoSwagger.URL("http://localhost:5005/swagger/doc.json")
 	e.GET("/swagger/*", echoSwagger.EchoWrapHandler(url))
 
+	// Initialize other middlewares
+	mw.Init(s.cfg)
+
 	//Versioning
 	versionGroup := e.Group("/v1")
 
-	// Authentication settings
-	jwtService := jwtsvc.NewJwtService(s.cfg.Auth)
-	versionGroup.Use(getJWTMiddleware(s.cfg, jwtService))
-
-	// Register scoped instances(instances that are created per request)
+	// Register scoped instances(instances that are created per req)
 	e.Use(registerScopedInstances(db))
 
-	httpctrl.RegisterControllers(versionGroup, db)
+	httpctrl.RegisterControllers(versionGroup, db, s.cfg)
 
 	go func() {
 		address := fmt.Sprintf("%s:%s", s.cfg.Http.HOST, s.cfg.Http.PORT)
@@ -145,7 +142,7 @@ func getGlobalErrorHandler(logger logger.Logger) func(err error, c echo.Context)
 func getRequestResponseMiddleware(logger logger.Logger) func(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			//logger.Info("Incoming request")
+			//logger.Info("Incoming req")
 
 			if err := next(c); err != nil { //exec main process
 				c.Error(err)
@@ -154,44 +151,6 @@ func getRequestResponseMiddleware(logger logger.Logger) func(next echo.HandlerFu
 			//logger.Info("Outgoing response")
 
 			return nil
-		}
-	}
-}
-
-func getJWTMiddleware(cfg *configs.Config, jwtService jwtsvc.JwtServiceInterface) func(next echo.HandlerFunc) echo.HandlerFunc {
-	validAudiences := strings.Split(cfg.Auth.JWT_AUDIENCES, ",")
-
-	verifyAud := func(audiences string) bool {
-		if validAudiences[0] == "*" {
-			return true
-		}
-		for _, validAud := range validAudiences {
-			for _, aud := range strings.Split(audiences, ",") {
-				if validAud == aud {
-					return true
-				}
-			}
-		}
-		return false
-	}
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			token, err := jwtService.ValidateToken(strings.Replace(c.Request().Header.Get("Authorization"), "Bearer ", "", 1))
-			if err != nil {
-				return httperr.UnauthorizedError
-			}
-			claims := token.Claims.(jwt.MapClaims)
-			audiences := claims["aud"].(string)
-
-			if !verifyAud(audiences) {
-				return httperr.UnAuthorizedAudienceError
-			}
-
-			c.Set(srvcns.AuthUserKey, &jwtsvc.AuthUser{
-				ID: claims["sub"].(string),
-			})
-
-			return next(c)
 		}
 	}
 }
@@ -263,6 +222,12 @@ func getTimeoutConfig() middleware.TimeoutConfig {
 		Skipper:      middleware.DefaultSkipper,
 		Timeout:      timeout,
 		ErrorMessage: "Request timed out. Please try again later.",
+	}
+}
+
+func getCsrfConfig() middleware.CSRFConfig {
+	return middleware.CSRFConfig{
+		Skipper: middleware.DefaultSkipper,
 	}
 }
 

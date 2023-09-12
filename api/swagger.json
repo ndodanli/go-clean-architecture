@@ -10,14 +10,14 @@
     },
     "host": "127.0.0.1:5005",
     "paths": {
-        "/v1/auth/user": {
-            "get": {
+        "/v1/auth/login": {
+            "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "get string by ID",
+                "description": "Login",
                 "consumes": [
                     "application/json"
                 ],
@@ -25,41 +25,43 @@
                     "application/json"
                 ],
                 "tags": [
-                    "accounts"
+                    "app_user"
                 ],
-                "summary": "Show an account",
+                "summary": "Login",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Account ID",
-                        "name": "id",
-                        "in": "query",
-                        "required": true
+                        "description": "Username",
+                        "name": "loginReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/req.LoginRequest"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK. On success.",
                         "schema": {
-                            "$ref": "#/definitions/res.SwaggerSuccessRes-authctrl_GetUserResponse"
+                            "$ref": "#/definitions/baseres.SwaggerSuccessRes-res_LoginRes"
                         }
                     },
                     "400": {
                         "description": "Bad Request. On any validation error.",
                         "schema": {
-                            "$ref": "#/definitions/res.SwaggerValidationErrRes"
+                            "$ref": "#/definitions/baseres.SwaggerValidationErrRes"
                         }
                     },
                     "401": {
                         "description": "Unauthorized.",
                         "schema": {
-                            "$ref": "#/definitions/res.SwaggerUnauthorizedErrRes"
+                            "$ref": "#/definitions/baseres.SwaggerUnauthorizedErrRes"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error.",
                         "schema": {
-                            "$ref": "#/definitions/res.SwaggerInternalErrRes"
+                            "$ref": "#/definitions/baseres.SwaggerInternalErrRes"
                         }
                     }
                 }
@@ -67,84 +69,101 @@
         }
     },
     "definitions": {
-        "authctrl.GetUserResponse": {
+        "baseres.SwaggerInternalErrRes": {
             "type": "object",
             "properties": {
-                "age": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "res.SwaggerInternalErrRes": {
-            "type": "object",
-            "properties": {
-                "M": {
+                "m": {
                     "type": "string",
                     "example": "Internal Server Error"
                 },
-                "S": {
+                "s": {
                     "type": "boolean",
                     "example": false
                 }
             }
         },
-        "res.SwaggerSuccessRes-authctrl_GetUserResponse": {
+        "baseres.SwaggerSuccessRes-res_LoginRes": {
             "type": "object",
             "properties": {
-                "D": {
-                    "$ref": "#/definitions/authctrl.GetUserResponse"
+                "d": {
+                    "$ref": "#/definitions/res.LoginRes"
                 },
-                "M": {
+                "m": {
                     "type": "string",
                     "example": "XXX Created/Updated/Deleted Successfully"
                 },
-                "S": {
+                "s": {
                     "type": "boolean",
                     "example": true
                 }
             }
         },
-        "res.SwaggerUnauthorizedErrRes": {
+        "baseres.SwaggerUnauthorizedErrRes": {
             "type": "object",
             "properties": {
-                "M": {
+                "m": {
                     "type": "string",
                     "example": "Unauthorized"
                 },
-                "S": {
+                "s": {
                     "type": "boolean",
                     "example": false
                 }
             }
         },
-        "res.SwaggerValidationErrRes": {
+        "baseres.SwaggerValidationErrRes": {
             "type": "object",
             "properties": {
-                "S": {
+                "s": {
                     "type": "boolean",
                     "example": false
                 },
-                "V": {
+                "v": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/res.ValidationError"
+                        "$ref": "#/definitions/baseres.ValidationError"
                     }
                 }
             }
         },
-        "res.ValidationError": {
+        "baseres.ValidationError": {
             "type": "object",
             "properties": {
-                "E": {
+                "e": {
                     "type": "string",
-                    "example": "Age must be greater than 0"
+                    "example": "age must be greater than 0"
                 },
-                "F": {
+                "f": {
                     "type": "string",
-                    "example": "Age"
+                    "example": "age"
+                }
+            }
+        },
+        "req.LoginRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 6
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "res.LoginRes": {
+            "type": "object",
+            "properties": {
+                "accessToken": {
+                    "type": "string"
+                },
+                "refreshToken": {
+                    "type": "string"
                 }
             }
         }

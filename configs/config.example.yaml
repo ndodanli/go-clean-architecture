@@ -1,6 +1,6 @@
 server:
   PROJECT_NAME: "Auth Service"
-  SERVICE_NAME: "auth-broker"
+  SERVICE_NAME: "app_user-broker"
   APP_ENV: "dev"
   APP_DEBUG: true
   TIMEOUT: 15

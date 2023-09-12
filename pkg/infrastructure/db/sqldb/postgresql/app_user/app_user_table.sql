@@ -2,8 +2,8 @@ drop table if exists app_user cascade;
 create table if not exists app_user
 (
     id         bigserial primary key,
-    name       varchar(50) not null,
-    test_bool  bool,
+    username   varchar(50) not null,
+    password   varchar(255) not null,
 --     test_string_not_null varchar(50) not null,
 --     test_string_nullable varchar(50),
 --     test_int_not_null int not null,

@@ -18,7 +18,7 @@ import "context"
 
 // ContextRoleManager provides a context-aware interface to define the operations for managing roles.
 // Prefer this over RoleManager interface for context propagation, which is useful for things like handling
-// request timeouts.
+// req timeouts.
 type ContextRoleManager interface {
 	RoleManager
 

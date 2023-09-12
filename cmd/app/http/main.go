@@ -4,7 +4,6 @@ import (
 	"context"
 	_ "github.com/lib/pq"
 	"github.com/ndodanli/go-clean-architecture/configs"
-	"github.com/ndodanli/go-clean-architecture/internal/auth"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
@@ -33,16 +32,16 @@ func main() {
 
 	newServer := servers.NewServer(cfg, &ctx, appLogger)
 
-	a, err := auth.NewAuth(cfg)
+	//a, err := auth.NewAuth(cfg)
 
-	if err != nil {
-		log.Fatalf("error: auth: %s", err)
-	}
+	//if err != nil {
+	//	log.Fatalf("error: app_user: %s", err)
+	//}
 
 	// Initialize http errors
 	httperr.Init()
 
-	newServer.NewHttpServer(conn, appLogger, a)
+	newServer.NewHttpServer(conn, appLogger)
 
 	// Exit from application gracefully
 	gracefulexit.TerminateApp(ctx)
