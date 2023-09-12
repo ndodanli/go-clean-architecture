@@ -12,7 +12,7 @@ type AuthUser struct {
 }
 
 type JwtServiceInterface interface {
-	GenerateToken(id string) (string, error)
+	GenerateAccessToken(id string) (string, error)
 	ValidateToken(token string) (*jwt.Token, error)
 }
 
@@ -32,7 +32,7 @@ func NewJwtService(ac configs.Auth) JwtServiceInterface {
 	}
 }
 
-func (js *JwtService) GenerateToken(id string) (string, error) {
+func (js *JwtService) GenerateAccessToken(id string) (string, error) {
 	claims := jwt.RegisteredClaims{
 		Issuer:    js.issuer,
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(js.duration)),
