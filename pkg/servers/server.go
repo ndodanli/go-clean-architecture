@@ -14,7 +14,7 @@ const (
 	gzipLevel      = 5
 	stackSize      = 4 << 10 // 4 KB
 	bodyLimit      = "3M"
-	timeout        = 30 * time.Second
+	timeout        = 3000 * time.Second
 )
 
 // server

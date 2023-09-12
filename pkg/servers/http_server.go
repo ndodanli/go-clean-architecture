@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
-	echojwt "github.com/labstack/echo-jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/ndodanli/go-clean-architecture/api"
@@ -16,7 +16,8 @@ import (
 	cstmvalidator "github.com/ndodanli/go-clean-architecture/pkg/core/validator"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
-	serviceconstants "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services/constants"
+	jwtsvc "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/jwt"
+	srvcns "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services/constants"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/swaggo/echo-swagger"
 	"net/http"
@@ -87,7 +88,8 @@ func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger, auth *aut
 	versionGroup := e.Group("/v1")
 
 	// Authentication settings
-	versionGroup.Use(echojwt.WithConfig(getJWTConfig(s.cfg)))
+	jwtService := jwtsvc.NewJwtService(s.cfg.Auth)
+	versionGroup.Use(getJWTMiddleware(s.cfg, jwtService))
 
 	// Register scoped instances(instances that are created per request)
 	e.Use(registerScopedInstances(db))
@@ -156,18 +158,41 @@ func getRequestResponseMiddleware(logger logger.Logger) func(next echo.HandlerFu
 	}
 }
 
-func getJWTConfig(cfg *configs.Config) echojwt.Config {
-	return echojwt.Config{
-		Skipper: func(c echo.Context) bool {
-			if strings.Contains(c.Request().URL.Path, "swagger") {
-				return true
+func getJWTMiddleware(cfg *configs.Config, jwtService jwtsvc.JwtServiceInterface) func(next echo.HandlerFunc) echo.HandlerFunc {
+	validAudiences := strings.Split(cfg.Auth.JWT_AUDIENCES, ",")
+
+	verifyAud := func(audiences string) bool {
+		if validAudiences[0] == "*" {
+			return true
+		}
+		for _, validAud := range validAudiences {
+			for _, aud := range strings.Split(audiences, ",") {
+				if validAud == aud {
+					return true
+				}
 			}
-			return false
-		},
-		SigningKey: []byte(cfg.Auth.JWT_SECRET),
-		ErrorHandler: func(c echo.Context, err error) error {
-			return httperr.UnauthorizedError
-		},
+		}
+		return false
+	}
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			token, err := jwtService.ValidateToken(strings.Replace(c.Request().Header.Get("Authorization"), "Bearer ", "", 1))
+			if err != nil {
+				return httperr.UnauthorizedError
+			}
+			claims := token.Claims.(jwt.MapClaims)
+			audiences := claims["aud"].(string)
+
+			if !verifyAud(audiences) {
+				return httperr.UnAuthorizedAudienceError
+			}
+
+			c.Set(srvcns.AuthUserKey, &jwtsvc.AuthUser{
+				ID: claims["sub"].(string),
+			})
+
+			return next(c)
+		}
 	}
 }
 
@@ -245,7 +270,7 @@ func registerScopedInstances(db *pgxpool.Pool) func(next echo.HandlerFunc) echo.
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			txSessionManager := postgresql.NewTxSessionManager(db)
-			c.Set(serviceconstants.TxSessionManagerKey, txSessionManager)
+			c.Set(srvcns.TxSessionManagerKey, txSessionManager)
 			return next(c)
 		}
 	}

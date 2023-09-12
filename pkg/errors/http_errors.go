@@ -11,8 +11,9 @@ type ErrorData struct {
 }
 
 var (
-	UserNotFoundError *echo.HTTPError
-	UnauthorizedError *echo.HTTPError
+	UserNotFoundError         *echo.HTTPError
+	UnauthorizedError         *echo.HTTPError
+	UnAuthorizedAudienceError *echo.HTTPError
 )
 
 func Init() {
@@ -22,6 +23,10 @@ func Init() {
 	})
 	UserNotFoundError = echo.NewHTTPError(http.StatusNotFound, &ErrorData{
 		Message:   "User not found",
+		ShouldLog: false,
+	})
+	UnAuthorizedAudienceError = echo.NewHTTPError(http.StatusUnauthorized, &ErrorData{
+		Message:   "Unauthorized audience",
 		ShouldLog: false,
 	})
 }
