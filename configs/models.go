@@ -43,10 +43,11 @@ type Server struct {
 }
 
 type Auth struct {
-	JWT_SECRET                string `mapstructure:"JWT_SECRET,omitempty"`
-	JWT_ISSUER                string `mapstructure:"JWT_ISSUER,omitempty"`
-	JWT_AUDIENCES             string `mapstructure:"JWT_AUDIENCES,omitempty"` //comma separated, no spaces. example: "aud1,aud2,aud3"
-	JWT_EXPIRATION_IN_SECONDS int64  `mapstructure:"JWT_EXPIRATION_IN_SECONDS,omitempty"`
+	JWT_SECRET                        string `mapstructure:"JWT_SECRET,omitempty"`
+	JWT_ISSUER                        string `mapstructure:"JWT_ISSUER,omitempty"`
+	JWT_AUDIENCES                     string `mapstructure:"JWT_AUDIENCES,omitempty"` //comma separated, no spaces. example: "aud1,aud2,aud3"
+	JWT_EXPIRATION_IN_SECONDS         int64  `mapstructure:"JWT_EXPIRATION_IN_SECONDS,omitempty"`
+	JWT_REFRESH_EXPIRATION_IN_SECONDS int64  `mapstructure:"JWT_REFRESH_EXPIRATION_IN_SECONDS,omitempty"`
 }
 
 // Http config

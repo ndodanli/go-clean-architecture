@@ -45,7 +45,9 @@ func (ts *TxSessionManager) AcquireTxSession(ctx context.Context, correlationID 
 	return txSession, correlationID
 }
 
-func (ts *TxSessionManager) ReleaseTxSession(correlationID uuid.UUID) {
+func (ts *TxSessionManager) ReleaseTxSession(correlationID uuid.UUID, ctx context.Context) {
+	tx := ts.sessions[correlationID]
+	defer handleTransaction(tx, ctx)
 	delete(ts.sessions, correlationID)
 }
 
@@ -84,8 +86,7 @@ func ExecTx[T any](ctx context.Context, ts *TxSessionManager, correlationID uuid
 		}
 	}
 
-	defer handleTransaction(txSession, ctx, err)
-	defer ts.ReleaseTxSession(correlationID)
+	defer ts.ReleaseTxSession(correlationID, ctx)
 
 	var data T
 	var dataErr error
@@ -117,8 +118,8 @@ func ExecTxReturnSID[T any](ctx context.Context, ts *TxSessionManager, correlati
 		}
 	}
 
-	defer handleTransaction(txSession, ctx, err)
-	defer ts.ReleaseTxSession(correlationID)
+	defer handleTransaction(txSession, ctx)
+	defer ts.ReleaseTxSession(correlationID, ctx)
 
 	var data T
 	var dataErr error
@@ -127,14 +128,15 @@ func ExecTxReturnSID[T any](ctx context.Context, ts *TxSessionManager, correlati
 	return data, dataErr, correlationID
 }
 
-func handleTransaction(txSession pgx.Tx, ctx context.Context, err error) {
+func handleTransaction(tx pgx.Tx, ctx context.Context) {
+	var err error
 	if p := recover(); p != nil {
-		_ = txSession.Rollback(ctx)
+		_ = tx.Rollback(ctx)
 		panic(p)
 	} else if err != nil {
-		_ = txSession.Rollback(ctx)
+		_ = tx.Rollback(ctx)
 		panic("error")
 	} else {
-		err = txSession.Commit(ctx)
+		err = tx.Commit(ctx)
 	}
 }

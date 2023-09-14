@@ -2,15 +2,26 @@ package main
 
 import (
 	"context"
+	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 	"github.com/ndodanli/go-clean-architecture/configs"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
+	redissrv "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/cache/redis"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/ndodanli/go-clean-architecture/pkg/servers"
 	"github.com/ndodanli/go-clean-architecture/pkg/utils/gracefulexit"
 	"log"
 )
+
+type TestSt struct {
+	Name    string
+	Address string
+	Phone   string
+	Age     int
+	Boolean bool
+	Uuid    uuid.UUID
+}
 
 func main() {
 	log.Println("Starting api server")
@@ -30,18 +41,28 @@ func main() {
 	conn := postgresql.InitPgxPool(cfg, appLogger)
 	defer conn.Close()
 
+	postgresql.Migrate(ctx, conn)
+
 	newServer := servers.NewServer(cfg, &ctx, appLogger)
-
-	//a, err := auth.NewAuth(cfg)
-
-	//if err != nil {
-	//	log.Fatalf("error: app_user: %s", err)
-	//}
 
 	// Initialize http errors
 	httperr.Init()
 
-	newServer.NewHttpServer(conn, appLogger)
+	// Initialize redis
+	client := redissrv.NewRedisService(cfg.Redis)
+	err := client.Ping(ctx)
+	if err != nil {
+		appLogger.Error(err)
+		gracefulexit.TerminateApp(ctx)
+	}
+	defer func(client *redissrv.RedisService) {
+		err = client.Close()
+		if err != nil {
+			appLogger.Error(err)
+		}
+	}(client)
+
+	newServer.NewHttpServer(conn, appLogger, client)
 
 	// Exit from application gracefully
 	gracefulexit.TerminateApp(ctx)

@@ -4,9 +4,9 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/ndodanli/go-clean-architecture/configs"
+	srvcns "github.com/ndodanli/go-clean-architecture/pkg/core/constant"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
-	jwtsvc "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/jwt"
-	srvcns "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services/constants"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
 	"strconv"
 	"strings"
 )
@@ -16,10 +16,10 @@ var (
 )
 
 func Init(cfg *configs.Config) {
-	Authorize = getJWTMiddleware(cfg, jwtsvc.NewJWTService(cfg.Auth))
+	Authorize = getJWTMiddleware(cfg, services.NewJWTService(cfg.Auth))
 }
 
-func getJWTMiddleware(cfg *configs.Config, jwtService jwtsvc.JWTServiceInterface) func(next echo.HandlerFunc) echo.HandlerFunc {
+func getJWTMiddleware(cfg *configs.Config, jwtService services.IJWTService) func(next echo.HandlerFunc) echo.HandlerFunc {
 	validAudiences := strings.Split(cfg.Auth.JWT_AUDIENCES, ",")
 
 	verifyAud := func(audiences []string) bool {
@@ -51,7 +51,7 @@ func getJWTMiddleware(cfg *configs.Config, jwtService jwtsvc.JWTServiceInterface
 			sub, _ := claims.GetSubject()
 			subInt64, _ := strconv.ParseInt(sub, 10, 64)
 
-			c.Set(srvcns.AuthUserKey, &jwtsvc.AuthUser{
+			c.Set(srvcns.AuthUserKey, &services.AuthUser{
 				ID: subInt64,
 			})
 

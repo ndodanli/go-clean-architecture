@@ -10,15 +10,29 @@ type ErrorData struct {
 	ShouldLog bool
 }
 
+// Dynamic errors
 var (
-	InternalServerError *echo.HTTPError
+	BindingError = func(message string) *echo.HTTPError {
+		return echo.NewHTTPError(http.StatusBadRequest, &ErrorData{
+			Message:   "Binding error: " + message,
+			ShouldLog: false,
+		})
+	}
+)
+
+// Static errors
+var (
+	InternalServerError      *echo.HTTPError
+	InvalidRefreshTokenError *echo.HTTPError
 )
 
 var (
-	UserNotFoundError           *echo.HTTPError
-	UnauthorizedError           *echo.HTTPError
-	UnAuthorizedAudienceError   *echo.HTTPError
-	UsernameOrPasswordIncorrect *echo.HTTPError
+	UserNotFoundError                *echo.HTTPError
+	UnauthorizedError                *echo.HTTPError
+	UnAuthorizedAudienceError        *echo.HTTPError
+	UsernameOrPasswordIncorrectError *echo.HTTPError
+	RefreshTokenNotFoundError        *echo.HTTPError
+	RefreshTokenExpiredError         *echo.HTTPError
 )
 
 func Init() {
@@ -38,8 +52,20 @@ func Init() {
 		Message:   "Unauthorized audience",
 		ShouldLog: false,
 	})
-	UsernameOrPasswordIncorrect = echo.NewHTTPError(http.StatusUnauthorized, &ErrorData{
+	UsernameOrPasswordIncorrectError = echo.NewHTTPError(http.StatusUnauthorized, &ErrorData{
 		Message:   "Username or password is incorrect",
 		ShouldLog: false,
+	})
+	RefreshTokenNotFoundError = echo.NewHTTPError(http.StatusUnauthorized, &ErrorData{
+		Message:   "Refresh token not found",
+		ShouldLog: true,
+	})
+	RefreshTokenExpiredError = echo.NewHTTPError(http.StatusUnauthorized, &ErrorData{
+		Message:   "Refresh token expired",
+		ShouldLog: false,
+	})
+	InvalidRefreshTokenError = echo.NewHTTPError(http.StatusBadRequest, &ErrorData{
+		Message:   "Invalid refresh token",
+		ShouldLog: true,
 	})
 }

@@ -6,44 +6,45 @@ import (
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
 	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/unit_of_work"
-	jwtsvc "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/jwt"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/req"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/res"
+	"github.com/ndodanli/go-clean-architecture/pkg/utils"
 	"golang.org/x/crypto/bcrypt"
 	"strconv"
 )
 
-type AuthServiceInterface interface {
+type IAuthService interface {
 	Login(ctx context.Context, payload req.LoginRequest, ts *postgresql.TxSessionManager) *baseres.Result[res.LoginRes, error, struct{}]
+	RefreshToken(ctx context.Context, payload req.RefreshTokenRequest, manager *postgresql.TxSessionManager) *baseres.Result[res.RefreshTokenRes, error, struct{}]
 }
 
 type AuthService struct {
 	uow        uow.UnitOfWorkInterface
-	jwtService jwtsvc.JWTServiceInterface
+	jwtService IJWTService
 }
 
-func NewAuthService(uow uow.UnitOfWorkInterface, jwtService jwtsvc.JWTServiceInterface) AuthServiceInterface {
+func NewAuthService(uow uow.UnitOfWorkInterface, jwtService IJWTService) IAuthService {
 	return &AuthService{uow: uow, jwtService: jwtService}
 }
 
 func (s *AuthService) Login(ctx context.Context, payload req.LoginRequest, ts *postgresql.TxSessionManager) *baseres.Result[res.LoginRes, error, struct{}] {
 	result := baseres.NewResult[res.LoginRes, error, struct{}]()
 
-	userRepo := s.uow.AppUserRepo(ctx)
+	authRepo := s.uow.AuthRepo(ctx)
 
-	repoRes, err := userRepo.GetIdAndPasswordWithUsername(payload.Username, ts)
+	repoRes, err := authRepo.GetIdAndPasswordWithUsername(payload.Username, ts)
 
 	if err != nil {
 		return result.Err(err)
 	}
 
 	if repoRes == nil {
-		return result.Err(httperr.UsernameOrPasswordIncorrect)
+		return result.Err(httperr.UsernameOrPasswordIncorrectError)
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(repoRes.Password), []byte(payload.Password))
 	if err != nil {
-		return result.Err(httperr.UsernameOrPasswordIncorrect)
+		return result.Err(httperr.UsernameOrPasswordIncorrectError)
 	}
 
 	var accessToken string
@@ -53,16 +54,54 @@ func (s *AuthService) Login(ctx context.Context, payload req.LoginRequest, ts *p
 		return result.Err(err)
 	}
 
-	var refreshToken string
-	refreshToken, err = s.jwtService.GenerateRefreshToken(strconv.FormatInt(repoRes.ID, 10))
+	refreshToken, expiresAt := s.jwtService.GenerateRefreshToken()
+
+	_, err = authRepo.CreateNewRefreshToken(repoRes.ID, expiresAt, refreshToken, ts)
 	if err != nil {
 		return result.Err(err)
 	}
 
 	result.Data = res.LoginRes{
 		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+		RefreshToken: refreshToken.String(),
 	}
 
+	return result.Ok()
+}
+
+func (s *AuthService) RefreshToken(ctx context.Context, payload req.RefreshTokenRequest, ts *postgresql.TxSessionManager) *baseres.Result[res.RefreshTokenRes, error, struct{}] {
+	result := baseres.NewResult[res.RefreshTokenRes, error, struct{}]()
+
+	authRepo := s.uow.AuthRepo(ctx)
+
+	repoRes, err, sid := authRepo.GetRefreshTokenWithUUID(payload.RefreshToken, ts)
+	if err != nil {
+		return result.Err(err)
+	}
+
+	if repoRes == nil {
+		return result.Err(httperr.RefreshTokenNotFoundError)
+	}
+
+	if repoRes.ExpiresAt.Before(utils.UTCNow()) {
+		return result.Err(httperr.RefreshTokenExpiredError)
+	}
+
+	refreshToken, expiresAt := s.jwtService.GenerateRefreshToken()
+	var accessToken string
+	accessToken, err = s.jwtService.GenerateAccessToken(strconv.FormatInt(repoRes.AppUserId, 10))
+	if err != nil {
+		return result.Err(err)
+	}
+
+	_, err = authRepo.UpdateRefreshToken(repoRes.ID, expiresAt, refreshToken, sid, ts)
+	if err != nil {
+		return result.Err(err)
+	}
+
+	result.Data = res.RefreshTokenRes{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken.String(),
+	}
 	return result.Ok()
 }

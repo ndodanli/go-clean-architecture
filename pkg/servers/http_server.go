@@ -9,13 +9,14 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/ndodanli/go-clean-architecture/api"
 	"github.com/ndodanli/go-clean-architecture/configs"
-	httpctrl "github.com/ndodanli/go-clean-architecture/internal/server/http/controller"
+	httpctrl "github.com/ndodanli/go-clean-architecture/internal/server/http/ctrl"
+	"github.com/ndodanli/go-clean-architecture/pkg/core/constant"
 	res "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	cstmvalidator "github.com/ndodanli/go-clean-architecture/pkg/core/validator"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
+	redissrv "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/cache/redis"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
 	mw "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/middleware"
-	srvcns "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services/constants"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/swaggo/echo-swagger"
 	"net/http"
@@ -33,7 +34,7 @@ import (
 // @in header
 // @name Authorization
 
-func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger) (e *echo.Echo) {
+func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger, redisService *redissrv.RedisService) (e *echo.Echo) {
 	e = echo.New()
 
 	// Handle ip extraction
@@ -75,8 +76,11 @@ func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger) (e *echo.
 	// Security settings
 	e.Use(middleware.SecureWithConfig(getSecureConfig()))
 
-	// Validator settings
+	// Set custom validator
 	e.Validator = cstmvalidator.NewCustomValidator(validator.New())
+
+	// Set custom binder
+	//e.Binder = cstmbinder.NewCustomBinder()
 
 	// Swagger settings
 	url := echoSwagger.URL("http://localhost:5005/swagger/doc.json")
@@ -91,7 +95,7 @@ func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger) (e *echo.
 	// Register scoped instances(instances that are created per req)
 	e.Use(registerScopedInstances(db))
 
-	httpctrl.RegisterControllers(versionGroup, db, s.cfg)
+	httpctrl.RegisterControllers(versionGroup, db, s.cfg, redisService.Client)
 
 	go func() {
 		address := fmt.Sprintf("%s:%s", s.cfg.Http.HOST, s.cfg.Http.PORT)
@@ -235,7 +239,7 @@ func registerScopedInstances(db *pgxpool.Pool) func(next echo.HandlerFunc) echo.
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			txSessionManager := postgresql.NewTxSessionManager(db)
-			c.Set(srvcns.TxSessionManagerKey, txSessionManager)
+			c.Set(constant.TxSessionManagerKey, txSessionManager)
 			return next(c)
 		}
 	}
