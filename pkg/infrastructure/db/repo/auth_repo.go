@@ -6,7 +6,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
+	"go/types"
 	"time"
 )
 
@@ -14,7 +16,7 @@ type IAuthRepo interface {
 	GetRefreshTokenWithUUID(tokenUUID uuid.UUID, ts *postgresql.TxSessionManager) (*RefreshTokenWithUUIDRepoRes, error, uuid.UUID)
 	UpdateRefreshToken(tokenId int64, expiresAt time.Time, tokenUUID uuid.UUID, sid uuid.UUID, ts *postgresql.TxSessionManager) (any, error)
 	GetIdAndPasswordWithUsername(username string, ts *postgresql.TxSessionManager) (*GetOnlyIdRepoRes, error)
-	CreateNewRefreshToken(appUserId int64, expiresAt time.Time, refreshToken uuid.UUID, ts *postgresql.TxSessionManager) (*RefreshTokenRepoRes, error)
+	UpsertRefreshToken(appUserId int64, expiresAt time.Time, refreshToken uuid.UUID, ts *postgresql.TxSessionManager) (*types.Nil, error)
 }
 
 type AuthRepo struct {
@@ -87,11 +89,29 @@ func (r *AuthRepo) GetIdAndPasswordWithUsername(username string, ts *postgresql.
 	})
 }
 
-func (r *AuthRepo) CreateNewRefreshToken(appUserId int64, expiresAt time.Time, refreshToken uuid.UUID, ts *postgresql.TxSessionManager) (*RefreshTokenRepoRes, error) {
-	return postgresql.ExecTx(r.ctx, ts, uuid.Nil, func(tx pgx.Tx) (*RefreshTokenRepoRes, error) {
-		_, err := tx.Exec(r.ctx,
-			`INSERT INTO refresh_token (app_user_id, token_uuid, expires_at) 
-					VALUES ($1, $2, $3)`,
+func (r *AuthRepo) UpsertRefreshToken(appUserId int64, expiresAt time.Time, refreshToken uuid.UUID, ts *postgresql.TxSessionManager) (*types.Nil, error) {
+	return postgresql.ExecTx(r.ctx, ts, uuid.Nil, func(tx pgx.Tx) (*types.Nil, error) {
+		// Check if user's refresh token is revoked if it exists
+		var revoked bool
+		err := tx.QueryRow(r.ctx, `SELECT revoked FROM refresh_token WHERE app_user_id = $1`, appUserId).Scan(&revoked)
+		if err != nil {
+			if !errors.As(err, &pgx.ErrNoRows) {
+				return nil, err
+			}
+		}
+
+		if revoked {
+			return nil, httperr.InvalidAuthenticationError
+		}
+
+		_, err = tx.Exec(r.ctx,
+			`INSERT INTO refresh_token  (app_user_id, token_uuid, expires_at, created_at, updated_at)
+    					VALUES ($1, $2, $3, NOW(), NOW())
+    					ON CONFLICT (app_user_id) DO UPDATE SET
+						    token_uuid = $2,
+						    expires_at = $3,
+						    updated_at = NOW()
+						    `,
 			appUserId, refreshToken, expiresAt)
 
 		if err != nil {

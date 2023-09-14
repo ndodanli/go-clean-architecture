@@ -148,8 +148,14 @@ func getRequestResponseMiddleware(logger logger.Logger) func(next echo.HandlerFu
 		return func(c echo.Context) error {
 			//logger.Info("Incoming req")
 
-			if err := next(c); err != nil { //exec main process
+			err := next(c)
+			if err != nil { //exec main process
 				c.Error(err)
+			}
+
+			txSessions := c.Get(constant.TxSessionManagerKey)
+			if txSessions != nil {
+				txSessions.(*postgresql.TxSessionManager).ReleaseAllTxSessions(c.Request().Context(), err)
 			}
 
 			//logger.Info("Outgoing response")

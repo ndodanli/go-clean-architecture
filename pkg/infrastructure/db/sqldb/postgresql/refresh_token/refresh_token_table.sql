@@ -11,4 +11,5 @@ CREATE TABLE IF NOT EXISTS refresh_token
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_token_uuid ON refresh_token (token_uuid);
+CREATE INDEX IF NOT EXISTS idx_token_uuid ON refresh_token (token_uuid);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_app_user_id ON refresh_token (app_user_id);

@@ -56,7 +56,7 @@ func (s *AuthService) Login(ctx context.Context, payload req.LoginRequest, ts *p
 
 	refreshToken, expiresAt := s.jwtService.GenerateRefreshToken()
 
-	_, err = authRepo.CreateNewRefreshToken(repoRes.ID, expiresAt, refreshToken, ts)
+	_, err = authRepo.UpsertRefreshToken(repoRes.ID, expiresAt, refreshToken, ts)
 	if err != nil {
 		return result.Err(err)
 	}

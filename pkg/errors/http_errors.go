@@ -30,6 +30,7 @@ var (
 	UserNotFoundError                *echo.HTTPError
 	UnauthorizedError                *echo.HTTPError
 	UnAuthorizedAudienceError        *echo.HTTPError
+	InvalidAuthenticationError       *echo.HTTPError
 	UsernameOrPasswordIncorrectError *echo.HTTPError
 	RefreshTokenNotFoundError        *echo.HTTPError
 	RefreshTokenExpiredError         *echo.HTTPError
@@ -67,5 +68,9 @@ func Init() {
 	InvalidRefreshTokenError = echo.NewHTTPError(http.StatusBadRequest, &ErrorData{
 		Message:   "Invalid refresh token",
 		ShouldLog: true,
+	})
+	InvalidAuthenticationError = echo.NewHTTPError(http.StatusUnauthorized, &ErrorData{
+		Message:   "Invalid authentication",
+		ShouldLog: false,
 	})
 }
