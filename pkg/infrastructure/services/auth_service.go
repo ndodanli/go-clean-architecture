@@ -74,7 +74,7 @@ func (s *AuthService) RefreshToken(ctx context.Context, payload req.RefreshToken
 
 	authRepo := s.uow.AuthRepo(ctx)
 
-	repoRes, err, sid := authRepo.GetRefreshTokenWithUUID(payload.RefreshToken, ts)
+	repoRes, err := authRepo.GetRefreshTokenWithUUID(payload.RefreshToken, ts)
 	if err != nil {
 		return result.Err(err)
 	}
@@ -94,7 +94,7 @@ func (s *AuthService) RefreshToken(ctx context.Context, payload req.RefreshToken
 		return result.Err(err)
 	}
 
-	_, err = authRepo.UpdateRefreshToken(repoRes.ID, expiresAt, refreshToken, sid, ts)
+	_, err = authRepo.UpdateRefreshToken(repoRes.ID, expiresAt, refreshToken, ts)
 	if err != nil {
 		return result.Err(err)
 	}

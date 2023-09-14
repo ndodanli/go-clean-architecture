@@ -9,9 +9,10 @@ import (
 )
 
 type TxSessionManager struct {
-	sessions map[uuid.UUID]pgx.Tx
-	m        *sync.Mutex
-	db       *pgxpool.Pool
+	sessions  map[uuid.UUID]pgx.Tx
+	defaultTx pgx.Tx
+	m         *sync.Mutex
+	db        *pgxpool.Pool
 }
 
 func NewTxSessionManager(db *pgxpool.Pool) *TxSessionManager {
@@ -49,21 +50,36 @@ func (ts *TxSessionManager) AcquireTxSession(ctx context.Context, correlationID 
 	return txSession, correlationID
 }
 
-func (ts *TxSessionManager) ReleaseAllTxSessions(ctx context.Context, err error) {
+func (ts *TxSessionManager) ReleaseAllTxSessions(ctx context.Context, err error) error {
 	ts.m.Lock()
 	defer ts.m.Unlock()
+
+	var panicErr error
+	if ts.defaultTx != nil {
+		panicErr = handleTransaction(ts.defaultTx, ctx, err)
+		if panicErr != nil {
+			return panicErr
+		}
+		ts.defaultTx = nil
+	}
 	for correlationID, tx := range ts.sessions {
 		delete(ts.sessions, correlationID)
-		handleTransaction(tx, ctx, err)
+		panicErr = handleTransaction(tx, ctx, err)
+		if panicErr != nil {
+			return panicErr
+		}
 	}
+
+	return nil
 }
 
-func (ts *TxSessionManager) ReleaseTxSession(correlationID uuid.UUID, ctx context.Context) {
+func (ts *TxSessionManager) ReleaseTxSession(correlationID uuid.UUID, ctx context.Context) error {
 	ts.m.Lock()
 	defer ts.m.Unlock()
 	tx := ts.sessions[correlationID]
 	delete(ts.sessions, correlationID)
-	handleTransaction(tx, ctx, nil)
+	err := handleTransaction(tx, ctx, nil)
+	return err
 }
 
 func (ts *TxSessionManager) beginAndSetTxSession(ctx context.Context, correlationID uuid.UUID) (pgx.Tx, error) {
@@ -79,7 +95,54 @@ func (ts *TxSessionManager) beginAndSetTxSession(ctx context.Context, correlatio
 	return newTx, nil
 }
 
+func ExecDefaultTx[T any](ctx context.Context, ts *TxSessionManager, correlationID uuid.UUID, txFunc func(tx pgx.Tx) (T, error)) (T, error) {
+	ts.m.Lock()
+	var data T
+	if ts.defaultTx == nil {
+		var err error
+		ts.defaultTx, err = ts.db.Begin(ctx)
+		if err != nil {
+			return data, err
+		}
+	}
+	ts.m.Unlock()
+
+	var dataErr error
+	data, dataErr = txFunc(ts.defaultTx)
+
+	return data, dataErr
+}
+
 func ExecTx[T any](ctx context.Context, ts *TxSessionManager, correlationID uuid.UUID, txFunc func(tx pgx.Tx) (T, error)) (T, error) {
+	ts.m.Lock()
+	var data T
+	var err error
+	var txSession pgx.Tx
+	var exists bool
+
+	if correlationID == uuid.Nil {
+		correlationID = uuid.New()
+		txSession, err = ts.beginAndSetTxSession(ctx, correlationID)
+		if err != nil {
+			return data, err
+		}
+	} else {
+		txSession, exists = ts.sessions[correlationID]
+		if !exists {
+			txSession, err = ts.beginAndSetTxSession(ctx, correlationID)
+			if err != nil {
+				return data, err
+			}
+		}
+	}
+
+	var dataErr error
+	data, dataErr = txFunc(txSession)
+
+	return data, dataErr
+}
+
+func ExecAndReleaseTx[T any](ctx context.Context, ts *TxSessionManager, correlationID uuid.UUID, txFunc func(tx pgx.Tx) (T, error)) (T, error) {
 	ts.m.Lock()
 	var err error
 	var txSession pgx.Tx
@@ -103,12 +166,14 @@ func ExecTx[T any](ctx context.Context, ts *TxSessionManager, correlationID uuid
 		}
 	}
 
-	defer ts.ReleaseTxSession(correlationID, ctx)
-
 	var data T
 	var dataErr error
 	data, dataErr = txFunc(txSession)
 
+	panicErr := ts.ReleaseTxSession(correlationID, ctx)
+	if panicErr != nil {
+		return data, panicErr
+	}
 	return data, dataErr
 }
 
@@ -135,22 +200,27 @@ func ExecTxReturnSID[T any](ctx context.Context, ts *TxSessionManager, correlati
 		}
 	}
 
-	defer handleTransaction(txSession, ctx, err)
-	defer ts.ReleaseTxSession(correlationID, ctx)
-
 	var data T
 	var dataErr error
 	data, dataErr = txFunc(txSession)
 
+	panicErr := ts.ReleaseTxSession(correlationID, ctx)
+	if panicErr != nil {
+		return data, panicErr, correlationID
+	}
+
 	return data, dataErr, correlationID
 }
 
-func handleTransaction(tx pgx.Tx, ctx context.Context, err error) {
+func handleTransaction(tx pgx.Tx, ctx context.Context, err error) error {
+	var panicErr error
 	if p := recover(); p != nil {
-		_ = tx.Rollback(ctx)
+		panicErr = tx.Rollback(ctx)
 	} else if err != nil {
-		_ = tx.Rollback(ctx)
+		panicErr = tx.Rollback(ctx)
 	} else {
-		err = tx.Commit(ctx)
+		panicErr = tx.Commit(ctx)
 	}
+
+	return panicErr
 }

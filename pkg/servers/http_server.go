@@ -118,8 +118,11 @@ func getGlobalErrorHandler(logger logger.Logger) func(err error, c echo.Context)
 			if ok {
 				baseHttpApiResult := res.NewResult[any, *echo.HTTPError, any]()
 				baseHttpApiResult.SetErrorMessage(errorData.Message)
-				if errorData.ShouldLog {
+				if errorData.ShouldLogAsError {
 					logger.Error(err)
+				}
+				if errorData.ShouldLogAsInfo {
+					logger.Info(err)
 				}
 				jsonError := c.JSON(he.Code, baseHttpApiResult)
 				if jsonError != nil {
@@ -153,9 +156,13 @@ func getRequestResponseMiddleware(logger logger.Logger) func(next echo.HandlerFu
 				c.Error(err)
 			}
 
+			// Release all tx sessions if there are any
 			txSessions := c.Get(constant.TxSessionManagerKey)
 			if txSessions != nil {
-				txSessions.(*postgresql.TxSessionManager).ReleaseAllTxSessions(c.Request().Context(), err)
+				panicErr := txSessions.(*postgresql.TxSessionManager).ReleaseAllTxSessions(c.Request().Context(), err)
+				if panicErr != nil {
+					logger.Error(panicErr)
+				}
 			}
 
 			//logger.Info("Outgoing response")
