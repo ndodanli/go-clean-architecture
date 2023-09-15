@@ -32,7 +32,7 @@ func NewAuthRepo(db *pgxpool.Pool, ctx context.Context) IAuthRepo {
 }
 
 func (r *AuthRepo) GetRefreshTokenWithUUID(tokenUUID uuid.UUID, ts *postgresql.TxSessionManager) (*RefreshTokenWithUUIDRepoRes, error) {
-	return postgresql.ExecDefaultTx(r.ctx, ts, uuid.Nil, func(tx pgx.Tx) (*RefreshTokenWithUUIDRepoRes, error) {
+	return postgresql.ExecDefaultTx(r.ctx, ts, func(tx pgx.Tx) (*RefreshTokenWithUUIDRepoRes, error) {
 		var res RefreshTokenWithUUIDRepoRes
 		err := tx.QueryRow(r.ctx, `SELECT id, app_user_id, expires_at 
 										FROM refresh_token 
@@ -52,7 +52,7 @@ func (r *AuthRepo) GetRefreshTokenWithUUID(tokenUUID uuid.UUID, ts *postgresql.T
 }
 
 func (r *AuthRepo) UpdateRefreshToken(tokenId int64, expiresAt time.Time, tokenUUID uuid.UUID, ts *postgresql.TxSessionManager) (*GetIdAndPasswordRepoRes, error) {
-	return postgresql.ExecDefaultTx(r.ctx, ts, uuid.Nil, func(tx pgx.Tx) (*GetIdAndPasswordRepoRes, error) {
+	return postgresql.ExecDefaultTx(r.ctx, ts, func(tx pgx.Tx) (*GetIdAndPasswordRepoRes, error) {
 		_, err := tx.Exec(r.ctx,
 			`UPDATE refresh_token 
 					SET token_uuid = $1,
@@ -75,7 +75,7 @@ func (r *AuthRepo) UpdateRefreshToken(tokenId int64, expiresAt time.Time, tokenU
 }
 
 func (r *AuthRepo) GetIdAndPasswordWithUsername(username string, ts *postgresql.TxSessionManager) (*GetIdAndPasswordRepoRes, error) {
-	return postgresql.ExecDefaultTx(r.ctx, ts, uuid.Nil, func(tx pgx.Tx) (*GetIdAndPasswordRepoRes, error) {
+	return postgresql.ExecDefaultTx(r.ctx, ts, func(tx pgx.Tx) (*GetIdAndPasswordRepoRes, error) {
 		var res GetIdAndPasswordRepoRes
 		err := tx.QueryRow(r.ctx, "SELECT id, password FROM app_user WHERE username = $1", username).Scan(&res.ID, &res.Password)
 
@@ -91,7 +91,7 @@ func (r *AuthRepo) GetIdAndPasswordWithUsername(username string, ts *postgresql.
 }
 
 func (r *AuthRepo) UpsertRefreshToken(appUserId int64, expiresAt time.Time, refreshToken uuid.UUID, ts *postgresql.TxSessionManager) (*types.Nil, error) {
-	return postgresql.ExecDefaultTx(r.ctx, ts, uuid.Nil, func(tx pgx.Tx) (*types.Nil, error) {
+	return postgresql.ExecDefaultTx(r.ctx, ts, func(tx pgx.Tx) (*types.Nil, error) {
 		// Check if user's refresh token is revoked if it exists
 		var revoked bool
 		err := tx.QueryRow(r.ctx, `SELECT revoked FROM refresh_token WHERE app_user_id = $1`, appUserId).Scan(&revoked)

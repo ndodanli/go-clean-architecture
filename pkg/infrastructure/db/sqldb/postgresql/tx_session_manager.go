@@ -95,7 +95,7 @@ func (ts *TxSessionManager) beginAndSetTxSession(ctx context.Context, correlatio
 	return newTx, nil
 }
 
-func ExecDefaultTx[T any](ctx context.Context, ts *TxSessionManager, correlationID uuid.UUID, txFunc func(tx pgx.Tx) (T, error)) (T, error) {
+func ExecDefaultTx[T any](ctx context.Context, ts *TxSessionManager, txFunc func(tx pgx.Tx) (T, error)) (T, error) {
 	ts.m.Lock()
 	var data T
 	if ts.defaultTx == nil {
@@ -220,6 +220,42 @@ func handleTransaction(tx pgx.Tx, ctx context.Context, err error) error {
 		panicErr = tx.Rollback(ctx)
 	} else {
 		panicErr = tx.Commit(ctx)
+	}
+
+	return panicErr
+}
+
+func (ts *TxSessionManager) ReleaseAllTxSessionsForTestEnv(ctx context.Context, err error) error {
+	ts.m.Lock()
+	defer ts.m.Unlock()
+
+	var panicErr error
+	if ts.defaultTx != nil {
+		panicErr = handleTransactionForTestEnv(ts.defaultTx, ctx, err)
+		if panicErr != nil {
+			return panicErr
+		}
+		ts.defaultTx = nil
+	}
+	for correlationID, tx := range ts.sessions {
+		delete(ts.sessions, correlationID)
+		panicErr = handleTransactionForTestEnv(tx, ctx, err)
+		if panicErr != nil {
+			return panicErr
+		}
+	}
+
+	return nil
+}
+
+func handleTransactionForTestEnv(tx pgx.Tx, ctx context.Context, err error) error {
+	var panicErr error
+	if p := recover(); p != nil {
+		panicErr = tx.Rollback(ctx)
+	} else if err != nil {
+		panicErr = tx.Rollback(ctx)
+	} else {
+		panicErr = tx.Rollback(ctx)
 	}
 
 	return panicErr

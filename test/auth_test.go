@@ -38,7 +38,7 @@ func setupTest() func(*error) {
 		// Tear down
 		defer db.Close()
 		defer testEnv.CancelContext()
-		txErr := ts.ReleaseAllTxSessions(ctx, *err)
+		txErr := ts.ReleaseAllTxSessionsForTestEnv(ctx, *err)
 		if txErr != nil {
 			fmt.Println(txErr)
 		}
