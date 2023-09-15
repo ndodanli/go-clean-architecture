@@ -14,8 +14,8 @@ import (
 
 type IAuthRepo interface {
 	GetRefreshTokenWithUUID(tokenUUID uuid.UUID, ts *postgresql.TxSessionManager) (*RefreshTokenWithUUIDRepoRes, error)
-	UpdateRefreshToken(tokenId int64, expiresAt time.Time, tokenUUID uuid.UUID, ts *postgresql.TxSessionManager) (*GetOnlyIdRepoRes, error)
-	GetIdAndPasswordWithUsername(username string, ts *postgresql.TxSessionManager) (*GetOnlyIdRepoRes, error)
+	UpdateRefreshToken(tokenId int64, expiresAt time.Time, tokenUUID uuid.UUID, ts *postgresql.TxSessionManager) (*GetIdAndPasswordRepoRes, error)
+	GetIdAndPasswordWithUsername(username string, ts *postgresql.TxSessionManager) (*GetIdAndPasswordRepoRes, error)
 	UpsertRefreshToken(appUserId int64, expiresAt time.Time, refreshToken uuid.UUID, ts *postgresql.TxSessionManager) (*types.Nil, error)
 }
 
@@ -51,8 +51,8 @@ func (r *AuthRepo) GetRefreshTokenWithUUID(tokenUUID uuid.UUID, ts *postgresql.T
 	})
 }
 
-func (r *AuthRepo) UpdateRefreshToken(tokenId int64, expiresAt time.Time, tokenUUID uuid.UUID, ts *postgresql.TxSessionManager) (*GetOnlyIdRepoRes, error) {
-	return postgresql.ExecDefaultTx(r.ctx, ts, uuid.Nil, func(tx pgx.Tx) (*GetOnlyIdRepoRes, error) {
+func (r *AuthRepo) UpdateRefreshToken(tokenId int64, expiresAt time.Time, tokenUUID uuid.UUID, ts *postgresql.TxSessionManager) (*GetIdAndPasswordRepoRes, error) {
+	return postgresql.ExecDefaultTx(r.ctx, ts, uuid.Nil, func(tx pgx.Tx) (*GetIdAndPasswordRepoRes, error) {
 		_, err := tx.Exec(r.ctx,
 			`UPDATE refresh_token 
 					SET token_uuid = $1,
@@ -74,9 +74,9 @@ func (r *AuthRepo) UpdateRefreshToken(tokenId int64, expiresAt time.Time, tokenU
 	})
 }
 
-func (r *AuthRepo) GetIdAndPasswordWithUsername(username string, ts *postgresql.TxSessionManager) (*GetOnlyIdRepoRes, error) {
-	return postgresql.ExecDefaultTx(r.ctx, ts, uuid.Nil, func(tx pgx.Tx) (*GetOnlyIdRepoRes, error) {
-		var res GetOnlyIdRepoRes
+func (r *AuthRepo) GetIdAndPasswordWithUsername(username string, ts *postgresql.TxSessionManager) (*GetIdAndPasswordRepoRes, error) {
+	return postgresql.ExecDefaultTx(r.ctx, ts, uuid.Nil, func(tx pgx.Tx) (*GetIdAndPasswordRepoRes, error) {
+		var res GetIdAndPasswordRepoRes
 		err := tx.QueryRow(r.ctx, "SELECT id, password FROM app_user WHERE username = $1", username).Scan(&res.ID, &res.Password)
 
 		if err != nil {

@@ -9,7 +9,6 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/ndodanli/go-clean-architecture/api"
 	"github.com/ndodanli/go-clean-architecture/configs"
-	httpctrl "github.com/ndodanli/go-clean-architecture/internal/server/http/ctrl"
 	"github.com/ndodanli/go-clean-architecture/pkg/core/constant"
 	res "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	cstmvalidator "github.com/ndodanli/go-clean-architecture/pkg/core/validator"
@@ -95,7 +94,7 @@ func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger, redisServ
 	// Register scoped instances(instances that are created per req)
 	e.Use(registerScopedInstances(db))
 
-	httpctrl.RegisterControllers(versionGroup, db, s.cfg, redisService.Client)
+	RegisterControllers(versionGroup, db, s.cfg, redisService.Client)
 
 	go func() {
 		address := fmt.Sprintf("%s:%s", s.cfg.Http.HOST, s.cfg.Http.PORT)

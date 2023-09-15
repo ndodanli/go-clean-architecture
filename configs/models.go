@@ -86,13 +86,16 @@ type Logger struct {
 
 // Postgresql config
 type Postgresql struct {
-	HOST       string `mapstructure:"HOST,omitempty"`
-	PORT       int    `mapstructure:"PORT,omitempty"`
-	USER       string `mapstructure:"USER,omitempty"`
-	PASS       string `mapstructure:"PASS,omitempty"`
-	DEFAULT_DB string `mapstructure:"DEFAULT_DB,omitempty"`
-	MAX_CONN   int    `mapstructure:"MAX_CONN,omitempty"`
-	DRIVER     string `mapstructure:"DRIVER,omitempty"`
+	HOST               string `mapstructure:"HOST,omitempty"`
+	PORT               int    `mapstructure:"PORT,omitempty"`
+	USER               string `mapstructure:"USER,omitempty"`
+	PASS               string `mapstructure:"PASS,omitempty"`
+	DEFAULT_DB         string `mapstructure:"DEFAULT_DB,omitempty"`
+	MIN_CONN           int    `mapstructure:"MIN_CONN,omitempty"`
+	MAX_CONN           int    `mapstructure:"MAX_CONN,omitempty"`
+	MAX_CONN_LIFETIME  int    `mapstructure:"MAX_CONN_LIFETIME,omitempty"`
+	MAX_CONN_IDLE_TIME int    `mapstructure:"MAX_CONN_IDLE_TIME,omitempty"`
+	DRIVER             string `mapstructure:"DRIVER,omitempty"`
 }
 
 // Mysql config

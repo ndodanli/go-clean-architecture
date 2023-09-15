@@ -10,17 +10,24 @@ import (
 
 func exportConfig() error {
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("./environments/")
+	var configPath string
 	allEnvironments := os.Environ()
 	fmt.Println(allEnvironments)
 	switch os.Getenv("APP_ENV") {
+	case "test":
+		configPath = "../environments/"
+		viper.SetConfigName("test")
 	case "dev":
+		configPath = "./environments/"
 		viper.SetConfigName("dev")
 	case "prod":
+		configPath = "./environments/"
 		viper.SetConfigName("prod")
 	default:
 		viper.SetConfigName("dev")
 	}
+
+	viper.AddConfigPath(configPath)
 
 	if err := viper.ReadInConfig(); err != nil {
 		return err
