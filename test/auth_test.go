@@ -10,6 +10,7 @@ import (
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/req"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
+	"github.com/ndodanli/go-clean-architecture/test/assert"
 	"testing"
 )
 
@@ -24,7 +25,7 @@ var (
 	ts          *postgresql.TxSessionManager
 )
 
-func setupTest() func(*error) {
+func setupTest() func() {
 	// Setup
 	testEnv = SetupTestEnv()
 	cfg = testEnv.Cfg
@@ -34,11 +35,13 @@ func setupTest() func(*error) {
 	log = testEnv.Log
 	appServices = testEnv.AppServices
 	ts = postgresql.NewTxSessionManager(db)
-	return func(err *error) {
+
+	// Disable logs
+	return func() {
 		// Tear down
 		defer db.Close()
 		defer testEnv.CancelContext()
-		txErr := ts.ReleaseAllTxSessionsForTestEnv(ctx, *err)
+		txErr := ts.ReleaseAllTxSessionsForTestEnv(ctx, nil)
 		if txErr != nil {
 			fmt.Println(txErr)
 		}
@@ -46,8 +49,7 @@ func setupTest() func(*error) {
 }
 
 func TestLogin(t *testing.T) {
-	var err error
-	defer setupTest()(&err)
+	defer setupTest()()
 
 	tableTest := []struct {
 		name    string
@@ -62,10 +64,7 @@ func TestLogin(t *testing.T) {
 		t.Run(param.name, func(t *testing.T) {
 			res := appServices.AuthService.Login(ctx, *param.payload, ts)
 			got := res.GetErrorMessage()
-			if got != param.want {
-				err = res.GetError()
-				t.Errorf("got %v want %v", got, param.want)
-			}
+			assert.DeepEqual(t, got, param.want)
 		})
 	}
 

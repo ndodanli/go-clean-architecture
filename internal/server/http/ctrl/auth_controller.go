@@ -23,7 +23,7 @@ func NewAuthController(group *echo.Group, requiredServices *services.AppServices
 		authService:     requiredServices.AuthService,
 	}
 
-	ac.controllerGroup.POST("/login", ac.Login)
+	ac.controllerGroup.POST("/login/:userID", ac.Login)
 	ac.controllerGroup.GET("/refreshToken/:refreshToken", ac.RefreshToken)
 
 	return ac
@@ -52,7 +52,7 @@ func (ac *AuthController) Login(c echo.Context) error {
 		return result.GetError()
 	}
 
-	return c.JSON(http.StatusOK, payload)
+	return c.JSON(http.StatusOK, result)
 }
 
 // RefreshToken godoc

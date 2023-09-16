@@ -43,7 +43,7 @@ func SetupTestEnv() *TestEnv {
 
 	conn := postgresql.InitPgxPool(cfg, appLogger)
 
-	postgresql.Migrate(ctx, conn)
+	//postgresql.Migrate(ctx, conn, appLogger)
 
 	// Initialize http errors
 	httperr.Init()
