@@ -17,8 +17,11 @@ package xormadapter
 import (
 	"errors"
 	"log"
+	"reflect"
 	"runtime"
+	"strconv"
 	"strings"
+	"xorm.io/builder"
 
 	"github.com/lib/pq"
 	"github.com/ndodanli/go-clean-architecture/pkg/casbin/v2/model"
@@ -85,7 +88,7 @@ func finalizer(a *Adapter) {
 // dbSpecified is an optional bool parameter. The default value is false.
 // It's up to whether you have specified an existing DB in dataSourceName.
 // If dbSpecified == true, you need to make sure the DB in dataSourceName exists.
-// If dbSpecified == false, the adapter will automatically create a DB named "app_user".
+// If dbSpecified == false, the adapter will automatically create a DB named "auth".
 func NewAdapter(driverName string, dataSourceName string, dbSpecified ...bool) (*Adapter, error) {
 	a := &Adapter{
 		driverName:     driverName,
@@ -191,7 +194,7 @@ func (a *Adapter) createDatabase() error {
 	}
 
 	if a.driverName == "postgres" {
-		if _, err = engine.Exec("CREATE DATABASE app_user"); err != nil {
+		if _, err = engine.Exec("CREATE DATABASE auth"); err != nil {
 			// 42P04 is	duplicate_database
 			if pqerr, ok := err.(*pq.Error); ok && pqerr.Code == "42P04" {
 				_ = engine.Close()
@@ -199,7 +202,7 @@ func (a *Adapter) createDatabase() error {
 			}
 		}
 	} else if a.driverName != "sqlite3" {
-		_, err = engine.Exec("CREATE DATABASE IF NOT EXISTS app_user")
+		_, err = engine.Exec("CREATE DATABASE IF NOT EXISTS auth")
 	}
 	if err != nil {
 		_ = engine.Close()
@@ -224,11 +227,11 @@ func (a *Adapter) open() error {
 		}
 
 		if a.driverName == "postgres" {
-			engine, err = xorm.NewEngine(a.driverName, a.dataSourceName+" dbname=app_user")
+			engine, err = xorm.NewEngine(a.driverName, a.dataSourceName+" dbname=auth")
 		} else if a.driverName == "sqlite3" {
 			engine, err = xorm.NewEngine(a.driverName, a.dataSourceName)
 		} else {
-			engine, err = xorm.NewEngine(a.driverName, a.dataSourceName+"app_user")
+			engine, err = xorm.NewEngine(a.driverName, a.dataSourceName+"auth")
 		}
 		if err != nil {
 			return err
@@ -357,21 +360,44 @@ func (a *Adapter) AddPolicy(sec string, ptype string, rule []string) error {
 // AddPolicies adds multiple policy rule to the storage.
 func (a *Adapter) AddPolicies(sec string, ptype string, rules [][]string) error {
 	_, err := a.engine.Transaction(func(tx *xorm.Session) (interface{}, error) {
+		policiesToInsert := make([]*CasbinRule, 0, len(rules))
+		existingPolicies := make([]*CasbinRule, 0, len(rules))
+		condition := builder.NewCond()
 		for _, rule := range rules {
-			var err error
-			var isLineExist bool
+			var conditionEq builder.Eq
+			conditionEq = map[string]interface{}{}
+			conditionEq["p_type"] = ptype
+			for i := 0; i < len(rule); i++ {
+				conditionEq["v"+strconv.Itoa(i)] = rule[i]
+			}
+			condition = condition.Or(conditionEq)
+		}
+		err := tx.Table(&CasbinRule{tableName: a.getFullTableName()}).Where(condition).Find(&existingPolicies)
+		if err != nil {
+			return nil, err
+		}
+
+	loop:
+		for _, rule := range rules {
 			line := a.genPolicyLine(ptype, rule)
-			// check if the rule already exists, if it does, skip it
-			isLineExist, err = tx.Get(line)
+			for _, policy := range existingPolicies {
+				if reflect.DeepEqual(line, policy) {
+					continue loop
+				}
+
+			}
+			policiesToInsert = append(policiesToInsert, line)
+		}
+
+		if len(policiesToInsert) > 0 {
+			var c int64
+			c, err = tx.InsertMulti(policiesToInsert)
 			if err != nil {
 				return nil, err
 			}
-			if isLineExist {
-				continue
-			}
-			_, err = tx.InsertOne(line)
-			if err != nil {
-				return nil, err
+			if c == int64(0) {
+				log.Printf("AddPolicies: no policy was inserted")
+				return nil, nil
 			}
 		}
 		return nil, nil
