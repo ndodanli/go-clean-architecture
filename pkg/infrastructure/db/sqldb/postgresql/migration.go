@@ -3,22 +3,33 @@ package postgresql
 import (
 	"context"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/ndodanli/go-clean-architecture/pkg/logger"
+	"os"
 )
 
-func Migrate(ctx context.Context, db *pgxpool.Pool) {
-	// Create refresh_token table if not exists
-	_, _ = db.Exec(ctx, `CREATE TABLE IF NOT EXISTS refresh_token
-(
-    id          SERIAL PRIMARY KEY,
-    app_user_id BIGINT      NOT NULL references app_user (id) ON DELETE CASCADE,
-    token_uuid  UUID        NOT NULL,
-    revoked     BOOLEAN     NOT NULL DEFAULT FALSE,
-    expires_at  TIMESTAMPTZ NOT NULL,
+func Migrate(ctx context.Context, db *pgxpool.Pool, logger *logger.ApiLogger) {
+	currentFilePath, _ := os.Getwd()
+	migrationFilePath := currentFilePath + "/pkg/infrastructure/db/sqldb/postgresql/migration.sql"
+	c, ioErr := os.ReadFile(migrationFilePath)
+	if ioErr != nil {
+		panic(ioErr)
+	}
+	sql := string(c)
 
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);`)
+	type TestError struct {
+		Message string
+		Test    string
+		Boolean bool
+	}
 
-	// Create index for token_uuid column
-	_, _ = db.Exec(ctx, `CREATE INDEX IF NOT EXISTS idx_token_uuid ON refresh_token (token_uuid);`)
+	t := TestError{
+		Message: "test",
+		Test:    "test",
+		Boolean: true,
+	}
+	logger.Error("Test Log", t)
+	_, err := db.Exec(ctx, sql)
+	if err != nil {
+		logger.Error("Test Log", t)
+	}
 }

@@ -40,7 +40,7 @@ func main() {
 
 	conn := postgresql.InitPgxPool(cfg, appLogger)
 
-	postgresql.Migrate(ctx, conn)
+	postgresql.Migrate(ctx, conn, appLogger)
 
 	newServer := servers.NewServer(cfg, &ctx, appLogger)
 
@@ -60,6 +60,19 @@ func main() {
 			appLogger.Error(err)
 		}
 	}(client)
+
+	type data struct {
+		Name string
+	}
+	var str []string = []string{"t"}
+	var d data
+	d, err = redissrv.AcquireHash(ctx, client.Client, "test1", str, func() (data, error) {
+		return data{"test"}, nil
+	})
+	if err != nil {
+		appLogger.Error(err)
+	}
+	appLogger.Info(d)
 
 	newServer.NewHttpServer(conn, appLogger, client)
 

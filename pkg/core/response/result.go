@@ -1,5 +1,11 @@
 package baseres
 
+import (
+	"errors"
+	"github.com/labstack/echo/v4"
+	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
+)
+
 type resultType any
 type ErrorType error
 type metadataType any
@@ -31,7 +37,22 @@ func (r *Result[D, E, M]) GetError() ErrorType {
 }
 
 func (r *Result[D, E, M]) GetErrorMessage() string {
-	return r.error.Error()
+	if r.error != nil {
+		var he *echo.HTTPError
+		if ok := errors.As(r.error, &he); ok {
+			_, ok = he.Message.(*httperr.ErrorData)
+			if ok {
+				return he.Message.(*httperr.ErrorData).Message
+			} else {
+				if _, ok = he.Message.(string); ok {
+					return he.Message.(string)
+				}
+			}
+		}
+		return r.error.Error()
+	} else {
+		return ""
+	}
 }
 
 func (r *Result[D, E, M]) GetMessage() string {

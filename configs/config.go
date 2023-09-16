@@ -24,6 +24,7 @@ func exportConfig() error {
 		configPath = "./environments/"
 		viper.SetConfigName("prod")
 	default:
+		configPath = "./environments/"
 		viper.SetConfigName("dev")
 	}
 

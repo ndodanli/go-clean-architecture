@@ -77,7 +77,7 @@ func (l *ApiLogger) InitLogger() {
 	core := zapcore.NewCore(encoder, logWriter, zap.NewAtomicLevelAt(logLevel))
 	logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 
-	l.sugarLogger = logger.Sugar()
+	l.sugarLogger = logger.Sugar().With()
 	if err := l.sugarLogger.Sync(); err != nil {
 		l.sugarLogger.Error(err)
 	}

@@ -47,13 +47,12 @@ func (ac *AuthController) Login(c echo.Context) error {
 	if err := utils.BindAndValidate(c, &payload); err != nil {
 		return err
 	}
-
 	result := ac.authService.Login(c.Request().Context(), payload, c.Get(srvcns.TxSessionManagerKey).(*postgresql.TxSessionManager))
 	if result.IsError() {
 		return result.GetError()
 	}
 
-	return c.JSON(http.StatusOK, result)
+	return c.JSON(http.StatusOK, payload)
 }
 
 // RefreshToken godoc

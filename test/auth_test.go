@@ -48,25 +48,25 @@ func setupTest() func(*error) {
 func TestLogin(t *testing.T) {
 	var err error
 	defer setupTest()(&err)
-	t.Run("should return jwt and refresh token", func(t *testing.T) {
-		tableTestParams := []struct {
-			name    string
-			payload *req.LoginRequest
-			want    bool
-		}{
-			{"fail authenticate", &req.LoginRequest{Username: "test", Password: "test1234"}, false},
-			{"success authenticate", &req.LoginRequest{Username: "test", Password: "test123"}, true},
-		}
 
-		for _, param := range tableTestParams {
-			t.Run(param.name, func(t *testing.T) {
-				res := appServices.AuthService.Login(ctx, *param.payload, ts)
-				got := res.IsSuccess()
-				if got != param.want {
-					err = res.GetError()
-					t.Errorf("got %v want %v", got, param.want)
-				}
-			})
-		}
-	})
+	tableTest := []struct {
+		name    string
+		payload *req.LoginRequest
+		want    string
+	}{
+		{"fail authenticate", &req.LoginRequest{Username: "test", Password: "test1234"}, "Username or password is incorrect"},
+		{"success authenticate", &req.LoginRequest{Username: "test", Password: "test123"}, ""},
+	}
+
+	for _, param := range tableTest {
+		t.Run(param.name, func(t *testing.T) {
+			res := appServices.AuthService.Login(ctx, *param.payload, ts)
+			got := res.GetErrorMessage()
+			if got != param.want {
+				err = res.GetError()
+				t.Errorf("got %v want %v", got, param.want)
+			}
+		})
+	}
+
 }
