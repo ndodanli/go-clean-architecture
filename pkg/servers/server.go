@@ -21,10 +21,10 @@ const (
 type server struct {
 	cfg    *configs.Config
 	ctx    *context.Context
-	logger logger.Logger
+	logger logger.ILogger
 }
 
 // NewServer constructor
-func NewServer(cfg *configs.Config, ctx *context.Context, logger logger.Logger) *server {
+func NewServer(cfg *configs.Config, ctx *context.Context, logger logger.ILogger) *server {
 	return &server{cfg: cfg, ctx: ctx, logger: logger}
 }

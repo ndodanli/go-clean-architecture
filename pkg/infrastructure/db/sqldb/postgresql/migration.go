@@ -22,14 +22,8 @@ func Migrate(ctx context.Context, db *pgxpool.Pool, logger *logger.ApiLogger) {
 		Boolean bool
 	}
 
-	t := TestError{
-		Message: "test",
-		Test:    "test",
-		Boolean: true,
-	}
-	logger.Error("Test Log", t)
 	_, err := db.Exec(ctx, sql)
 	if err != nil {
-		logger.Error("Test Log", t)
+		logger.Error("Test Log", nil, "app")
 	}
 }

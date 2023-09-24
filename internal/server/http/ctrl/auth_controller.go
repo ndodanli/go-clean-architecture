@@ -1,12 +1,14 @@
 package ctrl
 
 import (
+	"errors"
 	"github.com/labstack/echo/v4"
-	srvcns "github.com/ndodanli/go-clean-architecture/pkg/core/constant"
 	_ "github.com/ndodanli/go-clean-architecture/pkg/core/response"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/constant"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/req"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
+	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/ndodanli/go-clean-architecture/pkg/utils"
 	"net/http"
 )
@@ -15,15 +17,17 @@ type AuthController struct {
 	controllerGroup *echo.Group
 	httpClient      *http.Client
 	authService     services.IAuthService
+	logger          logger.ILogger
 }
 
-func NewAuthController(group *echo.Group, requiredServices *services.AppServices) *AuthController {
+func NewAuthController(group *echo.Group, requiredServices *services.AppServices, logger logger.ILogger) *AuthController {
 	ac := &AuthController{
 		controllerGroup: group.Group("/auth"),
 		authService:     requiredServices.AuthService,
+		logger:          logger,
 	}
 
-	ac.controllerGroup.POST("/login/:userID", ac.Login)
+	ac.controllerGroup.POST("/login", ac.Login)
 	ac.controllerGroup.GET("/refreshToken/:refreshToken", ac.RefreshToken)
 
 	return ac
@@ -44,10 +48,13 @@ func NewAuthController(group *echo.Group, requiredServices *services.AppServices
 // @Router       /v1/auth/login [post]
 func (ac *AuthController) Login(c echo.Context) error {
 	var payload req.LoginRequest
+	traceId := c.Get(constant.General.TraceIDKey)
+	ac.logger.Info("123", errors.New("test error"), traceId.(string))
 	if err := utils.BindAndValidate(c, &payload); err != nil {
 		return err
 	}
-	result := ac.authService.Login(c.Request().Context(), payload, c.Get(srvcns.TxSessionManagerKey).(*postgresql.TxSessionManager))
+
+	result := ac.authService.Login(c.Request().Context(), payload, c.Get(constant.General.TxSessionManagerKey).(*postgresql.TxSessionManager))
 	if result.IsError() {
 		return result.GetError()
 	}
@@ -74,7 +81,7 @@ func (ac *AuthController) RefreshToken(c echo.Context) error {
 		return err
 	}
 
-	result := ac.authService.RefreshToken(c.Request().Context(), payload, c.Get(srvcns.TxSessionManagerKey).(*postgresql.TxSessionManager))
+	result := ac.authService.RefreshToken(c.Request().Context(), payload, c.Get(constant.General.TxSessionManagerKey).(*postgresql.TxSessionManager))
 	if result.IsError() {
 		return result.GetError()
 	}

@@ -7,26 +7,22 @@ import (
 	"os"
 )
 
-// Logger methods interface
-type Logger interface {
+// ILogger methods interface
+type ILogger interface {
 	InitLogger()
-	Debug(args ...interface{})
-	Debugf(template string, args ...interface{})
-	Info(args ...interface{})
-	Infof(template string, args ...interface{})
-	Warn(args ...interface{})
-	Warnf(template string, args ...interface{})
-	Error(args ...interface{})
-	Errorf(template string, args ...interface{})
-	DPanic(args ...interface{})
-	DPanicf(template string, args ...interface{})
-	Fatal(args ...interface{})
-	Fatalf(template string, args ...interface{})
+	Debug(message string, metadata any, traceId string)
+	Info(message string, metadata any, traceId string)
+	Warn(message string, metadata any, traceId string)
+	Error(message string, metadata any, traceId string)
+	DPanic(message string, metadata any, traceId string)
+	Fatal(message string, metadata any, traceId string)
 }
 
 type ApiLogger struct {
 	cfg         *configs.Config
 	sugarLogger *zap.SugaredLogger
+	stdLogger   *zap.Logger
+	requestId   string
 }
 
 func NewApiLogger(cfg *configs.Config) *ApiLogger {
@@ -77,66 +73,48 @@ func (l *ApiLogger) InitLogger() {
 	core := zapcore.NewCore(encoder, logWriter, zap.NewAtomicLevelAt(logLevel))
 	logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 
-	l.sugarLogger = logger.Sugar().With()
-	if err := l.sugarLogger.Sync(); err != nil {
-		l.sugarLogger.Error(err)
+	l.stdLogger = logger
+	if err := l.stdLogger.Sync(); err != nil {
+		l.Error(err.Error(), err, "")
 	}
 }
 
-// Log methods
-
-func (l *ApiLogger) Debug(args ...interface{}) {
-	l.sugarLogger.Debug(args...)
+func (l *ApiLogger) Debug(message string, metadata any, traceId string) {
+	l.stdLogger.Debug(message, constructFields(metadata, traceId)...)
 }
 
-func (l *ApiLogger) Debugf(template string, args ...interface{}) {
-	l.sugarLogger.Debugf(template, args...)
+func (l *ApiLogger) Info(message string, metadata any, traceId string) {
+	l.stdLogger.Info(message, constructFields(metadata, traceId)...)
 }
 
-func (l *ApiLogger) Info(args ...interface{}) {
-	l.sugarLogger.Info(args...)
+func (l *ApiLogger) Warn(message string, metadata any, traceId string) {
+	l.stdLogger.Warn(message, constructFields(metadata, traceId)...)
 }
 
-func (l *ApiLogger) Infof(template string, args ...interface{}) {
-	l.sugarLogger.Infof(template, args...)
+func (l *ApiLogger) Error(message string, metadata any, traceId string) {
+	l.stdLogger.Error(message, constructFields(metadata, traceId)...)
 }
 
-func (l *ApiLogger) Warn(args ...interface{}) {
-	l.sugarLogger.Warn(args...)
+func (l *ApiLogger) DPanic(message string, metadata any, traceId string) {
+	l.stdLogger.DPanic(message, constructFields(metadata, traceId)...)
 }
 
-func (l *ApiLogger) Warnf(template string, args ...interface{}) {
-	l.sugarLogger.Warnf(template, args...)
+func (l *ApiLogger) Panic(message string, metadata any, traceId string) {
+	l.stdLogger.Panic(message, constructFields(metadata, traceId)...)
 }
 
-func (l *ApiLogger) Error(args ...interface{}) {
-	l.sugarLogger.Error(args...)
+func (l *ApiLogger) Fatal(message string, metadata any, traceId string) {
+	l.stdLogger.Fatal(message, constructFields(metadata, traceId)...)
 }
 
-func (l *ApiLogger) Errorf(template string, args ...interface{}) {
-	l.sugarLogger.Errorf(template, args...)
-}
+func constructFields(metadata any, traceId string) []zap.Field {
+	var fields []zap.Field
+	if traceId != "" {
+		fields = append(fields, zap.String("traceId", traceId))
+	}
+	if metadata != nil {
+		fields = append(fields, zap.Any("metadata", metadata))
+	}
 
-func (l *ApiLogger) DPanic(args ...interface{}) {
-	l.sugarLogger.DPanic(args...)
-}
-
-func (l *ApiLogger) DPanicf(template string, args ...interface{}) {
-	l.sugarLogger.DPanicf(template, args...)
-}
-
-func (l *ApiLogger) Panic(args ...interface{}) {
-	l.sugarLogger.Panic(args...)
-}
-
-func (l *ApiLogger) Panicf(template string, args ...interface{}) {
-	l.sugarLogger.Panicf(template, args...)
-}
-
-func (l *ApiLogger) Fatal(args ...interface{}) {
-	l.sugarLogger.Fatal(args...)
-}
-
-func (l *ApiLogger) Fatalf(template string, args ...interface{}) {
-	l.sugarLogger.Fatalf(template, args...)
+	return fields
 }

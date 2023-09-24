@@ -2,10 +2,11 @@ package mw
 
 import (
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/ndodanli/go-clean-architecture/configs"
-	srvcns "github.com/ndodanli/go-clean-architecture/pkg/core/constant"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/constant"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
 	"strconv"
 	"strings"
@@ -13,10 +14,12 @@ import (
 
 var (
 	Authorize func(next echo.HandlerFunc) echo.HandlerFunc
+	TraceID   func(next echo.HandlerFunc) echo.HandlerFunc
 )
 
 func Init(cfg *configs.Config) {
 	Authorize = getJWTMiddleware(cfg, services.NewJWTService(cfg.Auth))
+	TraceID = getTraceIDMiddleware()
 }
 
 func getJWTMiddleware(cfg *configs.Config, jwtService services.IJWTService) func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -51,10 +54,19 @@ func getJWTMiddleware(cfg *configs.Config, jwtService services.IJWTService) func
 			sub, _ := claims.GetSubject()
 			subInt64, _ := strconv.ParseInt(sub, 10, 64)
 
-			c.Set(srvcns.AuthUserKey, &services.AuthUser{
+			c.Set(constant.General.AuthUserKey, &services.AuthUser{
 				ID: subInt64,
 			})
 
+			return next(c)
+		}
+	}
+}
+
+func getTraceIDMiddleware() func(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Set(constant.General.TraceIDKey, uuid.New().String())
 			return next(c)
 		}
 	}

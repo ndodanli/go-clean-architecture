@@ -1,6 +1,7 @@
 package servers
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/go-playground/validator/v10"
@@ -9,18 +10,17 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/ndodanli/go-clean-architecture/api"
 	"github.com/ndodanli/go-clean-architecture/configs"
-	"github.com/ndodanli/go-clean-architecture/pkg/core/constant"
 	res "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	cstmvalidator "github.com/ndodanli/go-clean-architecture/pkg/core/validator"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
 	redissrv "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/cache/redis"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/constant"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
 	mw "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/middleware"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/swaggo/echo-swagger"
 	"net/http"
 	"strings"
-	"time"
 )
 
 // @title Swagger Auth API
@@ -33,8 +33,11 @@ import (
 // @in header
 // @name Authorization
 
-func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger, redisService *redissrv.RedisService) (e *echo.Echo) {
+func (s *server) NewHttpServer(ctx context.Context, db *pgxpool.Pool, logger logger.ILogger, redisService *redissrv.RedisService) (e *echo.Echo) {
 	e = echo.New()
+
+	// Initialize other middlewares
+	mw.Init(s.cfg)
 
 	// Handle ip extraction
 	handleIpExtraction(e, s.cfg)
@@ -66,8 +69,8 @@ func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger, redisServ
 	// Set body limit
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	// Add req id to context
-	e.Use(middleware.RequestID())
+	// Trace ID
+	e.Use(mw.TraceID)
 
 	// Request logger
 	e.Use(middleware.RequestLoggerWithConfig(getLoggerConfig(logger)))
@@ -85,31 +88,36 @@ func (s *server) NewHttpServer(db *pgxpool.Pool, logger logger.Logger, redisServ
 	url := echoSwagger.URL("http://localhost:5005/swagger/doc.json")
 	e.GET("/swagger/*", echoSwagger.EchoWrapHandler(url))
 
-	// Initialize other middlewares
-	mw.Init(s.cfg)
-
 	//Versioning
 	versionGroup := e.Group("/v1")
 
 	// Register scoped instances(instances that are created per req)
 	e.Use(registerScopedInstances(db))
 
-	RegisterControllers(versionGroup, db, s.cfg, redisService.Client)
+	RegisterControllers(versionGroup, db, s.cfg, redisService.Client, logger)
 
 	go func() {
 		address := fmt.Sprintf("%s:%s", s.cfg.Http.HOST, s.cfg.Http.PORT)
 		go func() {
-			time.Sleep(100 * time.Millisecond)
 			fmt.Printf("Routes:\n")
 			printRoutes(e.Routes())
+			select {
+			case done := <-ctx.Done():
+				logger.Info(fmt.Sprintf("Server is shutting down. Reason: %s", done), nil, "app")
+				if err := e.Shutdown(ctx); err != nil {
+					logger.Error("Server shutdown error", err, "app")
+				}
+			}
 		}()
+
 		e.Logger.Fatal(e.Start(address))
+
 	}()
 
 	return
 }
 
-func getGlobalErrorHandler(logger logger.Logger) func(err error, c echo.Context) {
+func getGlobalErrorHandler(logger logger.ILogger) func(err error, c echo.Context) {
 	return func(err error, c echo.Context) {
 		var he *echo.HTTPError
 		if errors.As(err, &he) {
@@ -118,34 +126,34 @@ func getGlobalErrorHandler(logger logger.Logger) func(err error, c echo.Context)
 				baseHttpApiResult := res.NewResult[any, *echo.HTTPError, any]()
 				baseHttpApiResult.SetErrorMessage(errorData.Message)
 				if errorData.ShouldLogAsError {
-					logger.Error(err)
+					logger.Error(errorData.Message, errorData.Metadata, c.Get(constant.General.TraceIDKey).(string))
 				}
 				if errorData.ShouldLogAsInfo {
-					logger.Info(err)
+					logger.Info(errorData.Message, errorData.Metadata, c.Get(constant.General.TraceIDKey).(string))
 				}
 				jsonError := c.JSON(he.Code, baseHttpApiResult)
 				if jsonError != nil {
-					logger.Error(err)
+					logger.Error(err.Error(), err, c.Get(constant.General.TraceIDKey).(string))
 				}
 			} else {
 				jsonError := c.JSON(he.Code, he.Message)
 				if jsonError != nil {
-					logger.Error(err)
+					logger.Error(err.Error(), err, c.Get(constant.General.TraceIDKey).(string))
 				}
 			}
 		} else {
-			logger.Error(err)
+			logger.Error(err.Error(), err, c.Get(constant.General.TraceIDKey).(string))
 			result := res.NewResult[any, *echo.HTTPError, any]()
 			result.SetErrorMessage("Internal Server Error")
 			jsonError := c.JSON(http.StatusInternalServerError, result)
 			if jsonError != nil {
-				logger.Error(err)
+				logger.Error(err.Error(), err, c.Get(constant.General.TraceIDKey).(string))
 			}
 		}
 	}
 }
 
-func getRequestResponseMiddleware(logger logger.Logger) func(next echo.HandlerFunc) echo.HandlerFunc {
+func getRequestResponseMiddleware(logger logger.ILogger) func(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			//logger.Info("Incoming req")
@@ -156,11 +164,11 @@ func getRequestResponseMiddleware(logger logger.Logger) func(next echo.HandlerFu
 			}
 
 			// Release all tx sessions if there are any
-			txSessions := c.Get(constant.TxSessionManagerKey)
+			txSessions := c.Get(constant.General.TxSessionManagerKey)
 			if txSessions != nil {
 				panicErr := txSessions.(*postgresql.TxSessionManager).ReleaseAllTxSessions(c.Request().Context(), err)
 				if panicErr != nil {
-					logger.Error(panicErr)
+					logger.Error("Error while releasing tx sessions", panicErr, c.Get(constant.General.TraceIDKey).(string))
 				}
 			}
 
@@ -203,7 +211,7 @@ func getCorsConfig() middleware.CORSConfig {
 	}
 }
 
-func getLoggerConfig(logger logger.Logger) middleware.RequestLoggerConfig {
+func getLoggerConfig(logger logger.ILogger) middleware.RequestLoggerConfig {
 	return middleware.RequestLoggerConfig{
 		Skipper:      middleware.DefaultSkipper,
 		LogURI:       true,
@@ -211,7 +219,7 @@ func getLoggerConfig(logger logger.Logger) middleware.RequestLoggerConfig {
 		LogMethod:    true,
 		LogRequestID: true,
 		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
-			logger.Infof("Req-Log ID:%s M:%s URI:%s S:%d", v.RequestID, v.Method, v.URI, v.Status)
+			logger.Info(fmt.Sprintf("Req-Log M:%s URI:%s S:%d", v.Method, v.URI, v.Status), nil, c.Get(constant.General.TraceIDKey).(string))
 
 			return nil
 		},
@@ -250,8 +258,9 @@ func getCsrfConfig() middleware.CSRFConfig {
 func registerScopedInstances(db *pgxpool.Pool) func(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
+			// Session manager
 			txSessionManager := postgresql.NewTxSessionManager(db)
-			c.Set(constant.TxSessionManagerKey, txSessionManager)
+			c.Set(constant.General.TxSessionManagerKey, txSessionManager)
 			return next(c)
 		}
 	}

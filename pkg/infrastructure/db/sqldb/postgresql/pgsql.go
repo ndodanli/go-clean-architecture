@@ -7,18 +7,19 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/ndodanli/go-clean-architecture/configs"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
+	"github.com/ndodanli/go-clean-architecture/pkg/utils/gracefulexit"
 	pgxUUID "github.com/vgarvardt/pgx-google-uuid/v5"
 	"os"
 	"time"
 )
 
-func InitPgxPool(cfg *configs.Config, logger logger.Logger) *pgxpool.Pool {
+func InitPgxPool(cfg *configs.Config, logger logger.ILogger) *pgxpool.Pool {
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s", cfg.Postgresql.HOST, cfg.Postgresql.PORT, cfg.Postgresql.USER, cfg.Postgresql.PASS, cfg.Postgresql.DEFAULT_DB)
 
 	pgxConfig, err := pgxpool.ParseConfig(connStr)
 	if err != nil {
-		logger.Error("PostgreSQL connection failed")
-		os.Exit(1)
+		logger.Error("PostgreSQL connection failed", err, "app")
+		gracefulexit.TerminateApp(context.Background())
 	}
 	pgxConfig.MinConns = int32(cfg.Postgresql.MIN_CONN)
 	pgxConfig.MaxConns = int32(cfg.Postgresql.MAX_CONN)
@@ -34,11 +35,11 @@ func InitPgxPool(cfg *configs.Config, logger logger.Logger) *pgxpool.Pool {
 	var conn *pgxpool.Pool
 	conn, err = pgxpool.NewWithConfig(context.TODO(), pgxConfig)
 	if err != nil {
-		logger.Error("PostgreSQL connection failed")
+		logger.Error("PostgreSQL connection failed", err, "app")
 		os.Exit(1)
 	}
 
-	logger.Info("PostgreSQL connection established")
+	logger.Info("PostgreSQL connection established", nil, "app")
 
 	return conn
 }

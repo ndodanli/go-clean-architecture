@@ -11,7 +11,6 @@ import (
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/ndodanli/go-clean-architecture/pkg/servers"
-	"github.com/ndodanli/go-clean-architecture/pkg/utils/gracefulexit"
 	"os"
 )
 
@@ -38,7 +37,7 @@ func SetupTestEnv() *TestEnv {
 	appLogger := logger.NewApiLogger(cfg)
 
 	appLogger.InitLogger()
-	appLogger.Infof("AppVersion: %s, LogLevel: %s, Mode: %s", cfg.Server.APP_VERSION, cfg.Logger.LEVEL, cfg.Server.APP_ENV)
+	appLogger.Info(fmt.Sprintf("AppVersion: %s, LogLevel: %s, Mode: %s", cfg.Server.APP_VERSION, cfg.Logger.LEVEL, cfg.Server.APP_ENV), nil, "app")
 	ctx, cancel := context.WithCancel(context.Background())
 
 	conn := postgresql.InitPgxPool(cfg, appLogger)
@@ -52,13 +51,14 @@ func SetupTestEnv() *TestEnv {
 	client := redissrv.NewRedisService(cfg.Redis)
 	err = client.Ping(ctx)
 	if err != nil {
-		appLogger.Error(err)
-		gracefulexit.TerminateApp(ctx)
+		appLogger.Error(err.Error(), err, "app")
+		cancel()
 	}
 	defer func(client *redissrv.RedisService) {
 		err = client.Close()
 		if err != nil {
-			appLogger.Error(err)
+			appLogger.Error(err.Error(), err, "app")
+			cancel()
 		}
 	}(client)
 

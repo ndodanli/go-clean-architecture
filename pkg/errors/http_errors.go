@@ -7,6 +7,7 @@ import (
 
 type ErrorData struct {
 	Message          string
+	Metadata         interface{}
 	ShouldLogAsError bool
 	ShouldLogAsInfo  bool
 }

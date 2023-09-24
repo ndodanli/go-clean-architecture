@@ -2,6 +2,7 @@ package servers
 
 import (
 	"crypto/tls"
+	"fmt"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -31,7 +32,7 @@ func (s *server) NewGrpcServer() (grpcServer *grpc.Server, err error) {
 
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
-		s.logger.Fatalf("failed to load key pair: %s", err)
+		s.logger.Fatal("failed to load key pair: %s", err, "app")
 	}
 
 	grpcServer = grpc.NewServer(
@@ -53,8 +54,8 @@ func (s *server) NewGrpcServer() (grpcServer *grpc.Server, err error) {
 	}
 
 	go func() {
-		s.logger.Infof("%s gRPC server is listening on port: {%s}", s.cfg.Server.PROJECT_NAME, s.cfg.Grpc.PORT)
-		s.logger.Error(grpcServer.Serve(tcpListener))
+		s.logger.Info(fmt.Sprintf("%s gRPC server is listening on port: {%s}", s.cfg.Server.PROJECT_NAME, s.cfg.Grpc.PORT), nil, "app")
+		s.logger.Error("gRPC server error", grpcServer.Serve(tcpListener), "app")
 	}()
 
 	return

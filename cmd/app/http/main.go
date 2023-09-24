@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 	"github.com/ndodanli/go-clean-architecture/configs"
@@ -25,6 +26,8 @@ type TestSt struct {
 
 func main() {
 	log.Println("Starting api server")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	cfg, errConfig := configs.ParseConfig()
 	if errConfig != nil {
@@ -34,9 +37,7 @@ func main() {
 	appLogger := logger.NewApiLogger(cfg)
 
 	appLogger.InitLogger()
-	appLogger.Infof("AppVersion: %s, LogLevel: %s, Mode: %s", cfg.Server.APP_VERSION, cfg.Logger.LEVEL, cfg.Server.APP_ENV)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	appLogger.Info(fmt.Sprintf("AppVersion: %s, LogLevel: %s, Mode: %s", cfg.Server.APP_VERSION, cfg.Logger.LEVEL, cfg.Server.APP_ENV), nil, "app")
 
 	conn := postgresql.InitPgxPool(cfg, appLogger)
 
@@ -51,33 +52,21 @@ func main() {
 	client := redissrv.NewRedisService(cfg.Redis)
 	err := client.Ping(ctx)
 	if err != nil {
-		appLogger.Error(err)
-		gracefulexit.TerminateApp(ctx)
+		appLogger.Error(err.Error(), err, "app")
+		cancel()
 	}
 	defer func(client *redissrv.RedisService) {
 		err = client.Close()
 		if err != nil {
-			appLogger.Error(err)
+			appLogger.Error(err.Error(), err, "app")
+			cancel()
 		}
 	}(client)
 
-	type data struct {
-		Name string
-	}
-	var str []string = []string{"t"}
-	var d data
-	d, err = redissrv.AcquireHash(ctx, client.Client, "test1", str, func() (data, error) {
-		return data{"test"}, nil
-	})
-	if err != nil {
-		appLogger.Error(err)
-	}
-	appLogger.Info(d)
-
-	newServer.NewHttpServer(conn, appLogger, client)
+	newServer.NewHttpServer(ctx, conn, appLogger, client)
 
 	// Exit from application gracefully
 	gracefulexit.TerminateApp(ctx)
 
-	appLogger.Info("Server Exited Properly")
+	appLogger.Info("Server Exited Properly", nil, "app")
 }

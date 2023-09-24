@@ -33,6 +33,13 @@ func (r *Result[D, E, M]) IsError() bool {
 }
 
 func (r *Result[D, E, M]) GetError() ErrorType {
+	var he *echo.HTTPError
+	if ok := errors.As(r.error, &he); ok {
+		_, ok = he.Message.(*httperr.ErrorData)
+		if ok {
+			he.Message.(*httperr.ErrorData).Metadata = r.metadata
+		}
+	}
 	return r.error
 }
 
