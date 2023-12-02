@@ -6,7 +6,7 @@ import (
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/repo"
 )
 
-type UnitOfWorkInterface interface {
+type IUnitOfWork interface {
 	GetDB() *pgxpool.Pool
 	AppUserRepo(ctx context.Context) repo.IAppUserRepo
 	AuthRepo(ctx context.Context) repo.IAuthRepo

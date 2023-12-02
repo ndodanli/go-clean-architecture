@@ -21,3 +21,18 @@ type redisCns struct {
 var RedisConstants = redisCns{
 	RedisAppUserKey: "r1",
 }
+
+type PpstgreSQLTXStatuses struct {
+	//	'I' - idle / not in transaction
+	//	'T' - in a transaction
+	//	'E' - in a failed transaction
+	Idle              byte
+	InTransaction     byte
+	FailedTransaction byte
+}
+
+var PostgreSQLTXStatuses = PpstgreSQLTXStatuses{
+	Idle:              'I',
+	InTransaction:     'T',
+	FailedTransaction: 'E',
+}

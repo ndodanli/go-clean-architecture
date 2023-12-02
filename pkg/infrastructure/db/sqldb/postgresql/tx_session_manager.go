@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/constant"
 	"sync"
 )
 
@@ -55,7 +56,7 @@ func (ts *TxSessionManager) ReleaseAllTxSessions(ctx context.Context, err error)
 	defer ts.m.Unlock()
 
 	var panicErr error
-	if ts.defaultTx != nil {
+	if ts.defaultTx != nil && ts.defaultTx.Conn().PgConn().TxStatus() == constant.PostgreSQLTXStatuses.InTransaction {
 		panicErr = handleTransaction(ts.defaultTx, ctx, err)
 		if panicErr != nil {
 			return panicErr
@@ -64,7 +65,9 @@ func (ts *TxSessionManager) ReleaseAllTxSessions(ctx context.Context, err error)
 	}
 	for correlationID, tx := range ts.sessions {
 		delete(ts.sessions, correlationID)
-		panicErr = handleTransaction(tx, ctx, err)
+		if tx.Conn().PgConn().TxStatus() == constant.PostgreSQLTXStatuses.InTransaction {
+			panicErr = handleTransaction(tx, ctx, err)
+		}
 		if panicErr != nil {
 			return panicErr
 		}
@@ -98,7 +101,8 @@ func (ts *TxSessionManager) beginAndSetTxSession(ctx context.Context, correlatio
 func ExecDefaultTx[T any](ctx context.Context, ts *TxSessionManager, txFunc func(tx pgx.Tx) (T, error)) (T, error) {
 	ts.m.Lock()
 	var data T
-	if ts.defaultTx == nil {
+
+	if ts.defaultTx == nil || ts.defaultTx.Conn().PgConn().TxStatus() != constant.PostgreSQLTXStatuses.InTransaction {
 		var err error
 		ts.defaultTx, err = ts.db.Begin(ctx)
 		if err != nil {

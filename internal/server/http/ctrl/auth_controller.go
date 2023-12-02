@@ -1,12 +1,11 @@
 package ctrl
 
 import (
-	"errors"
 	"github.com/labstack/echo/v4"
 	_ "github.com/ndodanli/go-clean-architecture/pkg/core/response"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/constant"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/req"
+	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/mediatr"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/mediatr/queries"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/ndodanli/go-clean-architecture/pkg/utils"
@@ -16,14 +15,12 @@ import (
 type AuthController struct {
 	controllerGroup *echo.Group
 	httpClient      *http.Client
-	authService     services.IAuthService
 	logger          logger.ILogger
 }
 
 func NewAuthController(group *echo.Group, requiredServices *services.AppServices, logger logger.ILogger) *AuthController {
 	ac := &AuthController{
 		controllerGroup: group.Group("/auth"),
-		authService:     requiredServices.AuthService,
 		logger:          logger,
 	}
 
@@ -40,26 +37,22 @@ func NewAuthController(group *echo.Group, requiredServices *services.AppServices
 // @Tags         Auth
 // @Accept       json
 // @Produce      json
-// @Param        loginReq body req.LoginRequest true "Username"
-// @Success      200  {object}   baseres.SwaggerSuccessRes[res.LoginRes] "OK. On success."
+// @Param        loginReq body queries.LoginQuery true "Username"
+// @Success      200  {object}   baseres.SwaggerSuccessRes[queries.LoginQueryResponse] "OK. On success."
 // @Failure      400  {object}   baseres.SwaggerValidationErrRes "Bad Request. On any validation error."
 // @Failure      401  {object}   baseres.SwaggerUnauthorizedErrRes "Unauthorized."
 // @Failure      500  {object}   baseres.SwaggerInternalErrRes "Internal Server Error."
 // @Router       /v1/auth/login [post]
 func (ac *AuthController) Login(c echo.Context) error {
-	var payload req.LoginRequest
-	traceId := c.Get(constant.General.TraceIDKey)
-	ac.logger.Info("123", errors.New("test error"), traceId.(string))
-	if err := utils.BindAndValidate(c, &payload); err != nil {
+	var query queries.LoginQuery
+	if err := utils.BindAndValidate(c, &query); err != nil {
 		return err
 	}
-
-	result := ac.authService.Login(c.Request().Context(), payload, c.Get(constant.General.TxSessionManagerKey).(*postgresql.TxSessionManager))
-	if result.IsError() {
-		return result.GetError()
+	res := mediatr.Send[*queries.LoginQuery, *baseres.Result[queries.LoginQueryResponse, error, struct{}]](c, &query)
+	if res.IsError() {
+		return res.GetError()
 	}
-
-	return c.JSON(http.StatusOK, result)
+	return c.JSON(http.StatusOK, res)
 }
 
 // RefreshToken godoc
@@ -70,21 +63,19 @@ func (ac *AuthController) Login(c echo.Context) error {
 // @Accept       json
 // @Produce      json
 // @Param        refreshToken path string true "Refresh Token"
-// @Success      200  {object}   baseres.SwaggerSuccessRes[res.RefreshTokenRes] "OK. On success."
+// @Success      200  {object}   baseres.SwaggerSuccessRes[queries.RefreshTokenQueryResponse] "OK. On success."
 // @Failure      400  {object}   baseres.SwaggerValidationErrRes "Bad Request. On any validation error."
 // @Failure      401  {object}   baseres.SwaggerUnauthorizedErrRes "Unauthorized."
 // @Failure      500  {object}   baseres.SwaggerInternalErrRes "Internal Server Error."
 // @Router       /v1/auth/refreshToken [get]
 func (ac *AuthController) RefreshToken(c echo.Context) error {
-	var payload req.RefreshTokenRequest
-	if err := utils.BindAndValidate(c, &payload); err != nil {
+	var query queries.RefreshTokenQuery
+	if err := utils.BindAndValidate(c, &query); err != nil {
 		return err
 	}
-
-	result := ac.authService.RefreshToken(c.Request().Context(), payload, c.Get(constant.General.TxSessionManagerKey).(*postgresql.TxSessionManager))
-	if result.IsError() {
-		return result.GetError()
+	res := mediatr.Send[*queries.RefreshTokenQuery, *baseres.Result[queries.RefreshTokenQueryResponse, error, struct{}]](c, &query)
+	if res.IsError() {
+		return res.GetError()
 	}
-
-	return c.JSON(http.StatusOK, result)
+	return c.JSON(http.StatusOK, res)
 }

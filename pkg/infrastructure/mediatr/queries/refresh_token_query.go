@@ -1,0 +1,77 @@
+package queries
+
+import (
+	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
+	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
+	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/constant"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
+	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/unit_of_work"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
+	"github.com/ndodanli/go-clean-architecture/pkg/logger"
+	"github.com/ndodanli/go-clean-architecture/pkg/utils"
+	"strconv"
+)
+
+type RefreshTokenQueryHandler struct {
+	uow        uow.IUnitOfWork
+	jwtService services.IJWTService
+	logger     logger.ILogger
+}
+
+func NewRefreshTokenQueryHandler(appServices *services.AppServices, uow uow.IUnitOfWork, logger logger.ILogger) *RefreshTokenQueryHandler {
+	return &RefreshTokenQueryHandler{
+		uow:        uow,
+		jwtService: appServices.JWTService,
+		logger:     logger,
+	}
+}
+
+type RefreshTokenQuery struct {
+	RefreshToken uuid.UUID `param:"refreshToken" validate:"required"`
+}
+
+type RefreshTokenQueryResponse struct {
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+}
+
+func (h *RefreshTokenQueryHandler) Handle(echoCtx echo.Context, query *RefreshTokenQuery) *baseres.Result[RefreshTokenQueryResponse, error, struct{}] {
+	result := baseres.NewResult[RefreshTokenQueryResponse, error, struct{}]()
+	ctx := echoCtx.Request().Context()
+	ts := echoCtx.Get(constant.General.TxSessionManagerKey).(*postgresql.TxSessionManager)
+	authRepo := h.uow.AuthRepo(ctx)
+
+	repoRes, err := authRepo.GetRefreshTokenWithUUID(query.RefreshToken, ts)
+	if err != nil {
+		return result.Err(err)
+	}
+
+	if repoRes == nil {
+		return result.Err(httperr.RefreshTokenNotFoundError)
+	}
+
+	if repoRes.ExpiresAt.Before(utils.UTCNow()) {
+		return result.Err(httperr.RefreshTokenExpiredError)
+	}
+
+	refreshToken, expiresAt := h.jwtService.GenerateRefreshToken()
+	var accessToken string
+	accessToken, err = h.jwtService.GenerateAccessToken(strconv.FormatInt(repoRes.AppUserId, 10))
+	if err != nil {
+		return result.Err(err)
+	}
+
+	_, err = authRepo.UpdateRefreshToken(repoRes.ID, expiresAt, refreshToken, ts)
+	if err != nil {
+		return result.Err(err)
+	}
+
+	result.Data = RefreshTokenQueryResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken.String(),
+	}
+
+	return result.Ok()
+}

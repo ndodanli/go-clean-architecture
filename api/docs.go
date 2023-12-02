@@ -32,7 +32,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "app_user"
+                    "Auth"
                 ],
                 "summary": "Login",
                 "parameters": [
@@ -42,7 +42,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/req.LoginRequest"
+                            "$ref": "#/definitions/queries.LoginQuery"
                         }
                     }
                 ],
@@ -50,7 +50,62 @@ const docTemplate = `{
                     "200": {
                         "description": "OK. On success.",
                         "schema": {
-                            "$ref": "#/definitions/baseres.SwaggerSuccessRes-res_LoginRes"
+                            "$ref": "#/definitions/baseres.SwaggerSuccessRes-queries_LoginQueryResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request. On any validation error.",
+                        "schema": {
+                            "$ref": "#/definitions/baseres.SwaggerValidationErrRes"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized.",
+                        "schema": {
+                            "$ref": "#/definitions/baseres.SwaggerUnauthorizedErrRes"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error.",
+                        "schema": {
+                            "$ref": "#/definitions/baseres.SwaggerInternalErrRes"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/auth/refreshToken": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "RefreshToken",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "RefreshToken",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Refresh Token",
+                        "name": "refreshToken",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK. On success.",
+                        "schema": {
+                            "$ref": "#/definitions/baseres.SwaggerSuccessRes-queries_RefreshTokenQueryResponse"
                         }
                     },
                     "400": {
@@ -89,11 +144,27 @@ const docTemplate = `{
                 }
             }
         },
-        "baseres.SwaggerSuccessRes-res_LoginRes": {
+        "baseres.SwaggerSuccessRes-queries_LoginQueryResponse": {
             "type": "object",
             "properties": {
                 "d": {
-                    "$ref": "#/definitions/res.LoginRes"
+                    "$ref": "#/definitions/queries.LoginQueryResponse"
+                },
+                "m": {
+                    "type": "string",
+                    "example": "XXX Created/Updated/Deleted Successfully"
+                },
+                "s": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "baseres.SwaggerSuccessRes-queries_RefreshTokenQueryResponse": {
+            "type": "object",
+            "properties": {
+                "d": {
+                    "$ref": "#/definitions/queries.RefreshTokenQueryResponse"
                 },
                 "m": {
                     "type": "string",
@@ -146,7 +217,7 @@ const docTemplate = `{
                 }
             }
         },
-        "req.LoginRequest": {
+        "queries.LoginQuery": {
             "type": "object",
             "required": [
                 "password",
@@ -163,7 +234,18 @@ const docTemplate = `{
                 }
             }
         },
-        "res.LoginRes": {
+        "queries.LoginQueryResponse": {
+            "type": "object",
+            "properties": {
+                "accessToken": {
+                    "type": "string"
+                },
+                "refreshToken": {
+                    "type": "string"
+                }
+            }
+        },
+        "queries.RefreshTokenQueryResponse": {
             "type": "object",
             "properties": {
                 "accessToken": {

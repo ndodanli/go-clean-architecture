@@ -8,10 +8,21 @@ definitions:
         example: false
         type: boolean
     type: object
-  baseres.SwaggerSuccessRes-res_LoginRes:
+  baseres.SwaggerSuccessRes-queries_LoginQueryResponse:
     properties:
       d:
-        $ref: '#/definitions/res.LoginRes'
+        $ref: '#/definitions/queries.LoginQueryResponse'
+      m:
+        example: XXX Created/Updated/Deleted Successfully
+        type: string
+      s:
+        example: true
+        type: boolean
+    type: object
+  baseres.SwaggerSuccessRes-queries_RefreshTokenQueryResponse:
+    properties:
+      d:
+        $ref: '#/definitions/queries.RefreshTokenQueryResponse'
       m:
         example: XXX Created/Updated/Deleted Successfully
         type: string
@@ -47,7 +58,7 @@ definitions:
         example: age
         type: string
     type: object
-  req.LoginRequest:
+  queries.LoginQuery:
     properties:
       password:
         maxLength: 20
@@ -59,7 +70,14 @@ definitions:
     - password
     - username
     type: object
-  res.LoginRes:
+  queries.LoginQueryResponse:
+    properties:
+      accessToken:
+        type: string
+      refreshToken:
+        type: string
+    type: object
+  queries.RefreshTokenQueryResponse:
     properties:
       accessToken:
         type: string
@@ -85,14 +103,14 @@ paths:
         name: loginReq
         required: true
         schema:
-          $ref: '#/definitions/req.LoginRequest'
+          $ref: '#/definitions/queries.LoginQuery'
       produces:
       - application/json
       responses:
         "200":
           description: OK. On success.
           schema:
-            $ref: '#/definitions/baseres.SwaggerSuccessRes-res_LoginRes'
+            $ref: '#/definitions/baseres.SwaggerSuccessRes-queries_LoginQueryResponse'
         "400":
           description: Bad Request. On any validation error.
           schema:
@@ -109,7 +127,42 @@ paths:
       - BearerAuth: []
       summary: Login
       tags:
-      - app_user
+      - Auth
+  /v1/auth/refreshToken:
+    get:
+      consumes:
+      - application/json
+      description: RefreshToken
+      parameters:
+      - description: Refresh Token
+        in: path
+        name: refreshToken
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK. On success.
+          schema:
+            $ref: '#/definitions/baseres.SwaggerSuccessRes-queries_RefreshTokenQueryResponse'
+        "400":
+          description: Bad Request. On any validation error.
+          schema:
+            $ref: '#/definitions/baseres.SwaggerValidationErrRes'
+        "401":
+          description: Unauthorized.
+          schema:
+            $ref: '#/definitions/baseres.SwaggerUnauthorizedErrRes'
+        "500":
+          description: Internal Server Error.
+          schema:
+            $ref: '#/definitions/baseres.SwaggerInternalErrRes'
+      security:
+      - BearerAuth: []
+      summary: RefreshToken
+      tags:
+      - Auth
 securityDefinitions:
   BearerAuth:
     in: header
