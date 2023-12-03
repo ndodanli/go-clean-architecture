@@ -52,7 +52,7 @@ type Auth struct {
 
 // Http config
 type Http struct {
-	HOST                string        `mapstructure:"HOST,omitempty"`
+	HOST                string        `mapstructure:"IP,omitempty"`
 	PORT                string        `mapstructure:"PORT,omitempty"`
 	TIMEOUT             time.Duration `mapstructure:"TIMEOUT,omitempty"`
 	READ_TIMEOUT        time.Duration `mapstructure:"READ_TIMEOUT,omitempty"`
@@ -130,14 +130,15 @@ type MongoDB struct {
 
 // Redis config
 type Redis struct {
-	HOST          string `mapstructure:"HOST,omitempty"`
-	PORT          int    `mapstructure:"PORT,omitempty"`
-	USER          string `mapstructure:"USER,omitempty"`
-	PASS          string `mapstructure:"PASS,omitempty"`
-	DEFAULT_DB    int    `mapstructure:"DEFAULT_DB,omitempty"`
-	MIN_IDLE_CONN int    `mapstructure:"MIN_IDLE_CONN,omitempty"`
-	POOL_SIZE     int    `mapstructure:"POOL_SIZE,omitempty"`
-	POOL_TIMEOUT  int    `mapstructure:"POOL_TIMEOUT,omitempty"`
+	IP               string `mapstructure:"IP,omitempty"`
+	PORT             int    `mapstructure:"PORT,omitempty"`
+	USERNAME         string `mapstructure:"USERNAME,omitempty"`
+	PASSWORD         string `mapstructure:"PASSWORD,omitempty"`
+	DEFAULT_DB       int    `mapstructure:"DEFAULT_DB,omitempty"`
+	MIN_IDLE_CONN    int    `mapstructure:"MIN_IDLE_CONN,omitempty"`
+	POOL_SIZE        int    `mapstructure:"POOL_SIZE,omitempty"`
+	POOL_TIMEOUT     int    `mapstructure:"POOL_TIMEOUT,omitempty"`
+	SERVER_CA_BASE64 string `mapstructure:"SERVER_CA_BASE64,omitempty"`
 }
 
 // Clickhouse config

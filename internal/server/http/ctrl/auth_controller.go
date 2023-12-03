@@ -49,8 +49,8 @@ func (ac *AuthController) Login(c echo.Context) error {
 		return err
 	}
 	res := mediatr.Send[*queries.LoginQuery, *baseres.Result[queries.LoginQueryResponse, error, struct{}]](c, &query)
-	if res.IsError() {
-		return res.GetError()
+	if res.IsErr() {
+		return res.GetErr()
 	}
 	return c.JSON(http.StatusOK, res)
 }
@@ -74,8 +74,8 @@ func (ac *AuthController) RefreshToken(c echo.Context) error {
 		return err
 	}
 	res := mediatr.Send[*queries.RefreshTokenQuery, *baseres.Result[queries.RefreshTokenQueryResponse, error, struct{}]](c, &query)
-	if res.IsError() {
-		return res.GetError()
+	if res.IsErr() {
+		return res.GetErr()
 	}
 	return c.JSON(http.StatusOK, res)
 }

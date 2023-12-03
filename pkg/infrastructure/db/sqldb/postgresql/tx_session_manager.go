@@ -56,7 +56,7 @@ func (ts *TxSessionManager) ReleaseAllTxSessions(ctx context.Context, err error)
 	defer ts.m.Unlock()
 
 	var panicErr error
-	if ts.defaultTx != nil && ts.defaultTx.Conn().PgConn().TxStatus() == constant.PostgreSQLTXStatuses.InTransaction {
+	if ts.defaultTx != nil && (ts.defaultTx.Conn().PgConn().TxStatus() == constant.PostgreSQLTXStatuses.InTransaction || ts.defaultTx.Conn().PgConn().TxStatus() == constant.PostgreSQLTXStatuses.FailedTransaction) {
 		panicErr = handleTransaction(ts.defaultTx, ctx, err)
 		if panicErr != nil {
 			return panicErr
@@ -102,7 +102,7 @@ func ExecDefaultTx[T any](ctx context.Context, ts *TxSessionManager, txFunc func
 	ts.m.Lock()
 	var data T
 
-	if ts.defaultTx == nil || ts.defaultTx.Conn().PgConn().TxStatus() != constant.PostgreSQLTXStatuses.InTransaction {
+	if ts.defaultTx == nil || ts.defaultTx.Conn().PgConn().TxStatus() != constant.PostgreSQLTXStatuses.InTransaction || ts.defaultTx.Conn().PgConn().TxStatus() == constant.PostgreSQLTXStatuses.FailedTransaction {
 		var err error
 		ts.defaultTx, err = ts.db.Begin(ctx)
 		if err != nil {

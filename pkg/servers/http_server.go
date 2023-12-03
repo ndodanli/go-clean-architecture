@@ -13,10 +13,10 @@ import (
 	res "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	cstmvalidator "github.com/ndodanli/go-clean-architecture/pkg/core/validator"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
-	redissrv "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/cache/redis"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/constant"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
 	mw "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/middleware"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services/redissrv"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/swaggo/echo-swagger"
 	"net/http"
@@ -94,7 +94,7 @@ func (s *server) NewHttpServer(ctx context.Context, db *pgxpool.Pool, logger log
 	// Register scoped instances(instances that are created per req)
 	e.Use(registerScopedInstances(db))
 
-	RegisterControllers(versionGroup, db, s.cfg, redisService.Client, logger)
+	RegisterControllers(versionGroup, db, s.cfg, redisService, logger)
 
 	go func() {
 		address := fmt.Sprintf("%s:%s", s.cfg.Http.HOST, s.cfg.Http.PORT)

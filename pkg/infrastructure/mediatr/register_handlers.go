@@ -12,6 +12,13 @@ import (
 func RegisterMediatrHandlers(db *pgxpool.Pool, appServices *services.AppServices, uow uow.IUnitOfWork, logger logger.ILogger) error {
 	var err error
 	err = RegisterRequestHandler[
+		*queries.TestQuery, *baseres.Result[queries.TestQueryResponse, error, struct{}],
+	](queries.NewTestQueryHandler(appServices, uow, logger))
+	if err != nil {
+		return err
+	}
+
+	err = RegisterRequestHandler[
 		*queries.LoginQuery, *baseres.Result[queries.LoginQueryResponse, error, struct{}],
 	](queries.NewLoginQueryHandler(appServices, uow, logger))
 	if err != nil {

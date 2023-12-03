@@ -42,7 +42,6 @@ func (h *LoginQueryHandler) Handle(echoCtx echo.Context, query *LoginQuery) *bas
 	ctx := echoCtx.Request().Context()
 	tm := echoCtx.Get(constant.General.TxSessionManagerKey).(*postgresql.TxSessionManager)
 	authRepo := h.uow.AuthRepo(ctx)
-
 	repoRes, err := authRepo.GetIdAndPasswordWithUsername(query.Username, tm)
 
 	if err != nil {

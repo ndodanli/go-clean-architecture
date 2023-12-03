@@ -28,11 +28,11 @@ func (r *Result[D, E, M]) IsSuccess() bool {
 	return r.Success
 }
 
-func (r *Result[D, E, M]) IsError() bool {
+func (r *Result[D, E, M]) IsErr() bool {
 	return !r.Success
 }
 
-func (r *Result[D, E, M]) GetError() ErrorType {
+func (r *Result[D, E, M]) GetErr() ErrorType {
 	var he *echo.HTTPError
 	if ok := errors.As(r.error, &he); ok {
 		_, ok = he.Message.(*httperr.ErrorData)

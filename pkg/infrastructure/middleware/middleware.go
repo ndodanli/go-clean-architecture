@@ -54,7 +54,7 @@ func getJWTMiddleware(cfg *configs.Config, jwtService services.IJWTService) func
 			sub, _ := claims.GetSubject()
 			subInt64, _ := strconv.ParseInt(sub, 10, 64)
 
-			c.Set(constant.General.AuthUserKey, &services.AuthUser{
+			c.Set(constant.General.AuthUserId, &services.AuthUser{
 				ID: subInt64,
 			})
 

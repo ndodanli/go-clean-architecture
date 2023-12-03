@@ -4,14 +4,14 @@ type generalCns struct {
 	UnitOfWorkKey       string
 	TraceIDKey          string
 	TxSessionManagerKey string
-	AuthUserKey         string
+	AuthUserId          string
 }
 
 var General = generalCns{
 	UnitOfWorkKey:       "g1",
 	TraceIDKey:          "g2",
 	TxSessionManagerKey: "g3",
-	AuthUserKey:         "g4",
+	AuthUserId:          "g4",
 }
 
 type redisCns struct {
@@ -23,9 +23,9 @@ var RedisConstants = redisCns{
 }
 
 type PpstgreSQLTXStatuses struct {
-	//	'I' - idle / not in transaction
-	//	'T' - in a transaction
-	//	'E' - in a failed transaction
+	//	'I' - idle / not in transaction => 73
+	//	'T' - in a transaction => 84
+	//	'E' - in a failed transaction => 69
 	Idle              byte
 	InTransaction     byte
 	FailedTransaction byte

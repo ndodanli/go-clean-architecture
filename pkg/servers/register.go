@@ -8,8 +8,8 @@ import (
 	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/unit_of_work"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/mediatr"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services/redissrv"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
-	"github.com/redis/go-redis/v9"
 )
 
 type AppController struct {
@@ -18,9 +18,9 @@ type AppController struct {
 	*echo.Echo
 }
 
-func RegisterControllers(e *echo.Group, db *pgxpool.Pool, cfg *configs.Config, redisClient *redis.Client, logger logger.ILogger) {
+func RegisterControllers(e *echo.Group, db *pgxpool.Pool, cfg *configs.Config, redisService redissrv.IRedisService, logger logger.ILogger) {
 	unitOfWork := uow.NewUnitOfWork(db)
-	appServices := InitializeAppServices(unitOfWork, cfg, redisClient)
+	appServices := InitializeAppServices(unitOfWork, cfg, redisService)
 	ctrl.NewAuthController(e, appServices, logger)
 	ctrl.NewTestController(e, logger)
 
@@ -30,8 +30,9 @@ func RegisterControllers(e *echo.Group, db *pgxpool.Pool, cfg *configs.Config, r
 	}
 }
 
-func InitializeAppServices(uow uow.IUnitOfWork, cfg *configs.Config, redisClient *redis.Client) *services.AppServices {
+func InitializeAppServices(uow uow.IUnitOfWork, cfg *configs.Config, redisService redissrv.IRedisService) *services.AppServices {
 	var appServices services.AppServices
 	appServices.JWTService = services.NewJWTService(cfg.Auth)
+	appServices.RedisService = redisService
 	return &appServices
 }

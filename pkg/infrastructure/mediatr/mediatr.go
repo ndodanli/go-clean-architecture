@@ -172,7 +172,7 @@ func Send[TRequest any, TResponse any](echoCtx echo.Context, request TRequest) T
 	handlerValue, ok := buildRequestHandler[TRequest, TResponse](handler)
 	if !ok {
 		//return *new(TResponse), errors.Errorf("handler for request %T is not a Handler", request)
-		echoCtx.Logger().Error("no handler for request %T", request)
+		echoCtx.Logger().Error("handler for request %T is not a Handler", request)
 		baseHttpApiResult := res.NewResult[any, *echo.HTTPError, any]()
 		baseHttpApiResult.SetErrorMessage("Internal Server Error")
 		echoCtx.JSON(500, baseHttpApiResult)

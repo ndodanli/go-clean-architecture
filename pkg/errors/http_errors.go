@@ -29,7 +29,7 @@ var (
 )
 
 var (
-	UserNotFoundError                *echo.HTTPError
+	AppUserNotFoundError             *echo.HTTPError
 	UnauthorizedError                *echo.HTTPError
 	UnAuthorizedAudienceError        *echo.HTTPError
 	InvalidAuthenticationError       *echo.HTTPError
@@ -46,7 +46,7 @@ func Init() {
 	UnauthorizedError = echo.NewHTTPError(http.StatusUnauthorized, &ErrorData{
 		Message: "Unauthorized",
 	})
-	UserNotFoundError = echo.NewHTTPError(http.StatusNotFound, &ErrorData{
+	AppUserNotFoundError = echo.NewHTTPError(http.StatusNotFound, &ErrorData{
 		Message: "User not found",
 	})
 	UnAuthorizedAudienceError = echo.NewHTTPError(http.StatusUnauthorized, &ErrorData{
