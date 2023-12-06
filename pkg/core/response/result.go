@@ -20,6 +20,8 @@ type Result[D resultType, E ErrorType, M metadataType] struct {
 	Message          string            `json:"m,omitempty"`
 	Data             D                 `json:"d,omitempty"`
 	ValidationErrors []ValidationError `json:"v,omitempty"`
+	TestArray        []int             `json:"testArray,omitempty"`
+	TestMap          map[string]int    `json:"testMap,omitempty"`
 	error            ErrorType
 	metadata         metadataType
 }

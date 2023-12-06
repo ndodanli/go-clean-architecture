@@ -21,7 +21,7 @@ func main() {
 	appLogger := logger.NewApiLogger(cfg)
 
 	appLogger.InitLogger()
-	appLogger.Infof("AppVersion: %s, LogLevel: %s, Mode: %s", cfg.Server.APP_VERSION, cfg.Logger.LEVEL, cfg.Server.APP_ENV)
+	//appLogger.Info("AppVersion: %s, LogLevel: %s, Mode: %s", cfg.Server.APP_VERSION, cfg.Logger.LEVEL, cfg.Server.APP_ENV)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -45,5 +45,5 @@ func main() {
 	gracefulexit.TerminateApp(ctx)
 
 	grpcServer.GracefulStop()
-	appLogger.Info("Server Exited Properly")
+	//appLogger.Info("Server Exited Properly")
 }

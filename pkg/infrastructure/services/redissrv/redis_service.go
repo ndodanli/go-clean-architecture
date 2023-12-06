@@ -119,10 +119,92 @@ func (r *RedisService) Ping(ctx context.Context) error {
 // @param value string
 // @param ttl int64 seconds
 // @return error
-func (r *RedisService) SetString(ctx context.Context, key string, value string, ttl int64) error {
-	valueSet := r.redisClient.Set(ctx, key, value, time.Duration(ttl)*time.Second)
+func SetString(ctx context.Context, c *redis.Client, key string, value string, ttl int64) error {
+	valueSet := c.Set(ctx, key, value, time.Duration(ttl)*time.Second)
 	if valueSet.Err() != nil {
 		return valueSet.Err()
+	}
+	return nil
+}
+
+// SetHash is a function that sets the value of the key to the Redis cache.
+// @param ctx context.Context
+// @param r *redis.Client
+// @param masterKey string
+// @param value interface{} - value must be a struct or a pointer to a struct
+// @param ttl int64 seconds
+// @return error
+func SetHash(ctx context.Context, c *redis.Client, masterKey string, value interface{}, ttl int64) error {
+	val := reflect.ValueOf(value)
+	typ := reflect.TypeOf(value)
+	if val.Kind() == reflect.Ptr {
+		if val.IsNil() {
+			return apperr.ReturnFuncValueNil
+		} else {
+			val = val.Elem()
+			typ = typ.Elem()
+		}
+	}
+	hashData := make(map[string]string)
+	for i := 0; i < val.NumField(); i++ {
+		valField := val.Field(i)
+		if !val.Field(i).CanInterface() {
+			continue
+		}
+		valFieldInterface := valField.Interface()
+		if valFieldInterface == nil ||
+			valFieldInterface == "" ||
+			valFieldInterface == 0 ||
+			valFieldInterface == false ||
+			(valField.Kind() == reflect.Slice && valField.IsNil()) ||
+			(valField.Kind() == reflect.Map && valField.IsNil()) ||
+			(valField.Kind() == reflect.Ptr && valField.IsNil()) ||
+			(valField.Kind() == reflect.Struct && valField.IsZero()) {
+			continue
+		}
+
+		typeField := typ.Field(i)
+		fieldValue, err := json.Marshal(valFieldInterface)
+		if err != nil {
+			return err
+		}
+		hashData[typeField.Name] = string(fieldValue)
+	}
+	err := c.HSet(ctx, masterKey, hashData).Err()
+	if err != nil {
+		return err
+	}
+	if ttl > 0 {
+		err = c.Expire(ctx, masterKey, time.Duration(ttl)*time.Second).Err()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// SetHashField is a function that sets the value of the key to the Redis cache.
+// @param ctx context.Context
+// @param r *redis.Client
+// @param masterKey string
+// @param field string
+// @param value interface{}
+// @param ttl int64 seconds
+// @return error
+func SetHashField(ctx context.Context, c *redis.Client, masterKey string, field string, value interface{}, ttl int64) error {
+	serialized, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+	valueSet := c.HSet(ctx, masterKey, field, serialized)
+	if valueSet.Err() != nil {
+		return valueSet.Err()
+	}
+	if ttl > 0 {
+		err = c.Expire(ctx, masterKey, time.Duration(ttl)*time.Second).Err()
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -174,21 +256,32 @@ func AcquireString[T any](ctx context.Context, c *redis.Client, key string, ttl 
 // If the value is not in the cache, it calls the function and sets the value to the cache.
 // @param ctx context.Context
 // @param r *redis.Client
-// @param key string
+// @param masterKey string
 // @param ttl int64 seconds
 // @param desiredKeys []string - desired keys to get from hash, if empty, all keys will be fetched
-// @param fn func() (T, error)
+// @param fn func() (T, error) - Function must return a struct or a pointer to a struct
 // @return T
 // @return error
-func AcquireHash[T any](ctx context.Context, c *redis.Client, key string, ttl int64, desiredKeys []string, fn func() (T, error)) (T, error) {
+func AcquireHash[T any](ctx context.Context, c *redis.Client, masterKey string, ttl int64, desiredKeys []string, fn func() (T, error)) (T, error) {
 	var isErr bool = false
 	var result T
 	var err error
 	val := reflect.ValueOf(&result).Elem()
 	typ := reflect.TypeOf(&result).Elem()
 
-	if typ.Kind() != reflect.Struct {
+	if typ.Kind() != reflect.Struct && typ.Kind() != reflect.Ptr {
 		return result, apperr.ResultMustBeStruct
+	}
+
+	if typ.Kind() == reflect.Ptr {
+		if val.IsNil() {
+			val.Set(reflect.New(typ.Elem()))
+			val = val.Elem()
+			typ = typ.Elem()
+		} else {
+			val = val.Elem()
+			typ = typ.Elem()
+		}
 	}
 
 	if !val.CanSet() || !val.CanAddr() {
@@ -196,7 +289,7 @@ func AcquireHash[T any](ctx context.Context, c *redis.Client, key string, ttl in
 	}
 
 	if len(desiredKeys) > 0 {
-		HMGetResult := c.HMGet(ctx, key, desiredKeys...)
+		HMGetResult := c.HMGet(ctx, masterKey, desiredKeys...)
 
 		if HMGetResult.Err() != nil && HMGetResult.Err().Error() != "redis: nil" {
 			isErr = true
@@ -217,7 +310,7 @@ func AcquireHash[T any](ctx context.Context, c *redis.Client, key string, ttl in
 			return result, nil
 		}
 	} else {
-		HGetAllResult := c.HGetAll(ctx, key)
+		HGetAllResult := c.HGetAll(ctx, masterKey)
 		if HGetAllResult.Err() != nil && HGetAllResult.Err().Error() != "redis: nil" {
 			isErr = true
 		}
@@ -243,31 +336,47 @@ func AcquireHash[T any](ctx context.Context, c *redis.Client, key string, ttl in
 	if err != nil {
 		return result, err
 	}
-	val = reflect.ValueOf(result)
-
-	hashData := make(map[string]string)
-
-	for i := 0; i < val.NumField(); i++ {
-		fieldInterface := val.Field(i).Interface()
-		if !val.Field(i).CanInterface() || fieldInterface == nil || fieldInterface == "" || fieldInterface == 0 || fieldInterface == false {
-			continue
-		}
-		field := typ.Field(i)
-		var fieldValue []byte
-		fieldValue, err = json.Marshal(fieldInterface)
-		if err != nil {
-			return result, err
-		}
-		hashData[field.Name] = string(fieldValue)
-	}
-
 	if !isErr {
-		err = c.HSet(ctx, key, hashData).Err()
+		val = reflect.ValueOf(result)
+		if val.Kind() == reflect.Ptr {
+			if val.IsNil() {
+				return result, apperr.ReturnFuncValueNil
+			} else {
+				val = val.Elem()
+			}
+		}
+		hashData := make(map[string]string)
+		for i := 0; i < val.NumField(); i++ {
+			valField := val.Field(i)
+			if !val.Field(i).CanInterface() {
+				continue
+			}
+			valFieldInterface := valField.Interface()
+			if valFieldInterface == nil ||
+				valFieldInterface == "" ||
+				valFieldInterface == 0 ||
+				valFieldInterface == false ||
+				(valField.Kind() == reflect.Slice && valField.IsNil()) ||
+				(valField.Kind() == reflect.Map && valField.IsNil()) ||
+				(valField.Kind() == reflect.Ptr && valField.IsNil()) ||
+				(valField.Kind() == reflect.Struct && valField.IsZero()) {
+				continue
+			}
+
+			typeField := typ.Field(i)
+			var fieldValue []byte
+			fieldValue, err = json.Marshal(valFieldInterface)
+			if err != nil {
+				return result, err
+			}
+			hashData[typeField.Name] = string(fieldValue)
+		}
+		err = c.HSet(ctx, masterKey, hashData).Err()
 		if err != nil {
 			return result, err
 		}
 		if ttl > 0 {
-			err = c.Expire(ctx, key, time.Duration(ttl)*time.Second).Err()
+			err = c.Expire(ctx, masterKey, time.Duration(ttl)*time.Second).Err()
 			if err != nil {
 				return result, err
 			}

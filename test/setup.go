@@ -7,6 +7,7 @@ import (
 	"github.com/ndodanli/go-clean-architecture/configs"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
+	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/unit_of_work"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services/redissrv"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
@@ -48,26 +49,27 @@ func SetupTestEnv() *TestEnv {
 	httperr.Init()
 
 	// Initialize redis
-	client := redissrv.NewRedisService(cfg.Redis)
-	err = client.Ping(ctx)
+	redisService := redissrv.NewRedisService(cfg.Redis, appLogger)
+	err = redisService.Ping(ctx)
 	if err != nil {
 		appLogger.Error(err.Error(), err, "app")
-		cancel()
+		//cancel()
 	}
 	defer func(client *redissrv.RedisService) {
 		err = client.Close()
 		if err != nil {
 			appLogger.Error(err.Error(), err, "app")
-			cancel()
+			//cancel()
 		}
-	}(client)
+	}(redisService)
 
-	appServices := servers.InitializeAppServices(conn, cfg, client.Client)
+	unitOfWork := uow.NewUnitOfWork(conn)
+	appServices := servers.InitializeAppServices(unitOfWork, cfg, redisService)
 
 	return &TestEnv{
 		Cfg:           cfg,
 		Ctx:           ctx,
-		RedisClient:   client,
+		RedisClient:   redisService,
 		DB:            conn,
 		Log:           appLogger,
 		AppServices:   appServices,

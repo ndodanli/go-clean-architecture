@@ -49,8 +49,8 @@ func main() {
 	httperr.Init()
 
 	// Initialize redis
-	client := redissrv.NewRedisService(cfg.Redis, appLogger)
-	err := client.Ping(ctx)
+	redisService := redissrv.NewRedisService(cfg.Redis, appLogger)
+	err := redisService.Ping(ctx)
 	if err != nil {
 		appLogger.Error(err.Error(), err, "app")
 		//cancel()
@@ -61,9 +61,9 @@ func main() {
 			appLogger.Error(err.Error(), err, "app")
 			//cancel()
 		}
-	}(client)
+	}(redisService)
 
-	newServer.NewHttpServer(ctx, conn, appLogger, client)
+	newServer.NewHttpServer(ctx, conn, appLogger, redisService)
 
 	// Exit from application gracefully
 	gracefulexit.TerminateApp(ctx)
