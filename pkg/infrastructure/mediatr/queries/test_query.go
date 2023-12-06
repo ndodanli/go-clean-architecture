@@ -3,8 +3,8 @@ package queries
 import (
 	"fmt"
 	"github.com/labstack/echo/v4"
+	"github.com/ndodanli/go-clean-architecture/pkg/constant"
 	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/constant"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
 	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/unit_of_work"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"

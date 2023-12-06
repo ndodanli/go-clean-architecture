@@ -112,6 +112,21 @@ func (r *RedisService) Ping(ctx context.Context) error {
 	return r.redisClient.Ping(ctx).Err()
 }
 
+// SetString is a function that sets the value of the key to the Redis cache.
+// @param ctx context.Context
+// @param r *redis.Client
+// @param key string
+// @param value string
+// @param ttl int64 seconds
+// @return error
+func (r *RedisService) SetString(ctx context.Context, key string, value string, ttl int64) error {
+	valueSet := r.redisClient.Set(ctx, key, value, time.Duration(ttl)*time.Second)
+	if valueSet.Err() != nil {
+		return valueSet.Err()
+	}
+	return nil
+}
+
 // AcquireString is a function that gets the value of the key from the Redis cache.
 // If the value is not in the cache, it calls the function and sets the value to the cache.
 // @param ctx context.Context
@@ -155,6 +170,16 @@ func AcquireString[T any](ctx context.Context, c *redis.Client, key string, ttl 
 	return result, nil
 }
 
+// AcquireHash is a function that gets the value of the key from the Redis cache.
+// If the value is not in the cache, it calls the function and sets the value to the cache.
+// @param ctx context.Context
+// @param r *redis.Client
+// @param key string
+// @param ttl int64 seconds
+// @param desiredKeys []string - desired keys to get from hash, if empty, all keys will be fetched
+// @param fn func() (T, error)
+// @return T
+// @return error
 func AcquireHash[T any](ctx context.Context, c *redis.Client, key string, ttl int64, desiredKeys []string, fn func() (T, error)) (T, error) {
 	var isErr bool = false
 	var result T

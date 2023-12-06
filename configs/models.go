@@ -52,7 +52,7 @@ type Auth struct {
 
 // Http config
 type Http struct {
-	HOST                string        `mapstructure:"IP,omitempty"`
+	HOST                string        `mapstructure:"HOST,omitempty"`
 	PORT                string        `mapstructure:"PORT,omitempty"`
 	TIMEOUT             time.Duration `mapstructure:"TIMEOUT,omitempty"`
 	READ_TIMEOUT        time.Duration `mapstructure:"READ_TIMEOUT,omitempty"`

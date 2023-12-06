@@ -93,6 +93,12 @@ func (r *Result[D, E, M]) Ok() *Result[D, E, M] {
 	return r
 }
 
+func (r *Result[D, E, M]) OkWithData(data D) *Result[D, E, M] {
+	r.Success = true
+	r.Data = data
+	return r
+}
+
 func (r *Result[D, E, M]) OkWithMetadata(metadata metadataType) *Result[D, E, M] {
 	r.Success = true
 	r.metadata = metadata
