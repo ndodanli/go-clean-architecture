@@ -5,6 +5,7 @@ type generalCns struct {
 	TraceIDKey          string
 	TxSessionManagerKey string
 	AuthUserId          string
+	DBKey               string
 }
 
 var General = generalCns{
@@ -12,6 +13,7 @@ var General = generalCns{
 	TraceIDKey:          "g2",
 	TxSessionManagerKey: "g3",
 	AuthUserId:          "g4",
+	DBKey:               "g5",
 }
 
 type redisCns struct {

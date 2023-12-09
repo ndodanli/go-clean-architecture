@@ -14,17 +14,9 @@ import (
 )
 
 type LoginQueryHandler struct {
-	uow        uow.IUnitOfWork
-	jwtService services.IJWTService
-	logger     logger.ILogger
-}
-
-func NewLoginQueryHandler(appServices *services.AppServices, uow uow.IUnitOfWork, logger logger.ILogger) *LoginQueryHandler {
-	return &LoginQueryHandler{
-		uow:        uow,
-		jwtService: appServices.JWTService,
-		logger:     logger,
-	}
+	UOW         uow.IUnitOfWork
+	AppServices *services.AppServices
+	Logger      logger.ILogger
 }
 
 type LoginQuery struct {
@@ -41,7 +33,7 @@ func (h *LoginQueryHandler) Handle(echoCtx echo.Context, query *LoginQuery) *bas
 	result := baseres.NewResult[LoginQueryResponse, error, struct{}]()
 	ctx := echoCtx.Request().Context()
 	tm := echoCtx.Get(constant.General.TxSessionManagerKey).(*postgresql.TxSessionManager)
-	authRepo := h.uow.AuthRepo(ctx)
+	authRepo := h.UOW.AuthRepo(ctx)
 	repoRes, err := authRepo.GetIdAndPasswordWithUsername(query.Username, tm)
 
 	if err != nil {
@@ -58,13 +50,13 @@ func (h *LoginQueryHandler) Handle(echoCtx echo.Context, query *LoginQuery) *bas
 	}
 
 	var accessToken string
-	accessToken, err = h.jwtService.GenerateAccessToken(strconv.FormatInt(repoRes.ID, 10))
+	accessToken, err = h.AppServices.JWTService.GenerateAccessToken(strconv.FormatInt(repoRes.ID, 10))
 
 	if err != nil {
 		return result.Err(err)
 	}
 
-	refreshToken, expiresAt := h.jwtService.GenerateRefreshToken()
+	refreshToken, expiresAt := h.AppServices.JWTService.GenerateRefreshToken()
 
 	_, err = authRepo.UpsertRefreshToken(repoRes.ID, expiresAt, refreshToken, tm)
 	if err != nil {

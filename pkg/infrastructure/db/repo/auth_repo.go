@@ -31,6 +31,12 @@ func NewAuthRepo(db *pgxpool.Pool, ctx context.Context) IAuthRepo {
 	}
 }
 
+type RefreshTokenWithUUIDRepoRes struct {
+	ID        int64     `json:"id"`
+	AppUserId int64     `json:"appUserId"`
+	ExpiresAt time.Time `json:"expiresAt"`
+}
+
 func (r *AuthRepo) GetRefreshTokenWithUUID(tokenUUID uuid.UUID, tm *postgresql.TxSessionManager) (*RefreshTokenWithUUIDRepoRes, error) {
 	return postgresql.ExecDefaultTx(r.ctx, tm, func(tx pgx.Tx) (*RefreshTokenWithUUIDRepoRes, error) {
 		var res RefreshTokenWithUUIDRepoRes
@@ -65,13 +71,17 @@ func (r *AuthRepo) UpdateRefreshToken(tokenId int64, expiresAt time.Time, tokenU
 			return nil, err
 		}
 
-		err = tx.Commit(r.ctx)
 		if err != nil {
 			return nil, err
 		}
 
 		return nil, nil
 	})
+}
+
+type GetIdAndPasswordRepoRes struct {
+	ID       int64  `json:"id"`
+	Password string `json:"password"`
 }
 
 func (r *AuthRepo) GetIdAndPasswordWithUsername(username string, tm *postgresql.TxSessionManager) (*GetIdAndPasswordRepoRes, error) {

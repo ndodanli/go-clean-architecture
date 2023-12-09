@@ -28,3 +28,7 @@ type server struct {
 func NewServer(cfg *configs.Config, ctx *context.Context, logger logger.ILogger) *server {
 	return &server{cfg: cfg, ctx: ctx, logger: logger}
 }
+
+func (s *server) GetLoggerInstance() logger.ILogger {
+	return s.logger
+}

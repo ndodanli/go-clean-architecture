@@ -1,4 +1,4 @@
-package ctrl
+package authctrl
 
 import (
 	"github.com/labstack/echo/v4"
@@ -6,7 +6,6 @@ import (
 	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/mediatr"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/mediatr/queries"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/ndodanli/go-clean-architecture/pkg/utils"
 	"net/http"
@@ -18,7 +17,11 @@ type AuthController struct {
 	logger          logger.ILogger
 }
 
-func NewAuthController(group *echo.Group, requiredServices *services.AppServices, logger logger.ILogger) *AuthController {
+func NewAuthController(group *echo.Group, logger logger.ILogger) (*AuthController, error) {
+	err := RegisterMediatrHandlers()
+	if err != nil {
+		return nil, err
+	}
 	ac := &AuthController{
 		controllerGroup: group.Group("/auth"),
 		logger:          logger,
@@ -27,7 +30,7 @@ func NewAuthController(group *echo.Group, requiredServices *services.AppServices
 	ac.controllerGroup.POST("/login", ac.Login)
 	ac.controllerGroup.GET("/refreshToken/:refreshToken", ac.RefreshToken)
 
-	return ac
+	return ac, nil
 }
 
 // Login godoc

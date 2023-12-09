@@ -18,6 +18,7 @@ import (
 	mw "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/middleware"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services/redissrv"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
+	"github.com/ndodanli/go-clean-architecture/pkg/servers/singleton"
 	"github.com/swaggo/echo-swagger"
 	"net/http"
 	"strings"
@@ -46,10 +47,10 @@ func (s *server) NewHttpServer(ctx context.Context, db *pgxpool.Pool, logger log
 	e.Use(middleware.TimeoutWithConfig(getTimeoutConfig()))
 
 	// Request-Response middleware
-	e.Use(getRequestResponseMiddleware(logger))
+	e.Use(getRequestResponseMiddleware(singleton.LoggerSingleton))
 
 	// Global error handler
-	e.HTTPErrorHandler = getGlobalErrorHandler(logger)
+	e.HTTPErrorHandler = getGlobalErrorHandler(singleton.LoggerSingleton)
 
 	// Recover from panics
 	e.Use(middleware.RecoverWithConfig(getRecoverConfig()))
@@ -73,7 +74,7 @@ func (s *server) NewHttpServer(ctx context.Context, db *pgxpool.Pool, logger log
 	e.Use(mw.TraceID)
 
 	// Request logger
-	e.Use(middleware.RequestLoggerWithConfig(getLoggerConfig(logger)))
+	e.Use(middleware.RequestLoggerWithConfig(getLoggerConfig(singleton.LoggerSingleton)))
 
 	// Security settings
 	e.Use(middleware.SecureWithConfig(getSecureConfig()))
@@ -94,7 +95,7 @@ func (s *server) NewHttpServer(ctx context.Context, db *pgxpool.Pool, logger log
 	// Register scoped instances(instances that are created per req)
 	e.Use(registerScopedInstances(db))
 
-	RegisterControllers(versionGroup, db, s.cfg, redisService, logger)
+	RegisterControllers(versionGroup, db, s.cfg, redisService, singleton.LoggerSingleton)
 
 	go func() {
 		address := fmt.Sprintf("%s:%s", s.cfg.Http.HOST, s.cfg.Http.PORT)
@@ -103,9 +104,9 @@ func (s *server) NewHttpServer(ctx context.Context, db *pgxpool.Pool, logger log
 			printRoutes(e.Routes())
 			select {
 			case done := <-ctx.Done():
-				logger.Info(fmt.Sprintf("Server is shutting down. Reason: %s", done), nil, "app")
+				singleton.LoggerSingleton.Info(fmt.Sprintf("Server is shutting down. Reason: %s", done), nil, "app")
 				if err := e.Shutdown(ctx); err != nil {
-					logger.Error("Server shutdown error", err, "app")
+					singleton.LoggerSingleton.Error("Server shutdown error", err, "app")
 				}
 			}
 		}()
@@ -261,6 +262,7 @@ func registerScopedInstances(db *pgxpool.Pool) func(next echo.HandlerFunc) echo.
 			// Session manager
 			txSessionManager := postgresql.NewTxSessionManager(db)
 			c.Set(constant.General.TxSessionManagerKey, txSessionManager)
+			c.Set(constant.General.DBKey, db)
 			return next(c)
 		}
 	}

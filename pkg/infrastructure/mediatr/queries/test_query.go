@@ -2,7 +2,6 @@ package queries
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/ndodanli/go-clean-architecture/pkg/constant"
 	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
 	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/unit_of_work"
@@ -13,19 +12,14 @@ import (
 )
 
 type TestQueryHandler struct {
-	uow          uow.IUnitOfWork
-	jwtService   services.IJWTService
-	logger       logger.ILogger
-	redisService redissrv.IRedisService
+	UOW         uow.IUnitOfWork
+	Logger      logger.ILogger
+	AppServices *services.AppServices
+	TM          *postgresql.TxSessionManager
 }
 
-func NewTestQueryHandler(appServices *services.AppServices, uow uow.IUnitOfWork, logger logger.ILogger) *TestQueryHandler {
-	return &TestQueryHandler{
-		uow:          uow,
-		jwtService:   appServices.JWTService,
-		redisService: appServices.RedisService,
-		logger:       logger,
-	}
+func NewTestQueryHandler() *TestQueryHandler {
+	return &TestQueryHandler{}
 }
 
 type TestQuery struct {
@@ -42,24 +36,23 @@ func (h *TestQueryHandler) Handle(echoCtx echo.Context, query *TestQuery) *baser
 	result.Data.TestIDRes = "Test 123"
 	result.Data.TestArray = []int{}
 	ctx := echoCtx.Request().Context()
-	tm := echoCtx.Get(constant.General.TxSessionManagerKey).(*postgresql.TxSessionManager)
-	appUserRepo := h.uow.AppUserRepo(ctx)
+	appUserRepo := h.UOW.AppUserRepo(ctx, h.TM)
 
-	redisErr := h.redisService.Ping(ctx)
+	redisErr := h.AppServices.RedisService.Ping(ctx)
 	if redisErr != nil {
-		h.logger.Error(redisErr.Error(), redisErr, "app")
+		h.Logger.Error(redisErr.Error(), redisErr, "app")
 	}
 
-	redisSetStringResult := redissrv.SetString(ctx, h.redisService.Client(), "testKeySet", "testValueSet", 0)
+	redisSetStringResult := redissrv.SetString(ctx, h.AppServices.RedisService.Client(), "testKeySet", "testValueSet", 0)
 	_ = redisSetStringResult
 
-	//redisSetHashFieldResult := redissrv.SetHashField(ctx, h.redisService.Client(), "testMasterKey", "testHashField", result, 0)
+	//redisSetHashFieldResult := redissrv.SetHashField(ctx, h.AppServices.RedisService.Client(), "testMasterKey", "testHashField", result, 0)
 	//_ = redisSetHashFieldResult
 
-	redisSetHashResult := redissrv.SetHash(ctx, h.redisService.Client(), "testMasterKey", result, 0)
+	redisSetHashResult := redissrv.SetHash(ctx, h.AppServices.RedisService.Client(), "testMasterKey", result, 0)
 	_ = redisSetHashResult
 
-	redisAcquireHashResult, err := redissrv.AcquireHash(ctx, h.redisService.Client(), "testMasterKey1", 0, []string{}, func() (*baseres.Result[TestQueryResponse, error, struct{}], error) {
+	redisAcquireHashResult, err := redissrv.AcquireHash(ctx, h.AppServices.RedisService.Client(), "testMasterKey1", 0, []string{}, func() (*baseres.Result[TestQueryResponse, error, struct{}], error) {
 		return result, nil
 	})
 
@@ -70,7 +63,7 @@ func (h *TestQueryHandler) Handle(echoCtx echo.Context, query *TestQuery) *baser
 		"username": "testfdsfd",
 	}
 
-	_, err = appUserRepo.PatchAppUser(1, updateProps, tm)
+	_, err = appUserRepo.PatchAppUser(1, updateProps)
 	if err != nil {
 		return result.Err(err)
 	}

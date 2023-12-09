@@ -12,23 +12,25 @@ import (
 )
 
 type IAppUserRepo interface {
-	PatchAppUser(appUserID int64, updateProps map[string]interface{}, tm *postgresql.TxSessionManager) (*types.Nil, error)
+	PatchAppUser(appUserID int64, updateProps map[string]interface{}) (*types.Nil, error)
 }
 
 type AppUserRepo struct {
 	db  *pgxpool.Pool
 	ctx context.Context
+	tm  *postgresql.TxSessionManager
 }
 
-func NewAppUserRepo(db *pgxpool.Pool, ctx context.Context) IAppUserRepo {
+func NewAppUserRepo(db *pgxpool.Pool, ctx context.Context, tm *postgresql.TxSessionManager) IAppUserRepo {
 	return &AppUserRepo{
 		db:  db,
 		ctx: ctx,
+		tm:  tm,
 	}
 }
 
-func (r *AppUserRepo) PatchAppUser(appUserID int64, updateProps map[string]interface{}, tm *postgresql.TxSessionManager) (*types.Nil, error) {
-	return postgresql.ExecDefaultTx(r.ctx, tm, func(tx pgx.Tx) (*types.Nil, error) {
+func (r *AppUserRepo) PatchAppUser(appUserID int64, updateProps map[string]interface{}) (*types.Nil, error) {
+	return postgresql.ExecDefaultTx(r.ctx, r.tm, func(tx pgx.Tx) (*types.Nil, error) {
 		updateQuery := "UPDATE app_user SET"
 		values := []interface{}{appUserID}
 

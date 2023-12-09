@@ -1,4 +1,4 @@
-package ctrl
+package testctrl
 
 import (
 	"github.com/labstack/echo/v4"
@@ -16,7 +16,11 @@ type TestController struct {
 	logger          logger.ILogger
 }
 
-func NewTestController(group *echo.Group, logger logger.ILogger) *TestController {
+func NewTestController(group *echo.Group, logger logger.ILogger) (*TestController, error) {
+	err := RegisterMediatrHandlers()
+	if err != nil {
+		return nil, err
+	}
 	ac := &TestController{
 		controllerGroup: group.Group("/test"),
 		logger:          logger,
@@ -24,7 +28,7 @@ func NewTestController(group *echo.Group, logger logger.ILogger) *TestController
 
 	ac.controllerGroup.GET("/test", ac.Test)
 
-	return ac
+	return ac, nil
 }
 
 func (ac *TestController) Test(c echo.Context) error {
