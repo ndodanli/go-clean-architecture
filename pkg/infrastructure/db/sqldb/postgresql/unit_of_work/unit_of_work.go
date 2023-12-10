@@ -10,7 +10,7 @@ import (
 type IUnitOfWork interface {
 	GetDB() *pgxpool.Pool
 	AppUserRepo(ctx context.Context, tm *postgresql.TxSessionManager) repo.IAppUserRepo
-	AuthRepo(ctx context.Context) repo.IAuthRepo
+	AuthRepo(ctx context.Context, tm *postgresql.TxSessionManager) repo.IAuthRepo
 }
 
 type UnitOfWork struct {
@@ -31,6 +31,6 @@ func (uow UnitOfWork) AppUserRepo(ctx context.Context, tm *postgresql.TxSessionM
 	return repo.NewAppUserRepo(uow.db, ctx, tm)
 }
 
-func (uow UnitOfWork) AuthRepo(ctx context.Context) repo.IAuthRepo {
-	return repo.NewAuthRepo(uow.db, ctx)
+func (uow UnitOfWork) AuthRepo(ctx context.Context, tm *postgresql.TxSessionManager) repo.IAuthRepo {
+	return repo.NewAuthRepo(uow.db, ctx, tm)
 }

@@ -2,7 +2,6 @@ package queries
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/ndodanli/go-clean-architecture/pkg/constant"
 	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
@@ -17,6 +16,7 @@ type LoginQueryHandler struct {
 	UOW         uow.IUnitOfWork
 	AppServices *services.AppServices
 	Logger      logger.ILogger
+	TM          *postgresql.TxSessionManager
 }
 
 type LoginQuery struct {
@@ -29,12 +29,11 @@ type LoginQueryResponse struct {
 	RefreshToken string `json:"refreshToken"`
 }
 
-func (h *LoginQueryHandler) Handle(echoCtx echo.Context, query *LoginQuery) *baseres.Result[LoginQueryResponse, error, struct{}] {
-	result := baseres.NewResult[LoginQueryResponse, error, struct{}]()
+func (h *LoginQueryHandler) Handle(echoCtx echo.Context, query *LoginQuery) *baseres.Result[*LoginQueryResponse, error, struct{}] {
+	result := baseres.NewResult[*LoginQueryResponse, error, struct{}]()
 	ctx := echoCtx.Request().Context()
-	tm := echoCtx.Get(constant.General.TxSessionManagerKey).(*postgresql.TxSessionManager)
-	authRepo := h.UOW.AuthRepo(ctx)
-	repoRes, err := authRepo.GetIdAndPasswordWithUsername(query.Username, tm)
+	authRepo := h.UOW.AuthRepo(ctx, h.TM)
+	repoRes, err := authRepo.GetIdAndPasswordWithUsername(query.Username)
 
 	if err != nil {
 		return result.Err(err)
@@ -58,12 +57,12 @@ func (h *LoginQueryHandler) Handle(echoCtx echo.Context, query *LoginQuery) *bas
 
 	refreshToken, expiresAt := h.AppServices.JWTService.GenerateRefreshToken()
 
-	_, err = authRepo.UpsertRefreshToken(repoRes.ID, expiresAt, refreshToken, tm)
+	_, err = authRepo.UpsertRefreshToken(repoRes.ID, expiresAt, refreshToken)
 	if err != nil {
 		return result.Err(err)
 	}
 
-	result.Data = LoginQueryResponse{
+	result.Data = &LoginQueryResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken.String(),
 	}

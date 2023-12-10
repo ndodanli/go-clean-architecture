@@ -18,10 +18,6 @@ type TestQueryHandler struct {
 	TM          *postgresql.TxSessionManager
 }
 
-func NewTestQueryHandler() *TestQueryHandler {
-	return &TestQueryHandler{}
-}
-
 type TestQuery struct {
 	TestID string
 }

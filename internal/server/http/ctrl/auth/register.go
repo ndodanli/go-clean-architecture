@@ -9,15 +9,22 @@ import (
 func RegisterMediatrHandlers() error {
 	var err error
 	err = mediatr.RegisterRequestHandler[
-		*queries.LoginQuery, *baseres.Result[queries.LoginQueryResponse, error, struct{}],
+		*queries.LoginQuery, *baseres.Result[*queries.LoginQueryResponse, error, struct{}],
 	](&queries.LoginQueryHandler{})
 	if err != nil {
 		return err
 	}
 
 	err = mediatr.RegisterRequestHandler[
-		*queries.RefreshTokenQuery, *baseres.Result[queries.RefreshTokenQueryResponse, error, struct{}],
+		*queries.RefreshTokenQuery, *baseres.Result[*queries.RefreshTokenQueryResponse, error, struct{}],
 	](&queries.RefreshTokenQueryHandler{})
+	if err != nil {
+		return err
+	}
+
+	err = mediatr.RegisterRequestHandler[
+		*queries.SendConfirmationEmailForgotPasswordQuery, *baseres.Result[*queries.SendConfirmationEmailForgotPasswordQueryResponse, error, struct{}],
+	](&queries.SendConfirmationEmailForgotPasswordQueryHandler{})
 	if err != nil {
 		return err
 	}

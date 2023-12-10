@@ -3,7 +3,6 @@ package queries
 import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/ndodanli/go-clean-architecture/pkg/constant"
 	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
@@ -18,6 +17,7 @@ type RefreshTokenQueryHandler struct {
 	UOW         uow.IUnitOfWork
 	AppServices *services.AppServices
 	Logger      logger.ILogger
+	TM          *postgresql.TxSessionManager
 }
 
 type RefreshTokenQuery struct {
@@ -29,13 +29,12 @@ type RefreshTokenQueryResponse struct {
 	RefreshToken string `json:"refreshToken"`
 }
 
-func (h *RefreshTokenQueryHandler) Handle(echoCtx echo.Context, query *RefreshTokenQuery) *baseres.Result[RefreshTokenQueryResponse, error, struct{}] {
-	result := baseres.NewResult[RefreshTokenQueryResponse, error, struct{}]()
+func (h *RefreshTokenQueryHandler) Handle(echoCtx echo.Context, query *RefreshTokenQuery) *baseres.Result[*RefreshTokenQueryResponse, error, struct{}] {
+	result := baseres.NewResult[*RefreshTokenQueryResponse, error, struct{}]()
 	ctx := echoCtx.Request().Context()
-	ts := echoCtx.Get(constant.General.TxSessionManagerKey).(*postgresql.TxSessionManager)
-	authRepo := h.UOW.AuthRepo(ctx)
+	authRepo := h.UOW.AuthRepo(ctx, h.TM)
 
-	repoRes, err := authRepo.GetRefreshTokenWithUUID(query.RefreshToken, ts)
+	repoRes, err := authRepo.GetRefreshTokenWithUUID(query.RefreshToken)
 	if err != nil {
 		return result.Err(err)
 	}
@@ -55,12 +54,12 @@ func (h *RefreshTokenQueryHandler) Handle(echoCtx echo.Context, query *RefreshTo
 		return result.Err(err)
 	}
 
-	_, err = authRepo.UpdateRefreshToken(repoRes.ID, expiresAt, refreshToken, ts)
+	_, err = authRepo.UpdateRefreshToken(repoRes.ID, expiresAt, refreshToken)
 	if err != nil {
 		return result.Err(err)
 	}
 
-	result.Data = RefreshTokenQueryResponse{
+	result.Data = &RefreshTokenQueryResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken.String(),
 	}

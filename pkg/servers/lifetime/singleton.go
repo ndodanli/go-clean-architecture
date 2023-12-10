@@ -1,4 +1,4 @@
-package singleton
+package lifetime
 
 import (
 	"github.com/jackc/pgx/v5/pgxpool"

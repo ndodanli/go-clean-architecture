@@ -13,21 +13,23 @@ import (
 )
 
 type IAuthRepo interface {
-	GetRefreshTokenWithUUID(tokenUUID uuid.UUID, tm *postgresql.TxSessionManager) (*RefreshTokenWithUUIDRepoRes, error)
-	UpdateRefreshToken(tokenId int64, expiresAt time.Time, tokenUUID uuid.UUID, tm *postgresql.TxSessionManager) (*GetIdAndPasswordRepoRes, error)
-	GetIdAndPasswordWithUsername(username string, tm *postgresql.TxSessionManager) (*GetIdAndPasswordRepoRes, error)
-	UpsertRefreshToken(appUserId int64, expiresAt time.Time, refreshToken uuid.UUID, tm *postgresql.TxSessionManager) (*types.Nil, error)
+	GetRefreshTokenWithUUID(tokenUUID uuid.UUID) (*RefreshTokenWithUUIDRepoRes, error)
+	UpdateRefreshToken(tokenId int64, expiresAt time.Time, tokenUUID uuid.UUID) (*GetIdAndPasswordRepoRes, error)
+	GetIdAndPasswordWithUsername(username string) (*GetIdAndPasswordRepoRes, error)
+	UpsertRefreshToken(appUserId int64, expiresAt time.Time, refreshToken uuid.UUID) (*types.Nil, error)
 }
 
 type AuthRepo struct {
 	db  *pgxpool.Pool
 	ctx context.Context
+	tm  *postgresql.TxSessionManager
 }
 
-func NewAuthRepo(db *pgxpool.Pool, ctx context.Context) IAuthRepo {
+func NewAuthRepo(db *pgxpool.Pool, ctx context.Context, tm *postgresql.TxSessionManager) IAuthRepo {
 	return &AuthRepo{
 		db:  db,
 		ctx: ctx,
+		tm:  tm,
 	}
 }
 
@@ -37,8 +39,8 @@ type RefreshTokenWithUUIDRepoRes struct {
 	ExpiresAt time.Time `json:"expiresAt"`
 }
 
-func (r *AuthRepo) GetRefreshTokenWithUUID(tokenUUID uuid.UUID, tm *postgresql.TxSessionManager) (*RefreshTokenWithUUIDRepoRes, error) {
-	return postgresql.ExecDefaultTx(r.ctx, tm, func(tx pgx.Tx) (*RefreshTokenWithUUIDRepoRes, error) {
+func (r *AuthRepo) GetRefreshTokenWithUUID(tokenUUID uuid.UUID) (*RefreshTokenWithUUIDRepoRes, error) {
+	return postgresql.ExecDefaultTx(r.ctx, r.tm, func(tx pgx.Tx) (*RefreshTokenWithUUIDRepoRes, error) {
 		var res RefreshTokenWithUUIDRepoRes
 		err := tx.QueryRow(r.ctx, `SELECT id, app_user_id, expires_at 
 										FROM refresh_token 
@@ -47,7 +49,7 @@ func (r *AuthRepo) GetRefreshTokenWithUUID(tokenUUID uuid.UUID, tm *postgresql.T
 										LIMIT 1`, tokenUUID).Scan(&res.ID, &res.AppUserId, &res.ExpiresAt)
 
 		if err != nil {
-			if errors.As(err, &pgx.ErrNoRows) {
+			if errors.Is(err, pgx.ErrNoRows) {
 				return nil, nil
 			}
 			return nil, err
@@ -57,8 +59,8 @@ func (r *AuthRepo) GetRefreshTokenWithUUID(tokenUUID uuid.UUID, tm *postgresql.T
 	})
 }
 
-func (r *AuthRepo) UpdateRefreshToken(tokenId int64, expiresAt time.Time, tokenUUID uuid.UUID, tm *postgresql.TxSessionManager) (*GetIdAndPasswordRepoRes, error) {
-	return postgresql.ExecDefaultTx(r.ctx, tm, func(tx pgx.Tx) (*GetIdAndPasswordRepoRes, error) {
+func (r *AuthRepo) UpdateRefreshToken(tokenId int64, expiresAt time.Time, tokenUUID uuid.UUID) (*GetIdAndPasswordRepoRes, error) {
+	return postgresql.ExecDefaultTx(r.ctx, r.tm, func(tx pgx.Tx) (*GetIdAndPasswordRepoRes, error) {
 		_, err := tx.Exec(r.ctx,
 			`UPDATE refresh_token 
 					SET token_uuid = $1,
@@ -70,11 +72,6 @@ func (r *AuthRepo) UpdateRefreshToken(tokenId int64, expiresAt time.Time, tokenU
 		if err != nil {
 			return nil, err
 		}
-
-		if err != nil {
-			return nil, err
-		}
-
 		return nil, nil
 	})
 }
@@ -84,13 +81,13 @@ type GetIdAndPasswordRepoRes struct {
 	Password string `json:"password"`
 }
 
-func (r *AuthRepo) GetIdAndPasswordWithUsername(username string, tm *postgresql.TxSessionManager) (*GetIdAndPasswordRepoRes, error) {
-	return postgresql.ExecDefaultTx(r.ctx, tm, func(tx pgx.Tx) (*GetIdAndPasswordRepoRes, error) {
+func (r *AuthRepo) GetIdAndPasswordWithUsername(username string) (*GetIdAndPasswordRepoRes, error) {
+	return postgresql.ExecDefaultTx(r.ctx, r.tm, func(tx pgx.Tx) (*GetIdAndPasswordRepoRes, error) {
 		var res GetIdAndPasswordRepoRes
 		err := tx.QueryRow(r.ctx, "SELECT id, password FROM app_user WHERE username = $1", username).Scan(&res.ID, &res.Password)
 
 		if err != nil {
-			if errors.As(err, &pgx.ErrNoRows) {
+			if errors.Is(err, pgx.ErrNoRows) {
 				return nil, nil
 			}
 			return nil, err
@@ -100,13 +97,13 @@ func (r *AuthRepo) GetIdAndPasswordWithUsername(username string, tm *postgresql.
 	})
 }
 
-func (r *AuthRepo) UpsertRefreshToken(appUserId int64, expiresAt time.Time, refreshToken uuid.UUID, tm *postgresql.TxSessionManager) (*types.Nil, error) {
-	return postgresql.ExecDefaultTx(r.ctx, tm, func(tx pgx.Tx) (*types.Nil, error) {
+func (r *AuthRepo) UpsertRefreshToken(appUserId int64, expiresAt time.Time, refreshToken uuid.UUID) (*types.Nil, error) {
+	return postgresql.ExecDefaultTx(r.ctx, r.tm, func(tx pgx.Tx) (*types.Nil, error) {
 		// Check if user's refresh token is revoked if it exists
 		var revoked bool
 		err := tx.QueryRow(r.ctx, `SELECT revoked FROM refresh_token WHERE app_user_id = $1`, appUserId).Scan(&revoked)
 		if err != nil {
-			if !errors.As(err, &pgx.ErrNoRows) {
+			if !errors.Is(err, pgx.ErrNoRows) {
 				return nil, err
 			}
 		}

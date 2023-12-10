@@ -18,7 +18,7 @@ import (
 	mw "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/middleware"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services/redissrv"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
-	"github.com/ndodanli/go-clean-architecture/pkg/servers/singleton"
+	"github.com/ndodanli/go-clean-architecture/pkg/servers/lifetime"
 	"github.com/swaggo/echo-swagger"
 	"net/http"
 	"strings"
@@ -47,10 +47,10 @@ func (s *server) NewHttpServer(ctx context.Context, db *pgxpool.Pool, logger log
 	e.Use(middleware.TimeoutWithConfig(getTimeoutConfig()))
 
 	// Request-Response middleware
-	e.Use(getRequestResponseMiddleware(singleton.LoggerSingleton))
+	e.Use(getRequestResponseMiddleware(lifetime.LoggerSingleton))
 
 	// Global error handler
-	e.HTTPErrorHandler = getGlobalErrorHandler(singleton.LoggerSingleton)
+	e.HTTPErrorHandler = getGlobalErrorHandler(lifetime.LoggerSingleton)
 
 	// Recover from panics
 	e.Use(middleware.RecoverWithConfig(getRecoverConfig()))
@@ -74,7 +74,7 @@ func (s *server) NewHttpServer(ctx context.Context, db *pgxpool.Pool, logger log
 	e.Use(mw.TraceID)
 
 	// Request logger
-	e.Use(middleware.RequestLoggerWithConfig(getLoggerConfig(singleton.LoggerSingleton)))
+	e.Use(middleware.RequestLoggerWithConfig(getLoggerConfig(lifetime.LoggerSingleton)))
 
 	// Security settings
 	e.Use(middleware.SecureWithConfig(getSecureConfig()))
@@ -95,7 +95,7 @@ func (s *server) NewHttpServer(ctx context.Context, db *pgxpool.Pool, logger log
 	// Register scoped instances(instances that are created per req)
 	e.Use(registerScopedInstances(db))
 
-	RegisterControllers(versionGroup, db, s.cfg, redisService, singleton.LoggerSingleton)
+	RegisterControllers(versionGroup, db, s.cfg, redisService, lifetime.LoggerSingleton)
 
 	go func() {
 		address := fmt.Sprintf("%s:%s", s.cfg.Http.HOST, s.cfg.Http.PORT)
@@ -104,9 +104,9 @@ func (s *server) NewHttpServer(ctx context.Context, db *pgxpool.Pool, logger log
 			printRoutes(e.Routes())
 			select {
 			case done := <-ctx.Done():
-				singleton.LoggerSingleton.Info(fmt.Sprintf("Server is shutting down. Reason: %s", done), nil, "app")
+				lifetime.LoggerSingleton.Info(fmt.Sprintf("Server is shutting down. Reason: %s", done), nil, "app")
 				if err := e.Shutdown(ctx); err != nil {
-					singleton.LoggerSingleton.Error("Server shutdown error", err, "app")
+					lifetime.LoggerSingleton.Error("Server shutdown error", err, "app")
 				}
 			}
 		}()
@@ -173,8 +173,6 @@ func getRequestResponseMiddleware(logger logger.ILogger) func(next echo.HandlerF
 				}
 			}
 
-			//logger.Info("Outgoing response")
-
 			return nil
 		}
 	}
@@ -219,8 +217,10 @@ func getLoggerConfig(logger logger.ILogger) middleware.RequestLoggerConfig {
 		LogStatus:    true,
 		LogMethod:    true,
 		LogRequestID: true,
+		LogLatency:   true,
 		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
-			logger.Info(fmt.Sprintf("Req-Log M:%s URI:%s S:%d", v.Method, v.URI, v.Status), nil, c.Get(constant.General.TraceIDKey).(string))
+			logger.Info(fmt.Sprintf("Req-Log M:%s, URI:%s, S:%d, L:%s", v.Method, v.URI, v.Status, v.Latency),
+				nil, c.Get(constant.General.TraceIDKey).(string))
 
 			return nil
 		},

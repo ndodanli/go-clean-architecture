@@ -9,11 +9,9 @@ import (
 	res "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
 	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/unit_of_work"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
-	"github.com/ndodanli/go-clean-architecture/pkg/servers/singleton"
+	"github.com/ndodanli/go-clean-architecture/pkg/servers/lifetime"
 	"github.com/pkg/errors"
-	"time"
 )
 
 // RequestHandlerFunc is a continuation for the next task to execute in the pipeline
@@ -41,23 +39,6 @@ var notificationHandlersRegistrations = map[reflect.Type][]interface{}{}
 var pipelineBehaviours []interface{} = []interface{}{}
 
 type Unit struct{}
-
-func registerRequestHandler[TRequest any, TResponse any](handler any) error {
-	var request TRequest
-	requestType := reflect.TypeOf(request)
-
-	_, exist := requestHandlersRegistrations[requestType]
-	if exist {
-		// each request in request/response strategy should have just one handler
-		//log and return nil
-		fmt.Printf("registered handler already exists in the registry for message %s\n", requestType.String())
-		return nil
-	}
-
-	requestHandlersRegistrations[requestType] = handler
-
-	return nil
-}
 
 // RegisterRequestHandler register the request handler to mediatr registry.
 func RegisterRequestHandler[TRequest any, TResponse any](handler RequestHandler[TRequest, TResponse]) error {
@@ -164,6 +145,45 @@ func buildRequestHandler[TRequest any, TResponse any](handler any) (RequestHandl
 	return handlerValue, true
 }
 
+func registerRequestHandler[TRequest any, TResponse any](handler any) error {
+	var request TRequest
+	requestType := reflect.TypeOf(request)
+
+	_, exist := requestHandlersRegistrations[requestType]
+	if exist {
+		// each request in request/response strategy should have just one handler
+		//log and return nil
+		fmt.Printf("registered handler already exists in the registry for message %s\n", requestType.String())
+		return nil
+	}
+
+	handleValElem := reflect.ValueOf(handler).Elem()
+	handlerType := handleValElem.Type()
+
+	for i := 0; i < handleValElem.NumField(); i++ {
+		field := handleValElem.Field(i)
+		fieldType := handlerType.Field(i).Type
+
+		if field.IsValid() && field.IsNil() {
+			if fieldType.Kind() == reflect.Interface {
+				if fieldType.Implements(reflect.TypeOf((*logger.ILogger)(nil)).Elem()) {
+					field.Set(reflect.ValueOf(lifetime.LoggerSingleton))
+				} else if fieldType.Implements(reflect.TypeOf((*uow.IUnitOfWork)(nil)).Elem()) {
+					field.Set(reflect.ValueOf(lifetime.UOWSingleton))
+				}
+			}
+			switch fieldType {
+			case reflect.TypeOf(lifetime.AppServicesType):
+				field.Set(reflect.ValueOf(lifetime.AppServicesSingleton))
+			}
+		}
+	}
+
+	requestHandlersRegistrations[requestType] = handler
+
+	return nil
+}
+
 // Send the request to its corresponding request handler.
 func Send[TRequest any, TResponse any](echoCtx echo.Context, request TRequest) TResponse {
 	requestType := reflect.TypeOf(request)
@@ -182,32 +202,16 @@ func Send[TRequest any, TResponse any](echoCtx echo.Context, request TRequest) T
 	handleValElem := reflect.ValueOf(handler).Elem()
 	handlerType := handleValElem.Type()
 
-	// Calculate time taken by function
-	start := time.Now()
+	// Handle scoped instances
 	for i := 0; i < handleValElem.NumField(); i++ {
 		field := handleValElem.Field(i)
+		fieldType := handlerType.Field(i).Type
 
-		// Check if the field is nil (assuming pointers here)
-		if field.IsValid() && field.IsNil() {
-			fieldType := handlerType.Field(i).Type
-
-			if fieldType.Kind() == reflect.Interface {
-				if fieldType.Implements(reflect.TypeOf((*logger.ILogger)(nil)).Elem()) {
-					field.Set(reflect.ValueOf(singleton.LoggerSingleton))
-				} else if fieldType.Implements(reflect.TypeOf((*uow.IUnitOfWork)(nil)).Elem()) {
-					field.Set(reflect.ValueOf(singleton.UOWSingleton))
-				}
-			}
-			switch fieldType {
-			case reflect.TypeOf(&postgresql.TxSessionManager{}):
-				field.Set(reflect.ValueOf(echoCtx.Get(constant.General.TxSessionManagerKey).(*postgresql.TxSessionManager)))
-			case reflect.TypeOf(&services.AppServices{}):
-				field.Set(reflect.ValueOf(singleton.AppServicesSingleton))
-			}
+		switch fieldType {
+		case reflect.TypeOf(lifetime.TxSessionManagerType):
+			field.Set(reflect.ValueOf(echoCtx.Get(constant.General.TxSessionManagerKey).(*postgresql.TxSessionManager)))
 		}
 	}
-	elapsed := time.Since(start)
-	fmt.Println("App elapsed as milliseconds: ", elapsed.Milliseconds())
 
 	handlerValue, ok := buildRequestHandler[TRequest, TResponse](handler)
 	if !ok {

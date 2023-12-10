@@ -61,7 +61,6 @@ func (ts *TxSessionManager) ReleaseAllTxSessions(ctx context.Context, err error)
 		if panicErr != nil {
 			return panicErr
 		}
-		ts.defaultTx = nil
 	}
 	for correlationID, tx := range ts.sessions {
 		delete(ts.sessions, correlationID)
@@ -239,7 +238,6 @@ func (ts *TxSessionManager) ReleaseAllTxSessionsForTestEnv(ctx context.Context, 
 		if panicErr != nil {
 			return panicErr
 		}
-		ts.defaultTx = nil
 	}
 	for correlationID, tx := range ts.sessions {
 		delete(ts.sessions, correlationID)

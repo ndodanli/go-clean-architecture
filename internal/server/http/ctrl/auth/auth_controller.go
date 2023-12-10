@@ -12,9 +12,9 @@ import (
 )
 
 type AuthController struct {
-	controllerGroup *echo.Group
-	httpClient      *http.Client
-	logger          logger.ILogger
+	cGroup     *echo.Group
+	httpClient *http.Client
+	logger     logger.ILogger
 }
 
 func NewAuthController(group *echo.Group, logger logger.ILogger) (*AuthController, error) {
@@ -23,12 +23,13 @@ func NewAuthController(group *echo.Group, logger logger.ILogger) (*AuthControlle
 		return nil, err
 	}
 	ac := &AuthController{
-		controllerGroup: group.Group("/auth"),
-		logger:          logger,
+		cGroup: group.Group("/auth"),
+		logger: logger,
 	}
 
-	ac.controllerGroup.POST("/login", ac.Login)
-	ac.controllerGroup.GET("/refreshToken/:refreshToken", ac.RefreshToken)
+	ac.cGroup.POST("/login", ac.Login)
+	ac.cGroup.GET("/refreshToken/:refreshToken", ac.RefreshToken)
+	ac.cGroup.GET("/forgotPassword/:email", ac.ForgotPassword)
 
 	return ac, nil
 }
@@ -76,7 +77,32 @@ func (ac *AuthController) RefreshToken(c echo.Context) error {
 	if err := utils.BindAndValidate(c, &query); err != nil {
 		return err
 	}
-	res := mediatr.Send[*queries.RefreshTokenQuery, *baseres.Result[queries.RefreshTokenQueryResponse, error, struct{}]](c, &query)
+	res := mediatr.Send[*queries.RefreshTokenQuery, *baseres.Result[*queries.RefreshTokenQueryResponse, error, struct{}]](c, &query)
+	if res.IsErr() {
+		return res.GetErr()
+	}
+	return c.JSON(http.StatusOK, res)
+}
+
+// ForgotPassword godoc
+// @Security BearerAuth
+// @Summary      ForgotPassword
+// @Description  ForgotPassword
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        ForgotPassword path string
+// @Success      200  {object}   baseres.SwaggerSuccessRes[queries.ForgotPasswordQueryResponse] "OK. On success."
+// @Failure      400  {object}   baseres.SwaggerValidationErrRes "Bad Request. On any validation error."
+// @Failure      401  {object}   baseres.SwaggerUnauthorizedErrRes "Unauthorized."
+// @Failure      500  {object}   baseres.SwaggerInternalErrRes "Internal Server Error."
+// @Router       /v1/auth/ForgotPassword [get]
+func (ac *AuthController) ForgotPassword(c echo.Context) error {
+	var query queries.SendConfirmationEmailForgotPasswordQuery
+	if err := utils.BindAndValidate(c, &query); err != nil {
+		return err
+	}
+	res := mediatr.Send[*queries.SendConfirmationEmailForgotPasswordQuery, *baseres.Result[*queries.SendConfirmationEmailForgotPasswordQueryResponse, error, struct{}]](c, &query)
 	if res.IsErr() {
 		return res.GetErr()
 	}

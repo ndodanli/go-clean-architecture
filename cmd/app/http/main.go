@@ -11,7 +11,7 @@ import (
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services/redissrv"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/ndodanli/go-clean-architecture/pkg/servers"
-	"github.com/ndodanli/go-clean-architecture/pkg/servers/singleton"
+	"github.com/ndodanli/go-clean-architecture/pkg/servers/lifetime"
 	"github.com/ndodanli/go-clean-architecture/pkg/utils/gracefulexit"
 	"log"
 )
@@ -64,7 +64,7 @@ func main() {
 		}
 	}(redisService)
 
-	singleton.InitiateSingletons(appLogger, conn, cfg, redisService)
+	lifetime.InitiateSingletons(appLogger, conn, cfg, redisService)
 
 	newServer.NewHttpServer(ctx, conn, appLogger, redisService)
 
