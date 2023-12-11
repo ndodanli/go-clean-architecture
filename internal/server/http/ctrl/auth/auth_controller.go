@@ -9,6 +9,7 @@ import (
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/ndodanli/go-clean-architecture/pkg/utils"
 	"net/http"
+	"os"
 )
 
 type AuthController struct {
@@ -22,17 +23,47 @@ func NewAuthController(group *echo.Group, logger logger.ILogger) (*AuthControlle
 	if err != nil {
 		return nil, err
 	}
-	ac := &AuthController{
+	if os.Getenv("APP_ENV") == "test" {
+		return nil, err
+	}
+	c := &AuthController{
 		cGroup: group.Group("/auth"),
 		logger: logger,
 	}
 
-	ac.cGroup.POST("/login", ac.Login)
-	ac.cGroup.GET("/refreshToken/:refreshToken", ac.RefreshToken)
-	ac.cGroup.GET("/forgotPassword/:email", ac.ForgotPassword)
+	//c.cGroup.POST("/register", c.Register)
+	c.cGroup.POST("/login", c.Login)
+	c.cGroup.GET("/refreshToken/:refreshToken", c.RefreshToken)
+	c.cGroup.GET("/forgotPassword/:email", c.ForgotPassword)
+	c.cGroup.POST("/confirmForgotPasswordCode", c.ConfirmForgotPasswordCode)
 
-	return ac, nil
+	return c, nil
 }
+
+//// Register godoc
+//// @Security BearerAuth
+//// @Summary      Register
+//// @Description  Register
+//// @Tags         Auth
+//// @Accept       json
+//// @Produce      json
+//// @Param        loginReq body queries.RegisterQuery true "Username"
+//// @Success      200  {object}   baseres.SwaggerSuccessRes[queries.RegisterQueryResponse] "OK. On success."
+//// @Failure      400  {object}   baseres.SwaggerValidationErrRes "Bad Request. On any validation error."
+//// @Failure      401  {object}   baseres.SwaggerUnauthorizedErrRes "Unauthorized."
+//// @Failure      500  {object}   baseres.SwaggerInternalErrRes "Internal Server Error."
+//// @Router       /v1/auth/login [post]
+//func (ac *AuthController) Register(c echo.Context) error {
+//	var query queries.RegisterQuery
+//	if err := utils.BindAndValidate(c, &query); err != nil {
+//		return err
+//	}
+//	res := mediatr.Send[*queries.RegisterQuery, *baseres.Result[*queries.RegisterQueryResponse, error, struct{}]](c, &query)
+//	if res.IsErr() {
+//		return res.GetErr()
+//	}
+//	return c.JSON(http.StatusOK, res)
+//}
 
 // Login godoc
 // @Security BearerAuth
@@ -52,7 +83,7 @@ func (ac *AuthController) Login(c echo.Context) error {
 	if err := utils.BindAndValidate(c, &query); err != nil {
 		return err
 	}
-	res := mediatr.Send[*queries.LoginQuery, *baseres.Result[queries.LoginQueryResponse, error, struct{}]](c, &query)
+	res := mediatr.Send[*queries.LoginQuery, *baseres.Result[*queries.LoginQueryResponse, error, struct{}]](c, &query)
 	if res.IsErr() {
 		return res.GetErr()
 	}
@@ -103,6 +134,31 @@ func (ac *AuthController) ForgotPassword(c echo.Context) error {
 		return err
 	}
 	res := mediatr.Send[*queries.SendConfirmationEmailForgotPasswordQuery, *baseres.Result[*queries.SendConfirmationEmailForgotPasswordQueryResponse, error, struct{}]](c, &query)
+	if res.IsErr() {
+		return res.GetErr()
+	}
+	return c.JSON(http.StatusOK, res)
+}
+
+// ConfirmForgotPasswordCode godoc
+// @Security BearerAuth
+// @Summary      ConfirmForgotPasswordCode
+// @Description  ConfirmForgotPasswordCode
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        ConfirmForgotPasswordCode path string
+// @Success      200  {object}   baseres.SwaggerSuccessRes[queries.ConfirmForgotPasswordCodeQueryResponse] "OK. On success."
+// @Failure      400  {object}   baseres.SwaggerValidationErrRes "Bad Request. On any validation error."
+// @Failure      401  {object}   baseres.SwaggerUnauthorizedErrRes "Unauthorized."
+// @Failure      500  {object}   baseres.SwaggerInternalErrRes "Internal Server Error."
+// @Router       /v1/auth/ConfirmForgotPasswordCode [get]
+func (ac *AuthController) ConfirmForgotPasswordCode(c echo.Context) error {
+	var query queries.ConfirmForgotPasswordCodeQuery
+	if err := utils.BindAndValidate(c, &query); err != nil {
+		return err
+	}
+	res := mediatr.Send[*queries.ConfirmForgotPasswordCodeQuery, *baseres.Result[*queries.ConfirmForgotPasswordCodeQueryResponse, error, struct{}]](c, &query)
 	if res.IsErr() {
 		return res.GetErr()
 	}

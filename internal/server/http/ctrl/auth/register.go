@@ -29,5 +29,12 @@ func RegisterMediatrHandlers() error {
 		return err
 	}
 
+	err = mediatr.RegisterRequestHandler[
+		*queries.ConfirmForgotPasswordCodeQuery, *baseres.Result[*queries.ConfirmForgotPasswordCodeQueryResponse, error, struct{}],
+	](&queries.ConfirmForgotPasswordCodeQueryHandler{})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

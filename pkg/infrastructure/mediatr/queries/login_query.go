@@ -1,6 +1,7 @@
 package queries
 
 import (
+	"errors"
 	"github.com/labstack/echo/v4"
 	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
@@ -45,7 +46,11 @@ func (h *LoginQueryHandler) Handle(echoCtx echo.Context, query *LoginQuery) *bas
 
 	err = bcrypt.CompareHashAndPassword([]byte(repoRes.Password), []byte(query.Password))
 	if err != nil {
-		return result.Err(httperr.UsernameOrPasswordIncorrectError)
+		if !errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return result.Err(err)
+		} else {
+			return result.Err(httperr.PasswordCannotBeSameAsOldError)
+		}
 	}
 
 	var accessToken string

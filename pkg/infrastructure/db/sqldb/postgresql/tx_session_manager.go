@@ -51,39 +51,6 @@ func (ts *TxSessionManager) AcquireTxSession(ctx context.Context, correlationID 
 	return txSession, correlationID
 }
 
-func (ts *TxSessionManager) ReleaseAllTxSessions(ctx context.Context, err error) error {
-	ts.m.Lock()
-	defer ts.m.Unlock()
-
-	var panicErr error
-	if ts.defaultTx != nil && (ts.defaultTx.Conn().PgConn().TxStatus() == constant.PostgreSQLTXStatuses.InTransaction || ts.defaultTx.Conn().PgConn().TxStatus() == constant.PostgreSQLTXStatuses.FailedTransaction) {
-		panicErr = handleTransaction(ts.defaultTx, ctx, err)
-		if panicErr != nil {
-			return panicErr
-		}
-	}
-	for correlationID, tx := range ts.sessions {
-		delete(ts.sessions, correlationID)
-		if tx.Conn().PgConn().TxStatus() == constant.PostgreSQLTXStatuses.InTransaction {
-			panicErr = handleTransaction(tx, ctx, err)
-		}
-		if panicErr != nil {
-			return panicErr
-		}
-	}
-
-	return nil
-}
-
-func (ts *TxSessionManager) ReleaseTxSession(correlationID uuid.UUID, ctx context.Context) error {
-	ts.m.Lock()
-	defer ts.m.Unlock()
-	tx := ts.sessions[correlationID]
-	delete(ts.sessions, correlationID)
-	err := handleTransaction(tx, ctx, nil)
-	return err
-}
-
 func (ts *TxSessionManager) beginAndSetTxSession(ctx context.Context, correlationID uuid.UUID) (pgx.Tx, error) {
 	defer ts.m.Unlock()
 	newTx, err := ts.db.Begin(ctx)
@@ -233,7 +200,7 @@ func (ts *TxSessionManager) ReleaseAllTxSessionsForTestEnv(ctx context.Context, 
 	defer ts.m.Unlock()
 
 	var panicErr error
-	if ts.defaultTx != nil {
+	if ts.defaultTx != nil && (ts.defaultTx.Conn().PgConn().TxStatus() == constant.PostgreSQLTXStatuses.InTransaction || ts.defaultTx.Conn().PgConn().TxStatus() == constant.PostgreSQLTXStatuses.FailedTransaction) {
 		panicErr = handleTransactionForTestEnv(ts.defaultTx, ctx, err)
 		if panicErr != nil {
 			return panicErr
@@ -248,6 +215,39 @@ func (ts *TxSessionManager) ReleaseAllTxSessionsForTestEnv(ctx context.Context, 
 	}
 
 	return nil
+}
+
+func (ts *TxSessionManager) ReleaseAllTxSessions(ctx context.Context, err error) error {
+	ts.m.Lock()
+	defer ts.m.Unlock()
+
+	var panicErr error
+	if ts.defaultTx != nil && (ts.defaultTx.Conn().PgConn().TxStatus() == constant.PostgreSQLTXStatuses.InTransaction || ts.defaultTx.Conn().PgConn().TxStatus() == constant.PostgreSQLTXStatuses.FailedTransaction) {
+		panicErr = handleTransaction(ts.defaultTx, ctx, err)
+		if panicErr != nil {
+			return panicErr
+		}
+	}
+	for correlationID, tx := range ts.sessions {
+		delete(ts.sessions, correlationID)
+		if tx.Conn().PgConn().TxStatus() == constant.PostgreSQLTXStatuses.InTransaction {
+			panicErr = handleTransaction(tx, ctx, err)
+		}
+		if panicErr != nil {
+			return panicErr
+		}
+	}
+
+	return nil
+}
+
+func (ts *TxSessionManager) ReleaseTxSession(correlationID uuid.UUID, ctx context.Context) error {
+	ts.m.Lock()
+	defer ts.m.Unlock()
+	tx := ts.sessions[correlationID]
+	delete(ts.sessions, correlationID)
+	err := handleTransaction(tx, ctx, nil)
+	return err
 }
 
 func handleTransactionForTestEnv(tx pgx.Tx, ctx context.Context, err error) error {

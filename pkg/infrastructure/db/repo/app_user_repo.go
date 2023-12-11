@@ -95,6 +95,7 @@ func (r *AppUserRepo) PatchAppUser(appUserID int64, updateProps map[string]inter
 
 		i := 2
 		for key, value := range updateProps {
+			key = utils.ToSnakeCase(key)
 			updateQuery += fmt.Sprintf(" %s = $%d,", key, i)
 			values = append(values, value)
 			i++

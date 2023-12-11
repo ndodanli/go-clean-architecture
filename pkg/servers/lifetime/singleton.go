@@ -5,7 +5,6 @@ import (
 	"github.com/ndodanli/go-clean-architecture/configs"
 	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/unit_of_work"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services/redissrv"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 )
 
@@ -15,15 +14,16 @@ var (
 	AppServicesSingleton *services.AppServices
 )
 
-func InitiateSingletons(appLogger logger.ILogger, db *pgxpool.Pool, cfg *configs.Config, redisService redissrv.IRedisService) {
+func InitiateSingletons(appLogger logger.ILogger, db *pgxpool.Pool, cfg *configs.Config, redisService services.IRedisService) {
 	LoggerSingleton = appLogger
 	UOWSingleton = uow.NewUnitOfWork(db)
 	AppServicesSingleton = InitializeAppServices(cfg, redisService)
 }
 
-func InitializeAppServices(cfg *configs.Config, redisService redissrv.IRedisService) *services.AppServices {
+func InitializeAppServices(cfg *configs.Config, redisService services.IRedisService) *services.AppServices {
 	var appServices services.AppServices
 	appServices.JWTService = services.NewJWTService(cfg.Auth)
 	appServices.RedisService = redisService
+	appServices.SendgridService = services.NewSendgridService(&cfg.Sendgrid)
 	return &appServices
 }

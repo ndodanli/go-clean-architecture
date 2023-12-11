@@ -20,6 +20,7 @@ type Config struct {
 	Jobs       Jobs       `mapstructure:"jobs,omitempty"`
 	Nats       Nats       `mapstructure:"nats,omitempty"`
 	RabbitMq   RabbitMq   `mapstructure:"rabbitmq,omitempty"`
+	Sendgrid   Sendgrid   `mapstructure:"sendgrid,omitempty"`
 }
 
 // Swagger config
@@ -175,4 +176,10 @@ type Nats struct {
 // Nats run intervals
 type RabbitMq struct {
 	URI string `json:"URI,omitempty"`
+}
+
+type Sendgrid struct {
+	API_KEY    string `json:"API_KEY,omitempty"`
+	FROM_NAME  string `json:"FROM_NAME,omitempty"`
+	FROM_EMAIL string `json:"FROM_EMAIL,omitempty"`
 }

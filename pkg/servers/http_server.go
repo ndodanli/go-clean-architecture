@@ -16,11 +16,12 @@ import (
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
 	mw "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/middleware"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services/redissrv"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/ndodanli/go-clean-architecture/pkg/servers/lifetime"
 	"github.com/swaggo/echo-swagger"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -34,7 +35,7 @@ import (
 // @in header
 // @name Authorization
 
-func (s *server) NewHttpServer(ctx context.Context, db *pgxpool.Pool, logger logger.ILogger, redisService *redissrv.RedisService) (e *echo.Echo) {
+func (s *server) NewHttpServer(ctx context.Context, db *pgxpool.Pool, logger logger.ILogger, redisService *services.RedisService) (e *echo.Echo) {
 	e = echo.New()
 
 	// Initialize other middlewares
@@ -70,7 +71,7 @@ func (s *server) NewHttpServer(ctx context.Context, db *pgxpool.Pool, logger log
 	// Set body limit
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	// Trace ID
+	// Trace Id
 	e.Use(mw.TraceID)
 
 	// Request logger
@@ -95,7 +96,11 @@ func (s *server) NewHttpServer(ctx context.Context, db *pgxpool.Pool, logger log
 	// Register scoped instances(instances that are created per req)
 	e.Use(registerScopedInstances(db))
 
-	RegisterControllers(versionGroup, db, s.cfg, redisService, lifetime.LoggerSingleton)
+	err := RegisterControllers(versionGroup, lifetime.LoggerSingleton)
+	if err != nil {
+		lifetime.LoggerSingleton.Error("Error while registering controllers", err, "app")
+		os.Exit(1)
+	}
 
 	go func() {
 		address := fmt.Sprintf("%s:%s", s.cfg.Http.HOST, s.cfg.Http.PORT)
@@ -125,14 +130,23 @@ func getGlobalErrorHandler(logger logger.ILogger) func(err error, c echo.Context
 			errorData, ok := he.Message.(*httperr.ErrorData)
 			if ok {
 				baseHttpApiResult := res.NewResult[any, *echo.HTTPError, any]()
-				baseHttpApiResult.SetErrorMessage(errorData.Message)
-				if errorData.ShouldLogAsError {
+				if errorData.Status == 0 {
+					errorData.Status = http.StatusInternalServerError
+				}
+				if errorData.Status >= 500 {
+					baseHttpApiResult.SetErrorMessage("Internal Server Error")
+				} else {
+					baseHttpApiResult.SetErrorMessage(errorData.Message)
+				}
+
+				if errorData.ShouldLogAsError || errorData.Status >= 500 {
 					logger.Error(errorData.Message, errorData.Metadata, c.Get(constant.General.TraceIDKey).(string))
 				}
 				if errorData.ShouldLogAsInfo {
 					logger.Info(errorData.Message, errorData.Metadata, c.Get(constant.General.TraceIDKey).(string))
 				}
-				jsonError := c.JSON(he.Code, baseHttpApiResult)
+
+				jsonError := c.JSON(errorData.Status, baseHttpApiResult)
 				if jsonError != nil {
 					logger.Error(err.Error(), err, c.Get(constant.General.TraceIDKey).(string))
 				}

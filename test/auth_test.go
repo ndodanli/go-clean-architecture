@@ -1,51 +1,8 @@
 package test
 
 import (
-	"context"
-	"fmt"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/ndodanli/go-clean-architecture/configs"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
-	//"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/req"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services/redissrv"
-	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"testing"
 )
-
-var (
-	testEnv     *TestEnv
-	cfg         *configs.Config
-	ctx         context.Context
-	redisClient *redissrv.RedisService
-	db          *pgxpool.Pool
-	log         *logger.ApiLogger
-	appServices *services.AppServices
-	ts          *postgresql.TxSessionManager
-)
-
-func setupTest() func() {
-	// Setup
-	testEnv = SetupTestEnv()
-	cfg = testEnv.Cfg
-	ctx = testEnv.Ctx
-	redisClient = testEnv.RedisClient
-	db = testEnv.DB
-	log = testEnv.Log
-	appServices = testEnv.AppServices
-	ts = postgresql.NewTxSessionManager(db)
-
-	// Disable logs
-	return func() {
-		// Tear down
-		defer db.Close()
-		defer testEnv.CancelContext()
-		txErr := ts.ReleaseAllTxSessionsForTestEnv(ctx, nil)
-		if txErr != nil {
-			fmt.Println(txErr)
-		}
-	}
-}
 
 func TestLogin(t *testing.T) {
 	defer setupTest()()

@@ -8,7 +8,7 @@ import (
 	"github.com/ndodanli/go-clean-architecture/configs"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services/redissrv"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/ndodanli/go-clean-architecture/pkg/servers"
 	"github.com/ndodanli/go-clean-architecture/pkg/servers/lifetime"
@@ -50,13 +50,13 @@ func main() {
 	httperr.Init()
 
 	// Initialize redis
-	redisService := redissrv.NewRedisService(cfg.Redis, appLogger)
+	redisService := services.NewRedisService(cfg.Redis, appLogger)
 	err := redisService.Ping(ctx)
 	if err != nil {
 		appLogger.Error(err.Error(), err, "app")
 		//cancel()
 	}
-	defer func(client *redissrv.RedisService) {
+	defer func(client *services.RedisService) {
 		err = client.Close()
 		if err != nil {
 			appLogger.Error(err.Error(), err, "app")

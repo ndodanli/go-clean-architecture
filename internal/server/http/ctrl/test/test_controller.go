@@ -8,12 +8,13 @@ import (
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/mediatr/queries"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"net/http"
+	"os"
 )
 
 type TestController struct {
-	controllerGroup *echo.Group
-	httpClient      *http.Client
-	logger          logger.ILogger
+	cGroup     *echo.Group
+	httpClient *http.Client
+	logger     logger.ILogger
 }
 
 func NewTestController(group *echo.Group, logger logger.ILogger) (*TestController, error) {
@@ -21,12 +22,15 @@ func NewTestController(group *echo.Group, logger logger.ILogger) (*TestControlle
 	if err != nil {
 		return nil, err
 	}
+	if os.Getenv("APP_ENV") == "test" {
+		return nil, err
+	}
 	ac := &TestController{
-		controllerGroup: group.Group("/test"),
-		logger:          logger,
+		cGroup: group.Group("/test"),
+		logger: logger,
 	}
 
-	ac.controllerGroup.GET("/test", ac.Test)
+	ac.cGroup.GET("/test", ac.Test)
 
 	return ac, nil
 }

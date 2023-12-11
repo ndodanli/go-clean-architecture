@@ -5,6 +5,14 @@ create table if not exists app_user
     username   varchar(50)  not null,
     password   varchar(255) not null,
     email      varchar(50)  not null,
+    email_confirmed bool not null default false,
+    fp_email_confirmation_details jsonb not null default '{"code": "", "expires_at": null}',
+
+    created_at timestamp    not null default now(),
+    updated_at timestamp    not null default now(),
+    deleted_at timestamp    not null default '0001-01-01T00:00:00Z'
+);
+
 --     test_string_not_null varchar(50) not null,
 --     test_string_nullable varchar(50),
 --     test_int_not_null int not null,
@@ -31,8 +39,3 @@ create table if not exists app_user
 --     test_bytea_nullable bytea,
 --     test_array_not_null int[] not null,
 --     test_array_nullable int[],
-
-    created_at timestamp    not null default now(),
-    updated_at timestamp    not null default now(),
-    deleted_at timestamp    not null default '0001-01-01T00:00:00Z'
-);

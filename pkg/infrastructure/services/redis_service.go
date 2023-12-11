@@ -1,4 +1,4 @@
-package redissrv
+package services
 
 import (
 	"context"

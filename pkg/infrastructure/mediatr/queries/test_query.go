@@ -6,7 +6,6 @@ import (
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
 	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/unit_of_work"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services/redissrv"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"reflect"
 )
@@ -39,16 +38,16 @@ func (h *TestQueryHandler) Handle(echoCtx echo.Context, query *TestQuery) *baser
 		h.Logger.Error(redisErr.Error(), redisErr, "app")
 	}
 
-	redisSetStringResult := redissrv.SetString(ctx, h.AppServices.RedisService.Client(), "testKeySet", "testValueSet", 0)
+	redisSetStringResult := services.SetString(ctx, h.AppServices.RedisService.Client(), "testKeySet", "testValueSet", 0)
 	_ = redisSetStringResult
 
 	//redisSetHashFieldResult := redissrv.SetHashField(ctx, h.AppServices.RedisService.Client(), "testMasterKey", "testHashField", result, 0)
 	//_ = redisSetHashFieldResult
 
-	redisSetHashResult := redissrv.SetHash(ctx, h.AppServices.RedisService.Client(), "testMasterKey", result, 0)
+	redisSetHashResult := services.SetHash(ctx, h.AppServices.RedisService.Client(), "testMasterKey", result, 0)
 	_ = redisSetHashResult
 
-	redisAcquireHashResult, err := redissrv.AcquireHash(ctx, h.AppServices.RedisService.Client(), "testMasterKey1", 0, []string{}, func() (*baseres.Result[TestQueryResponse, error, struct{}], error) {
+	redisAcquireHashResult, err := services.AcquireHash(ctx, h.AppServices.RedisService.Client(), "testMasterKey1", 0, []string{}, func() (*baseres.Result[TestQueryResponse, error, struct{}], error) {
 		return result, nil
 	})
 

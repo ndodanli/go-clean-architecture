@@ -1,31 +1,11 @@
 package utils
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"reflect"
 	"time"
-	"unicode"
 )
-
-func toSnakeCase(s string) string {
-	var result bytes.Buffer
-
-	for i, char := range s {
-		// Convert uppercase letters to lowercase and insert underscore before them
-		if unicode.IsUpper(char) {
-			if i > 0 {
-				result.WriteRune('_')
-			}
-			result.WriteRune(unicode.ToLower(char))
-		} else {
-			result.WriteRune(char)
-		}
-	}
-
-	return result.String()
-}
 
 func ScanRowToStruct(row pgx.Row, dest interface{}, columns []string) error {
 	start := time.Now()
@@ -39,7 +19,7 @@ func ScanRowToStruct(row pgx.Row, dest interface{}, columns []string) error {
 		jsonTag := field.Tag.Get("db")
 		if jsonTag == "" {
 			// Take the field name and convert it to snake case
-			jsonTag = toSnakeCase(field.Name)
+			jsonTag = ToSnakeCase(field.Name)
 		}
 
 		fields[jsonTag] = destValue.Field(i)
