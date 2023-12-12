@@ -6,6 +6,8 @@ import (
 	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/mediatr"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/mediatr/queries"
+	mw "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/middleware"
+	oauthcfg "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/oauth_cfg"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/ndodanli/go-clean-architecture/pkg/utils"
 	"net/http"
@@ -33,9 +35,14 @@ func NewAuthController(group *echo.Group, logger logger.ILogger) (*AuthControlle
 
 	//c.cGroup.POST("/register", c.Register)
 	c.cGroup.POST("/login", c.Login)
+	// TODO: Implement social logins for mobile apps
+	c.cGroup.GET("/loginWithGoogle", c.LoginWithGoogle)
+	c.cGroup.GET("/loginWithGoogle/callback", c.LoginWithGoogleCallback)
 	c.cGroup.GET("/refreshToken/:refreshToken", c.RefreshToken)
-	c.cGroup.GET("/forgotPassword/:email", c.ForgotPassword)
+	c.cGroup.GET("/forgotPassword/:email", c.ForgotPassword, mw.Authenticate)
 	c.cGroup.POST("/confirmForgotPasswordCode", c.ConfirmForgotPasswordCode)
+	c.cGroup.GET("/emailConfirmation", c.EmailConfirmationHTML)
+	c.cGroup.GET("/emailConfirmationConfirm", c.EmailConfirmationConfirm)
 
 	return c, nil
 }
@@ -78,7 +85,7 @@ func NewAuthController(group *echo.Group, logger logger.ILogger) (*AuthControlle
 // @Failure      401  {object}   baseres.SwaggerUnauthorizedErrRes "Unauthorized."
 // @Failure      500  {object}   baseres.SwaggerInternalErrRes "Internal Server Error."
 // @Router       /v1/auth/login [post]
-func (ac *AuthController) Login(c echo.Context) error {
+func (ct *AuthController) Login(c echo.Context) error {
 	var query queries.LoginQuery
 	if err := utils.BindAndValidate(c, &query); err != nil {
 		return err
@@ -103,7 +110,7 @@ func (ac *AuthController) Login(c echo.Context) error {
 // @Failure      401  {object}   baseres.SwaggerUnauthorizedErrRes "Unauthorized."
 // @Failure      500  {object}   baseres.SwaggerInternalErrRes "Internal Server Error."
 // @Router       /v1/auth/refreshToken [get]
-func (ac *AuthController) RefreshToken(c echo.Context) error {
+func (ct *AuthController) RefreshToken(c echo.Context) error {
 	var query queries.RefreshTokenQuery
 	if err := utils.BindAndValidate(c, &query); err != nil {
 		return err
@@ -128,7 +135,7 @@ func (ac *AuthController) RefreshToken(c echo.Context) error {
 // @Failure      401  {object}   baseres.SwaggerUnauthorizedErrRes "Unauthorized."
 // @Failure      500  {object}   baseres.SwaggerInternalErrRes "Internal Server Error."
 // @Router       /v1/auth/ForgotPassword [get]
-func (ac *AuthController) ForgotPassword(c echo.Context) error {
+func (ct *AuthController) ForgotPassword(c echo.Context) error {
 	var query queries.SendConfirmationEmailForgotPasswordQuery
 	if err := utils.BindAndValidate(c, &query); err != nil {
 		return err
@@ -153,12 +160,51 @@ func (ac *AuthController) ForgotPassword(c echo.Context) error {
 // @Failure      401  {object}   baseres.SwaggerUnauthorizedErrRes "Unauthorized."
 // @Failure      500  {object}   baseres.SwaggerInternalErrRes "Internal Server Error."
 // @Router       /v1/auth/ConfirmForgotPasswordCode [get]
-func (ac *AuthController) ConfirmForgotPasswordCode(c echo.Context) error {
+func (ct *AuthController) ConfirmForgotPasswordCode(c echo.Context) error {
 	var query queries.ConfirmForgotPasswordCodeQuery
 	if err := utils.BindAndValidate(c, &query); err != nil {
 		return err
 	}
 	res := mediatr.Send[*queries.ConfirmForgotPasswordCodeQuery, *baseres.Result[*queries.ConfirmForgotPasswordCodeQueryResponse, error, struct{}]](c, &query)
+	if res.IsErr() {
+		return res.GetErr()
+	}
+	return c.JSON(http.StatusOK, res)
+}
+
+func (ct *AuthController) LoginWithGoogle(c echo.Context) error {
+	url := oauthcfg.GoogleOauth2Config.AuthCodeURL("state")
+	return c.Redirect(http.StatusTemporaryRedirect, url)
+}
+
+func (ct *AuthController) LoginWithGoogleCallback(c echo.Context) error {
+	var query queries.LoginWithGoogleQuery
+	if err := utils.BindAndValidate(c, &query); err != nil {
+		return err
+	}
+	res := mediatr.Send[*queries.LoginWithGoogleQuery, *baseres.Result[*queries.LoginWithGoogleQueryResponse, error, struct{}]](c, &query)
+	if res.IsErr() {
+		return res.GetErr()
+	}
+	return c.JSON(http.StatusOK, res)
+}
+
+func (ct *AuthController) EmailConfirmationHTML(c echo.Context) error {
+	htmlContent, err := os.ReadFile("assets/html/email_confirmation.html")
+	if err != nil {
+		return err
+	}
+	return c.HTMLBlob(http.StatusOK, htmlContent)
+}
+
+func (ct *AuthController) EmailConfirmationConfirm(c echo.Context) error {
+	queryParam := c.QueryParam("code")
+	_ = queryParam
+	var query queries.EmailConfirmationQuery
+	if err := utils.BindAndValidate(c, &query); err != nil {
+		return err
+	}
+	res := mediatr.Send[*queries.EmailConfirmationQuery, *baseres.Result[*queries.EmailConfirmationQueryResponse, error, struct{}]](c, &query)
 	if res.IsErr() {
 		return res.GetErr()
 	}

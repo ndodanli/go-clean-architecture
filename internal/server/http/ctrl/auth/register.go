@@ -36,5 +36,19 @@ func RegisterMediatrHandlers() error {
 		return err
 	}
 
+	err = mediatr.RegisterRequestHandler[
+		*queries.LoginWithGoogleQuery, *baseres.Result[*queries.LoginWithGoogleQueryResponse, error, struct{}],
+	](&queries.LoginWithGoogleQueryHandler{})
+	if err != nil {
+		return err
+	}
+
+	err = mediatr.RegisterRequestHandler[
+		*queries.EmailConfirmationQuery, *baseres.Result[*queries.EmailConfirmationQueryResponse, error, struct{}],
+	](&queries.EmailConfirmationQueryHandler{})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

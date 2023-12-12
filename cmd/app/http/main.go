@@ -8,6 +8,7 @@ import (
 	"github.com/ndodanli/go-clean-architecture/configs"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
+	oauthcfg "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/oauth_cfg"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/ndodanli/go-clean-architecture/pkg/servers"
@@ -48,6 +49,9 @@ func main() {
 
 	// Initialize http errors
 	httperr.Init()
+
+	// Initialize oauth2 configs
+	oauthcfg.Init(&cfg.GoogleOauth2)
 
 	// Initialize redis
 	redisService := services.NewRedisService(cfg.Redis, appLogger)

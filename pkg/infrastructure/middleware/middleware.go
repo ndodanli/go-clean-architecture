@@ -3,6 +3,7 @@ package mw
 import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v4"
 	"github.com/ndodanli/go-clean-architecture/configs"
 	"github.com/ndodanli/go-clean-architecture/pkg/constant"
@@ -13,18 +14,17 @@ import (
 )
 
 var (
-	Authorize func(next echo.HandlerFunc) echo.HandlerFunc
-	TraceID   func(next echo.HandlerFunc) echo.HandlerFunc
+	Authenticate func(next echo.HandlerFunc) echo.HandlerFunc
+	TraceID      func(next echo.HandlerFunc) echo.HandlerFunc
 )
 
-func Init(cfg *configs.Config) {
-	Authorize = getJWTMiddleware(cfg, services.NewJWTService(cfg.Auth))
+func Init(cfg *configs.Config, appServices *services.AppServices, db *pgxpool.Pool) {
+	Authenticate = getJWTMiddleware(cfg, appServices.JWTService, db)
 	TraceID = getTraceIDMiddleware()
 }
 
-func getJWTMiddleware(cfg *configs.Config, jwtService services.IJWTService) func(next echo.HandlerFunc) echo.HandlerFunc {
+func getJWTMiddleware(cfg *configs.Config, jwtService services.IJWTService, db *pgxpool.Pool) func(next echo.HandlerFunc) echo.HandlerFunc {
 	validAudiences := strings.Split(cfg.Auth.JWT_AUDIENCES, ",")
-
 	verifyAud := func(audiences []string) bool {
 		if validAudiences[0] == "*" || audiences[0] == "*" {
 			return true
@@ -40,6 +40,8 @@ func getJWTMiddleware(cfg *configs.Config, jwtService services.IJWTService) func
 	}
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
+			requestedEndpoint := c.Path()
+			_ = requestedEndpoint
 			token, err := jwtService.ValidateToken(strings.Replace(c.Request().Header.Get("Authorization"), "Bearer ", "", 1))
 			if err != nil {
 				return httperr.UnauthorizedError
@@ -57,6 +59,32 @@ func getJWTMiddleware(cfg *configs.Config, jwtService services.IJWTService) func
 			c.Set(constant.General.AuthUserId, &services.AuthUser{
 				ID: subInt64,
 			})
+
+			// Authorize
+			exists := false
+			// TODO: make this db function
+			err = db.QueryRow(c.Request().Context(), `
+WITH expanded_roles AS (SELECT UNNEST(roles) AS role_id
+                        FROM app_user
+                        WHERE id = $1
+                          AND deleted_at = '0001-01-01T00:00:00Z'
+                        LIMIT 1),
+	-- Fetch endpoint ID directly
+     endpoint AS (SELECT id
+                     FROM endpoint
+                     WHERE name = $2
+                       AND deleted_at = '0001-01-01T00:00:00Z'
+                     LIMIT 1)
+
+	-- Check authorization
+SELECT EXISTS (SELECT 1
+               FROM expanded_roles er
+                        JOIN role r ON r.id = er.role_id
+               WHERE r.deleted_at = '0001-01-01T00:00:00Z'
+                 AND (SELECT id from endpoint) = ANY (r.endpoint_ids));`, subInt64, requestedEndpoint).Scan(&exists)
+			if err != nil {
+				return httperr.UnauthorizedError
+			}
 
 			return next(c)
 		}

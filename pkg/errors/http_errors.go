@@ -52,6 +52,7 @@ var (
 	PasswordsDoNotMatchError                   *echo.HTTPError
 	CannotChangePasswordEmailNotConfirmedError *echo.HTTPError
 	PasswordCannotBeSameAsOldError             *echo.HTTPError
+	EmailAlreadyConfirmedError                 *echo.HTTPError
 )
 
 func Init() {
@@ -122,5 +123,9 @@ func Init() {
 	PasswordCannotBeSameAsOldError = echo.NewHTTPError(http.StatusBadRequest, &ErrorData{
 		Status:  400,
 		Message: "Password cannot be same as old",
+	})
+	EmailAlreadyConfirmedError = echo.NewHTTPError(http.StatusBadRequest, &ErrorData{
+		Status:  400,
+		Message: "Email already confirmed",
 	})
 }

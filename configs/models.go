@@ -4,23 +4,31 @@ import "time"
 
 // Config of application
 type Config struct {
-	Server     Server     `mapstructure:"server,omitempty"`
-	Auth       Auth       `mapstructure:"auth,omitempty"`
-	Swagger    Swagger    `mapstructure:"swagger,omitempty"`
-	Http       Http       `mapstructure:"http,omitempty"`
-	Grpc       Grpc       `mapstructure:"grpc,omitempty"`
-	Logger     Logger     `mapstructure:"logger,omitempty"`
-	Postgresql Postgresql `mapstructure:"postgresql,omitempty"`
-	Mysql      Mysql      `mapstructure:"mysql,omitempty"`
-	Mssql      Mssql      `mapstructure:"mssql,omitempty"`
-	MongoDB    MongoDB    `mapstructure:"mongodb,omitempty"`
-	Redis      Redis      `mapstructure:"redis,omitempty"`
-	Clickhouse Clickhouse `mapstructure:"clickhouse,omitempty"`
-	Firestore  Firestore  `mapstructure:"firestore,omitempty"`
-	Jobs       Jobs       `mapstructure:"jobs,omitempty"`
-	Nats       Nats       `mapstructure:"nats,omitempty"`
-	RabbitMq   RabbitMq   `mapstructure:"rabbitmq,omitempty"`
-	Sendgrid   Sendgrid   `mapstructure:"sendgrid,omitempty"`
+	Server       Server       `mapstructure:"server,omitempty"`
+	Auth         Auth         `mapstructure:"auth,omitempty"`
+	Swagger      Swagger      `mapstructure:"swagger,omitempty"`
+	Http         Http         `mapstructure:"http,omitempty"`
+	Grpc         Grpc         `mapstructure:"grpc,omitempty"`
+	Logger       Logger       `mapstructure:"logger,omitempty"`
+	Postgresql   Postgresql   `mapstructure:"postgresql,omitempty"`
+	Mysql        Mysql        `mapstructure:"mysql,omitempty"`
+	Mssql        Mssql        `mapstructure:"mssql,omitempty"`
+	MongoDB      MongoDB      `mapstructure:"mongodb,omitempty"`
+	Redis        Redis        `mapstructure:"redis,omitempty"`
+	Clickhouse   Clickhouse   `mapstructure:"clickhouse,omitempty"`
+	Firestore    Firestore    `mapstructure:"firestore,omitempty"`
+	Jobs         Jobs         `mapstructure:"jobs,omitempty"`
+	Nats         Nats         `mapstructure:"nats,omitempty"`
+	RabbitMq     RabbitMq     `mapstructure:"rabbitmq,omitempty"`
+	Sendgrid     Sendgrid     `mapstructure:"sendgrid,omitempty"`
+	GoogleOauth2 GoogleOauth2 `mapstructure:"google_oauth2,omitempty"`
+}
+
+type GoogleOauth2 struct {
+	CLIENT_ID     string `mapstructure:"CLIENT_ID,omitempty"`
+	CLIENT_SECRET string `mapstructure:"CLIENT_SECRET,omitempty"`
+	REDIRECT_URI  string `mapstructure:"REDIRECT_URI,omitempty"`
+	SCOPES        string `mapstructure:"SCOPES,omitempty"`
 }
 
 // Swagger config

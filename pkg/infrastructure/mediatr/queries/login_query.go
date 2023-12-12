@@ -22,7 +22,7 @@ type LoginQueryHandler struct {
 
 type LoginQuery struct {
 	Username string `json:"username" validate:"required"`
-	Password string `json:"password" validate:"required,min=6,max=20"`
+	Password string `json:"password" validate:"required"`
 }
 
 type LoginQueryResponse struct {

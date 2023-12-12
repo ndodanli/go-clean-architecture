@@ -32,7 +32,7 @@ func (h *SendConfirmationEmailForgotPasswordQueryHandler) Handle(echoCtx echo.Co
 	ctx := echoCtx.Request().Context()
 	appUserRepo := h.UOW.AppUserRepo(ctx, h.TM)
 
-	appUser, err := appUserRepo.FindOneByEmail(query.Email, []string{"id", "email_confirmed", "fp_email_confirmation_details"})
+	appUser, err := appUserRepo.FindOneByEmail(query.Email, []string{"id", "email_confirmed", "fp_email_confirmation"})
 	if err != nil {
 		return result.Err(err)
 	}
@@ -45,21 +45,21 @@ func (h *SendConfirmationEmailForgotPasswordQueryHandler) Handle(echoCtx echo.Co
 		return result.Err(httperr.CannotChangePasswordEmailNotConfirmedError)
 	}
 
-	validDate := appUser.FpEmailConfirmationDetails.ExpiresAt.Add(-9 * time.Minute)
+	validDate := appUser.FpEmailConfirmation.ExpiresAt.Add(-9 * time.Minute)
 	if time.Now().Before(validDate) {
 		return result.Err(httperr.CodeRecentlySentError)
 	}
 
-	appUser.FpEmailConfirmationDetails.Code = utils.GenerateCodeOnlyNumbers(6)
-	appUser.FpEmailConfirmationDetails.ExpiresAt = time.Now().Add(10 * time.Minute)
+	appUser.FpEmailConfirmation.Code = utils.GenerateCodeOnlyNumbers(6)
+	appUser.FpEmailConfirmation.ExpiresAt = time.Now().Add(10 * time.Minute)
 
-	err = h.AppServices.SendgridService.SendEmail(query.Email, "Forgot Password", "Your code is: "+appUser.FpEmailConfirmationDetails.Code)
+	err = h.AppServices.SendgridService.SendEmail(query.Email, "Forgot Password", "Your code is: "+appUser.FpEmailConfirmation.Code)
 	if err != nil {
 		return result.Err(err)
 	}
 
 	_, err = appUserRepo.PatchAppUser(appUser.Id, map[string]interface{}{
-		"fp_email_confirmation_details": appUser.FpEmailConfirmationDetails,
+		"fp_email_confirmation": appUser.FpEmailConfirmation,
 	})
 	if err != nil {
 		return result.Err(err)

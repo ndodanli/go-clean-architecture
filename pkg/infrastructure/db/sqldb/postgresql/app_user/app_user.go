@@ -3,12 +3,14 @@ package app_user
 import "time"
 
 type AppUser struct {
-	Id                         int64                    `db:"id" json:"id"`
-	Username                   string                   `db:"username" json:"username"`
-	Email                      string                   `db:"email" json:"email"`
-	Password                   string                   `db:"password" json:"password"`
-	EmailConfirmed             bool                     `db:"email_confirmed" json:"emailConfirmed"`
-	FpEmailConfirmationDetails EmailConfirmationDetails `db:"fp_email_confirmation_details" json:"fpEmailConfirmationDetails"`
+	Id                  int64                    `db:"id" json:"id"`
+	Username            string                   `db:"username" json:"username"`
+	Email               string                   `db:"email" json:"email"`
+	Password            string                   `db:"password" json:"password"`
+	EmailConfirmed      bool                     `db:"email_confirmed" json:"emailConfirmed"`
+	FpEmailConfirmation EmailConfirmationDetails `db:"fp_email_confirmation" json:"fpEmailConfirmationDetails"`
+	EmailConfirmation   EmailConfirmationDetails `db:"email_confirmation" json:"emailConfirmationDetails"`
+	Roles               []int                    `db:"roles" json:"roles"`
 
 	CreatedAt time.Time `db:"created_at" json:"createdAt"`
 	UpdatedAt time.Time `db:"updated_at" json:"updatedAt"`

@@ -39,7 +39,7 @@ func (s *server) NewHttpServer(ctx context.Context, db *pgxpool.Pool, logger log
 	e = echo.New()
 
 	// Initialize other middlewares
-	mw.Init(s.cfg)
+	mw.Init(s.cfg, lifetime.AppServicesSingleton, db)
 
 	// Handle ip extraction
 	handleIpExtraction(e, s.cfg)
@@ -233,7 +233,7 @@ func getLoggerConfig(logger logger.ILogger) middleware.RequestLoggerConfig {
 		LogRequestID: true,
 		LogLatency:   true,
 		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
-			logger.Info(fmt.Sprintf("Req-Log M:%s, URI:%s, S:%d, L:%s", v.Method, v.URI, v.Status, v.Latency),
+			logger.Info(fmt.Sprintf("HttpReq-Log M:%s, URI:%s, S:%d, L:%s", v.Method, v.URI, v.Status, v.Latency),
 				nil, c.Get(constant.General.TraceIDKey).(string))
 
 			return nil

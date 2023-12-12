@@ -34,7 +34,7 @@ func (h *ConfirmForgotPasswordCodeQueryHandler) Handle(echoCtx echo.Context, que
 	ctx := echoCtx.Request().Context()
 	appUserRepo := h.UOW.AppUserRepo(ctx, h.TM)
 
-	appUser, err := appUserRepo.FindOneByEmail(query.Email, []string{"id", "password", "email_confirmed", "fp_email_confirmation_details"})
+	appUser, err := appUserRepo.FindOneByEmail(query.Email, []string{"id", "password", "email_confirmed", "fp_email_confirmation"})
 	if err != nil {
 		return result.Err(err)
 	}
@@ -47,11 +47,11 @@ func (h *ConfirmForgotPasswordCodeQueryHandler) Handle(echoCtx echo.Context, que
 		return result.Err(httperr.CannotChangePasswordEmailNotConfirmedError)
 	}
 
-	//if time.Now().After(appUser.FpEmailConfirmationDetails.ExpiresAt) {
+	//if time.Now().After(appUser.FpEmailConfirmation.ExpiresAt) {
 	//	return result.Err(httperr.ConfirmationCodeExpiredError)
 	//}
 
-	if appUser.FpEmailConfirmationDetails.Code != query.Code {
+	if appUser.FpEmailConfirmation.Code != query.Code {
 		return result.Err(httperr.InvalidConfirmationCodeError)
 	}
 
@@ -68,12 +68,12 @@ func (h *ConfirmForgotPasswordCodeQueryHandler) Handle(echoCtx echo.Context, que
 		}
 	}
 
-	appUser.FpEmailConfirmationDetails.Code = ""
+	appUser.FpEmailConfirmation.Code = ""
 
 	newPasswordHash, err := bcrypt.GenerateFromPassword([]byte(query.NewPassword), bcrypt.DefaultCost)
 	_, err = appUserRepo.PatchAppUser(appUser.Id, map[string]interface{}{
-		"password":                      newPasswordHash,
-		"fp_email_confirmation_details": appUser.FpEmailConfirmationDetails,
+		"password":              newPasswordHash,
+		"fp_email_confirmation": appUser.FpEmailConfirmation,
 	})
 	if err != nil {
 		return result.Err(err)

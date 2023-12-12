@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=1.0, initial-scale=1.0">
+    <title>Go-Clean-Arch Email</title>
+</head>
+
+<body>
+<div style="padding: 1%;">
+    <div id="email-confirmation"></div>
+</div>
+<script>
+    const el = document.getElementById("email-confirmation")
+    const target = location.protocol + "//" + location.host + location.pathname + "Confirm" + location.search;
+    console.log("target", target)
+    fetch(target, {method: "get"})
+        .then(response => response.json())
+        .then(data => {
+            console.log("data", data)
+            if (!data.s) {
+                el.innerHTML = `<div style="background-color:red">${data.m}</div>`
+            } else {
+                el.innerHTML = `<div style="background-color:green">${data.m}</div>`
+            }
+        })
+        .catch(err => {
+            console.log("err", err)
+            el.innerHTML = `<div style="background-color:red">${err.message}</div>`
+        });
+</script>
+</body>
+
+
+</html>
