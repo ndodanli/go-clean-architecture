@@ -26,8 +26,8 @@ type TestQueryResponse struct {
 	TestArray []int  `json:"testArray"`
 }
 
-func (h *TestQueryHandler) Handle(echoCtx echo.Context, query *TestQuery) *baseres.Result[TestQueryResponse, error, struct{}] {
-	result := baseres.NewResult[TestQueryResponse, error, struct{}]()
+func (h *TestQueryHandler) Handle(echoCtx echo.Context, query *TestQuery) *baseres.Result[*TestQueryResponse, error, struct{}] {
+	result := baseres.NewResult[*TestQueryResponse, error, struct{}](nil)
 	result.Data.TestIDRes = "Test 123"
 	result.Data.TestArray = []int{}
 	ctx := echoCtx.Request().Context()
@@ -47,7 +47,7 @@ func (h *TestQueryHandler) Handle(echoCtx echo.Context, query *TestQuery) *baser
 	redisSetHashResult := services.SetHash(ctx, h.AppServices.RedisService.Client(), "testMasterKey", result, 0)
 	_ = redisSetHashResult
 
-	redisAcquireHashResult, err := services.AcquireHash(ctx, h.AppServices.RedisService.Client(), "testMasterKey1", 0, []string{}, func() (*baseres.Result[TestQueryResponse, error, struct{}], error) {
+	redisAcquireHashResult, err := services.AcquireHash(ctx, h.AppServices.RedisService.Client(), "testMasterKey1", 0, []string{}, func() (*baseres.Result[*TestQueryResponse, error, struct{}], error) {
 		return result, nil
 	})
 

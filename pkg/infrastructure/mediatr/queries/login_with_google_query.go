@@ -28,7 +28,7 @@ type LoginWithGoogleQueryResponse struct {
 }
 
 func (h *LoginWithGoogleQueryHandler) Handle(echoCtx echo.Context, query *LoginWithGoogleQuery) *baseres.Result[*LoginWithGoogleQueryResponse, error, struct{}] {
-	result := baseres.NewResult[*LoginWithGoogleQueryResponse, error, struct{}]()
+	result := baseres.NewResult[*LoginWithGoogleQueryResponse, error, struct{}](nil)
 	ctx := echoCtx.Request().Context()
 	//authRepo := h.UOW.AuthRepo(ctx, h.TM)
 	token, err := oauthcfg.GoogleOauth2Config.Exchange(ctx, query.Code)

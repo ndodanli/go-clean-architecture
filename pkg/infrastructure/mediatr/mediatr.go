@@ -193,7 +193,7 @@ func Send[TRequest any, TResponse any](echoCtx echo.Context, request TRequest) T
 		// request-response strategy should have exactly one handler and if we can't find a corresponding handler, we should return an error
 		//return *new(TResponse), errors.Errorf("no handler for request %T", request)
 		echoCtx.Logger().Error("no handler for request %T", request)
-		baseHttpApiResult := res.NewResult[any, *echo.HTTPError, any]()
+		baseHttpApiResult := res.NewResult[any, *echo.HTTPError, any](nil)
 		baseHttpApiResult.SetErrorMessage("Internal Server Error")
 		echoCtx.JSON(500, baseHttpApiResult)
 		return response
@@ -217,7 +217,7 @@ func Send[TRequest any, TResponse any](echoCtx echo.Context, request TRequest) T
 	if !ok {
 		//return *new(TResponse), errors.Errorf("handler for request %T is not a Handler", request)
 		echoCtx.Logger().Error("handler for request %T is not a Handler", request)
-		baseHttpApiResult := res.NewResult[any, *echo.HTTPError, any]()
+		baseHttpApiResult := res.NewResult[any, *echo.HTTPError, any](nil)
 		baseHttpApiResult.SetErrorMessage("Internal Server Error")
 		echoCtx.JSON(500, baseHttpApiResult)
 		return response

@@ -8,7 +8,7 @@ import (
 )
 
 type IUnitOfWork interface {
-	GetDB() *pgxpool.Pool
+	DB() *pgxpool.Pool
 	AppUserRepo(ctx context.Context, tm *postgresql.TxSessionManager) repo.IAppUserRepo
 	AuthRepo(ctx context.Context, tm *postgresql.TxSessionManager) repo.IAuthRepo
 }
@@ -23,7 +23,7 @@ func NewUnitOfWork(db *pgxpool.Pool) *UnitOfWork {
 	}
 }
 
-func (uow UnitOfWork) GetDB() *pgxpool.Pool {
+func (uow UnitOfWork) DB() *pgxpool.Pool {
 	return uow.db
 }
 

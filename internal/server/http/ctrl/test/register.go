@@ -9,7 +9,7 @@ import (
 func RegisterMediatrHandlers() error {
 	var err error
 	err = mediatr.RegisterRequestHandler[
-		*queries.TestQuery, *baseres.Result[queries.TestQueryResponse, error, struct{}],
+		*queries.TestQuery, *baseres.Result[*queries.TestQueryResponse, error, struct{}],
 	](&queries.TestQueryHandler{})
 	if err != nil {
 		return err

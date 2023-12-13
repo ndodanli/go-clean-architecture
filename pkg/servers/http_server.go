@@ -104,9 +104,14 @@ func (s *server) NewHttpServer(ctx context.Context, db *pgxpool.Pool, logger log
 
 	go func() {
 		address := fmt.Sprintf("%s:%s", s.cfg.Http.HOST, s.cfg.Http.PORT)
+		routes := e.Routes()
+		err := syncRoutesToDB(db, routes)
+		if err != nil {
+			lifetime.LoggerSingleton.Error("Error while upserting routes to db", err, "app")
+			os.Exit(1)
+		}
+		printRoutes(routes)
 		go func() {
-			fmt.Printf("Routes:\n")
-			printRoutes(e.Routes())
 			select {
 			case done := <-ctx.Done():
 				lifetime.LoggerSingleton.Info(fmt.Sprintf("Server is shutting down. Reason: %s", done), nil, "app")
@@ -129,7 +134,7 @@ func getGlobalErrorHandler(logger logger.ILogger) func(err error, c echo.Context
 		if errors.As(err, &he) {
 			errorData, ok := he.Message.(*httperr.ErrorData)
 			if ok {
-				baseHttpApiResult := res.NewResult[any, *echo.HTTPError, any]()
+				baseHttpApiResult := res.NewResult[any, *echo.HTTPError, any](nil)
 				if errorData.Status == 0 {
 					errorData.Status = http.StatusInternalServerError
 				}
@@ -158,7 +163,7 @@ func getGlobalErrorHandler(logger logger.ILogger) func(err error, c echo.Context
 			}
 		} else {
 			logger.Error(err.Error(), err, c.Get(constant.General.TraceIDKey).(string))
-			result := res.NewResult[any, *echo.HTTPError, any]()
+			result := res.NewResult[any, *echo.HTTPError, any](nil)
 			result.SetErrorMessage("Internal Server Error")
 			jsonError := c.JSON(http.StatusInternalServerError, result)
 			if jsonError != nil {
@@ -177,7 +182,6 @@ func getRequestResponseMiddleware(logger logger.ILogger) func(next echo.HandlerF
 			if err != nil { //exec main process
 				c.Error(err)
 			}
-
 			// Release all tx sessions if there are any
 			txSessions := c.Get(constant.General.TxSessionManagerKey)
 			if txSessions != nil {
@@ -194,12 +198,13 @@ func getRequestResponseMiddleware(logger logger.ILogger) func(next echo.HandlerF
 
 func getRecoverConfig() middleware.RecoverConfig {
 	return middleware.RecoverConfig{
-		Skipper:           middleware.DefaultSkipper,
-		StackSize:         stackSize,
-		DisableStackAll:   false,
-		DisablePrintStack: false,
-		LogLevel:          0,
-		LogErrorFunc:      nil,
+		Skipper:             middleware.DefaultSkipper,
+		StackSize:           stackSize,
+		DisableStackAll:     false,
+		DisablePrintStack:   false,
+		DisableErrorHandler: false,
+		LogLevel:            0,
+		LogErrorFunc:        nil,
 	}
 }
 
@@ -293,6 +298,50 @@ func handleIpExtraction(e *echo.Echo, cfg *configs.Config) {
 	default:
 		e.IPExtractor = echo.ExtractIPDirect()
 	}
+}
+
+func syncRoutesToDB(db *pgxpool.Pool, routes []*echo.Route) error {
+	ctx := context.Background()
+	insertQuery := "INSERT INTO endpoint (name, method) VALUES "
+	values := []interface{}{}
+
+	for i, route := range routes {
+		insertQuery += "(" + fmt.Sprintf("$%d, $%d)", 2*i+1, 2*i+2)
+		values = append(values, route.Path, route.Method)
+
+		if i < len(routes)-1 {
+			insertQuery += ", "
+		}
+	}
+
+	insertQuery += " ON CONFLICT (name, method) DO NOTHING"
+
+	_, err := db.Exec(ctx, insertQuery, values...)
+	if err != nil {
+		return err
+	}
+
+	updateQuery := `
+        UPDATE endpoint
+        SET deleted_at = NOW()
+        WHERE (name, method) NOT IN (`
+
+	for i, _ := range routes {
+		updateQuery += fmt.Sprintf("($%d, $%d)", 2*i+1, 2*i+2)
+
+		if i < len(routes)-1 {
+			updateQuery += ", "
+		}
+	}
+
+	updateQuery += ") AND deleted_at = '0001-01-01 00:00:00'"
+
+	_, err = db.Exec(ctx, updateQuery, values...)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func printRoutes(routes []*echo.Route) {

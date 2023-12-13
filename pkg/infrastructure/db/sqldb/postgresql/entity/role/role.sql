@@ -12,5 +12,5 @@ create table if not exists role
 
 );
 
-CREATE INDEX idx_role_id ON role(id);
-CREATE INDEX idx_role_endpoint_ids ON role USING GIN(endpoint_ids);
+CREATE UNIQUE INDEX role_name_uidx ON role(name);
+CREATE INDEX role_endpoint_ids_idx ON role USING GIN(endpoint_ids);

@@ -6,7 +6,6 @@ import (
 	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/mediatr"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/mediatr/queries"
-	mw "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/middleware"
 	oauthcfg "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/oauth_cfg"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/ndodanli/go-clean-architecture/pkg/utils"
@@ -39,7 +38,7 @@ func NewAuthController(group *echo.Group, logger logger.ILogger) (*AuthControlle
 	c.cGroup.GET("/loginWithGoogle", c.LoginWithGoogle)
 	c.cGroup.GET("/loginWithGoogle/callback", c.LoginWithGoogleCallback)
 	c.cGroup.GET("/refreshToken/:refreshToken", c.RefreshToken)
-	c.cGroup.GET("/forgotPassword/:email", c.ForgotPassword, mw.Authenticate)
+	c.cGroup.GET("/forgotPassword/:email", c.ForgotPassword)
 	c.cGroup.POST("/confirmForgotPasswordCode", c.ConfirmForgotPasswordCode)
 	c.cGroup.GET("/emailConfirmation", c.EmailConfirmationHTML)
 	c.cGroup.GET("/emailConfirmationConfirm", c.EmailConfirmationConfirm)
@@ -47,33 +46,31 @@ func NewAuthController(group *echo.Group, logger logger.ILogger) (*AuthControlle
 	return c, nil
 }
 
-//// Register godoc
-//// @Security BearerAuth
-//// @Summary      Register
-//// @Description  Register
-//// @Tags         Auth
-//// @Accept       json
-//// @Produce      json
-//// @Param        loginReq body queries.RegisterQuery true "Username"
-//// @Success      200  {object}   baseres.SwaggerSuccessRes[queries.RegisterQueryResponse] "OK. On success."
-//// @Failure      400  {object}   baseres.SwaggerValidationErrRes "Bad Request. On any validation error."
-//// @Failure      401  {object}   baseres.SwaggerUnauthorizedErrRes "Unauthorized."
-//// @Failure      500  {object}   baseres.SwaggerInternalErrRes "Internal Server Error."
-//// @Router       /v1/auth/login [post]
-//func (ac *AuthController) Register(c echo.Context) error {
-//	var query queries.RegisterQuery
-//	if err := utils.BindAndValidate(c, &query); err != nil {
-//		return err
-//	}
-//	res := mediatr.Send[*queries.RegisterQuery, *baseres.Result[*queries.RegisterQueryResponse, error, struct{}]](c, &query)
-//	if res.IsErr() {
-//		return res.GetErr()
-//	}
-//	return c.JSON(http.StatusOK, res)
-//}
+// // Register godoc
+// // @Summary      Register
+// // @Description  Register
+// // @Tags         Auth
+// // @Accept       json
+// // @Produce      json
+// // @Param        loginReq body queries.RegisterQuery true "Username"
+// // @Success      200  {object}   baseres.SwaggerSuccessRes[queries.RegisterQueryResponse] "OK. On success."
+// // @Failure      400  {object}   baseres.SwaggerValidationErrRes "Bad Request. On any validation error."
+// // @Failure      401  {object}   baseres.SwaggerUnauthorizedErrRes "Unauthorized."
+// // @Failure      500  {object}   baseres.SwaggerInternalErrRes "Internal Server Error."
+// // @Router       /v1/auth/login [post]
+func (ac *AuthController) Register(c echo.Context) error {
+	var query queries.RegisterQuery
+	if err := utils.BindAndValidate(c, &query); err != nil {
+		return err
+	}
+	res := mediatr.Send[*queries.RegisterQuery, *baseres.Result[*queries.RegisterQueryResponse, error, struct{}]](c, &query)
+	if res.IsErr() {
+		return res.GetErr()
+	}
+	return c.JSON(http.StatusOK, res)
+}
 
 // Login godoc
-// @Security BearerAuth
 // @Summary      Login
 // @Description  Login
 // @Tags         Auth
@@ -123,7 +120,6 @@ func (ct *AuthController) RefreshToken(c echo.Context) error {
 }
 
 // ForgotPassword godoc
-// @Security BearerAuth
 // @Summary      ForgotPassword
 // @Description  ForgotPassword
 // @Tags         Auth
@@ -148,7 +144,6 @@ func (ct *AuthController) ForgotPassword(c echo.Context) error {
 }
 
 // ConfirmForgotPasswordCode godoc
-// @Security BearerAuth
 // @Summary      ConfirmForgotPasswordCode
 // @Description  ConfirmForgotPasswordCode
 // @Tags         Auth

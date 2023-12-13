@@ -120,7 +120,7 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 		if err := cv.validator.Struct(reqParams.Params); err != nil {
 			var ve validator.ValidationErrors
 			if errors.As(err, &ve) {
-				result := res.NewResult[any, error, string]()
+				result := res.NewResult[any, error, string](nil)
 
 				out := make([]res.ValidationError, len(ve))
 				for j, fe := range ve {

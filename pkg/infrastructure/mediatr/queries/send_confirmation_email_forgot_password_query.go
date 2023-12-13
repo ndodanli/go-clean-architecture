@@ -28,7 +28,7 @@ type SendConfirmationEmailForgotPasswordQueryResponse struct {
 }
 
 func (h *SendConfirmationEmailForgotPasswordQueryHandler) Handle(echoCtx echo.Context, query *SendConfirmationEmailForgotPasswordQuery) *baseres.Result[*SendConfirmationEmailForgotPasswordQueryResponse, error, struct{}] {
-	result := baseres.NewResult[*SendConfirmationEmailForgotPasswordQueryResponse, error, struct{}]()
+	result := baseres.NewResult[*SendConfirmationEmailForgotPasswordQueryResponse, error, struct{}](nil)
 	ctx := echoCtx.Request().Context()
 	appUserRepo := h.UOW.AppUserRepo(ctx, h.TM)
 

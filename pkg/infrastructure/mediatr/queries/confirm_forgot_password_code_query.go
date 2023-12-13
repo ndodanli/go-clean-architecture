@@ -30,7 +30,7 @@ type ConfirmForgotPasswordCodeQueryResponse struct {
 }
 
 func (h *ConfirmForgotPasswordCodeQueryHandler) Handle(echoCtx echo.Context, query *ConfirmForgotPasswordCodeQuery) *baseres.Result[*ConfirmForgotPasswordCodeQueryResponse, error, struct{}] {
-	result := baseres.NewResult[*ConfirmForgotPasswordCodeQueryResponse, error, struct{}]()
+	result := baseres.NewResult[*ConfirmForgotPasswordCodeQueryResponse, error, struct{}](nil)
 	ctx := echoCtx.Request().Context()
 	appUserRepo := h.UOW.AppUserRepo(ctx, h.TM)
 

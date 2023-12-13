@@ -1,8 +1,10 @@
 package services
 
 import (
+	"context"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/ndodanli/go-clean-architecture/configs"
 	"github.com/ndodanli/go-clean-architecture/pkg/utils"
 	"strings"
@@ -10,13 +12,15 @@ import (
 )
 
 type AuthUser struct {
-	ID int64
+	ID      int64
+	RoleIds []int64
 }
 
 type IJWTService interface {
 	GenerateAccessToken(id string) (string, error)
 	ValidateToken(token string) (*jwt.Token, error)
 	GenerateRefreshToken() (u uuid.UUID, expiresAt time.Time)
+	Authorize(ctx context.Context, db *pgxpool.Pool, appUserId int64, endpoint string, endpointMethod string) (*AuthorizeResponse, error)
 }
 
 type JWTService struct {
@@ -35,6 +39,27 @@ func NewJWTService(ac configs.Auth) IJWTService {
 		issuer:                 ac.JWT_ISSUER,
 		secret:                 []byte(ac.JWT_SECRET),
 	}
+}
+
+type AuthorizeResponse struct {
+	IsAuthorized   bool
+	AppUserRoleIds []int64
+}
+
+func (js *JWTService) Authorize(ctx context.Context, db *pgxpool.Pool, appUserId int64, endpoint string, endpointMethod string) (*AuthorizeResponse, error) {
+	var isAuthorized bool
+	var appUserRoleIds []int64
+	err := db.QueryRow(ctx, `SELECT * FROM check_authorization($1, $2, $3)`,
+		appUserId, endpoint, endpointMethod).Scan(&isAuthorized, &appUserRoleIds)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &AuthorizeResponse{
+		IsAuthorized:   isAuthorized,
+		AppUserRoleIds: appUserRoleIds,
+	}, nil
 }
 
 func (js *JWTService) GenerateAccessToken(id string) (string, error) {

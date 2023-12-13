@@ -40,8 +40,6 @@ func getJWTMiddleware(cfg *configs.Config, jwtService services.IJWTService, db *
 	}
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			requestedEndpoint := c.Path()
-			_ = requestedEndpoint
 			token, err := jwtService.ValidateToken(strings.Replace(c.Request().Header.Get("Authorization"), "Bearer ", "", 1))
 			if err != nil {
 				return httperr.UnauthorizedError
@@ -56,35 +54,22 @@ func getJWTMiddleware(cfg *configs.Config, jwtService services.IJWTService, db *
 			sub, _ := claims.GetSubject()
 			subInt64, _ := strconv.ParseInt(sub, 10, 64)
 
-			c.Set(constant.General.AuthUserId, &services.AuthUser{
-				ID: subInt64,
-			})
-
 			// Authorize
-			exists := false
-			// TODO: make this db function
-			err = db.QueryRow(c.Request().Context(), `
-WITH expanded_roles AS (SELECT UNNEST(roles) AS role_id
-                        FROM app_user
-                        WHERE id = $1
-                          AND deleted_at = '0001-01-01T00:00:00Z'
-                        LIMIT 1),
-	-- Fetch endpoint ID directly
-     endpoint AS (SELECT id
-                     FROM endpoint
-                     WHERE name = $2
-                       AND deleted_at = '0001-01-01T00:00:00Z'
-                     LIMIT 1)
-
-	-- Check authorization
-SELECT EXISTS (SELECT 1
-               FROM expanded_roles er
-                        JOIN role r ON r.id = er.role_id
-               WHERE r.deleted_at = '0001-01-01T00:00:00Z'
-                 AND (SELECT id from endpoint) = ANY (r.endpoint_ids));`, subInt64, requestedEndpoint).Scan(&exists)
+			requestedEndpoint := c.Path()
+			var authorizeResponse *services.AuthorizeResponse
+			authorizeResponse, err = jwtService.Authorize(c.Request().Context(), db, subInt64, requestedEndpoint, c.Request().Method)
 			if err != nil {
+				return httperr.ErrorWhileAuthorizingError
+			}
+
+			if !authorizeResponse.IsAuthorized {
 				return httperr.UnauthorizedError
 			}
+
+			c.Set(constant.General.AuthUser, &services.AuthUser{
+				ID:      subInt64,
+				RoleIds: authorizeResponse.AppUserRoleIds,
+			})
 
 			return next(c)
 		}

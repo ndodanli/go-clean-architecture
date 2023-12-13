@@ -121,8 +121,9 @@ func (r *Result[D, E, M]) ErrWithMetadata(error E, metadata metadataType) *Resul
 	return r
 }
 
-func NewResult[R resultType, E ErrorType, M metadataType]() *Result[R, E, M] {
+func NewResult[R resultType, E ErrorType, M metadataType](data R) *Result[R, E, M] {
 	return &Result[R, E, M]{
 		Success: true,
+		Data:    data,
 	}
 }

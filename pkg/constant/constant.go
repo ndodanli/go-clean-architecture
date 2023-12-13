@@ -4,7 +4,7 @@ type generalCns struct {
 	UnitOfWorkKey       string
 	TraceIDKey          string
 	TxSessionManagerKey string
-	AuthUserId          string
+	AuthUser            string
 	DBKey               string
 }
 
@@ -12,7 +12,7 @@ var General = generalCns{
 	UnitOfWorkKey:       "g1",
 	TraceIDKey:          "g2",
 	TxSessionManagerKey: "g3",
-	AuthUserId:          "g4",
+	AuthUser:            "g4",
 	DBKey:               "g5",
 }
 

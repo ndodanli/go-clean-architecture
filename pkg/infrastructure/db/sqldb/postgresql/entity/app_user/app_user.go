@@ -1,4 +1,4 @@
-package app_user
+package entity
 
 import "time"
 

@@ -14,7 +14,7 @@ create table if not exists app_user
       "code": "",
       "expires_at": null
     }',
-    roles                         int[]        not null default '{}',
+    role_ids                         int[]        not null default '{}',
 
     created_at                    timestamp    not null default now(),
     updated_at                    timestamp    not null default now(),

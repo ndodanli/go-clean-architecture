@@ -6,6 +6,7 @@ import (
 	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/mediatr"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/mediatr/queries"
+	mw "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/middleware"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"net/http"
 	"os"
@@ -30,7 +31,7 @@ func NewTestController(group *echo.Group, logger logger.ILogger) (*TestControlle
 		logger: logger,
 	}
 
-	ac.cGroup.GET("/test", ac.Test)
+	ac.cGroup.GET("/test", ac.Test, mw.Authenticate)
 
 	return ac, nil
 }

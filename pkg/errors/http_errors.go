@@ -33,8 +33,9 @@ var (
 
 // Static errors
 var (
-	InternalServerError      *echo.HTTPError
-	InvalidRefreshTokenError *echo.HTTPError
+	InternalServerError        *echo.HTTPError
+	InvalidRefreshTokenError   *echo.HTTPError
+	ErrorWhileAuthorizingError *echo.HTTPError
 )
 
 var (
@@ -53,6 +54,7 @@ var (
 	CannotChangePasswordEmailNotConfirmedError *echo.HTTPError
 	PasswordCannotBeSameAsOldError             *echo.HTTPError
 	EmailAlreadyConfirmedError                 *echo.HTTPError
+	EndpointIdsAreNotValid                     *echo.HTTPError
 )
 
 func Init() {
@@ -127,5 +129,14 @@ func Init() {
 	EmailAlreadyConfirmedError = echo.NewHTTPError(http.StatusBadRequest, &ErrorData{
 		Status:  400,
 		Message: "Email already confirmed",
+	})
+	ErrorWhileAuthorizingError = echo.NewHTTPError(http.StatusInternalServerError, &ErrorData{
+		Status:           500,
+		Message:          "Error while authorizing",
+		ShouldLogAsError: true,
+	})
+	EndpointIdsAreNotValid = echo.NewHTTPError(http.StatusBadRequest, &ErrorData{
+		Status:  400,
+		Message: "Endpoint ids are not valid",
 	})
 }

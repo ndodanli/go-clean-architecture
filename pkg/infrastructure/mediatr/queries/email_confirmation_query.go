@@ -5,7 +5,7 @@ import (
 	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/app_user"
+	entity "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/entity/app_user"
 	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/unit_of_work"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
@@ -29,7 +29,7 @@ type EmailConfirmationQueryResponse struct {
 }
 
 func (h *EmailConfirmationQueryHandler) Handle(echoCtx echo.Context, query *EmailConfirmationQuery) *baseres.Result[*EmailConfirmationQueryResponse, error, struct{}] {
-	result := baseres.NewResult[*EmailConfirmationQueryResponse, error, struct{}]()
+	result := baseres.NewResult[*EmailConfirmationQueryResponse, error, struct{}](nil)
 	ctx := echoCtx.Request().Context()
 	appUserRepo := h.UOW.AppUserRepo(ctx, h.TM)
 
@@ -40,7 +40,7 @@ func (h *EmailConfirmationQueryHandler) Handle(echoCtx echo.Context, query *Emai
 		return result.Err(err)
 	}
 
-	var appUser *app_user.AppUser
+	var appUser *entity.AppUser
 	appUser, err = appUserRepo.FindOneById(int64Uid, []string{"email_confirmed", "email_confirmation"})
 	if err != nil {
 		return result.Err(httperr.AppUserNotFoundError)

@@ -30,7 +30,7 @@ type RefreshTokenQueryResponse struct {
 }
 
 func (h *RefreshTokenQueryHandler) Handle(echoCtx echo.Context, query *RefreshTokenQuery) *baseres.Result[*RefreshTokenQueryResponse, error, struct{}] {
-	result := baseres.NewResult[*RefreshTokenQueryResponse, error, struct{}]()
+	result := baseres.NewResult[*RefreshTokenQueryResponse, error, struct{}](nil)
 	ctx := echoCtx.Request().Context()
 	authRepo := h.UOW.AuthRepo(ctx, h.TM)
 

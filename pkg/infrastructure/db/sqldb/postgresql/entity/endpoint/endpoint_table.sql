@@ -3,6 +3,7 @@ create table if not exists endpoint
 (
     id          bigserial primary key,
     name        text      not null,
+    method      text      not null,
     description text,
 
     created_at  timestamp not null default now(),
@@ -10,4 +11,4 @@ create table if not exists endpoint
     deleted_at  timestamp not null default '0001-01-01T00:00:00Z'
 );
 
-CREATE UNIQUE INDEX uidx_endpoint_name ON endpoint(name);
+CREATE UNIQUE INDEX uidx_endpoint_name ON endpoint (name, method);

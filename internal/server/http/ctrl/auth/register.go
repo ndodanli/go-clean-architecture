@@ -50,5 +50,12 @@ func RegisterMediatrHandlers() error {
 		return err
 	}
 
+	err = mediatr.RegisterRequestHandler[
+		*queries.RegisterQuery, *baseres.Result[*queries.RegisterQueryResponse, error, struct{}],
+	](&queries.RegisterQueryHandler{})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

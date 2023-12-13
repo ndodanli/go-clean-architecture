@@ -192,6 +192,18 @@ func handleTransaction(tx pgx.Tx, ctx context.Context, err error) error {
 		panicErr = tx.Commit(ctx)
 	}
 
+	if panicErr != nil && panicErr.Error() == "conn busy" {
+		isConnectionClosed := tx.Conn().PgConn().IsClosed()
+		if !isConnectionClosed {
+			closeErr := tx.Conn().Close(ctx)
+			if closeErr != nil {
+				panicErr = closeErr
+			}
+
+			panicErr = tx.Rollback(ctx)
+		}
+	}
+
 	return panicErr
 }
 

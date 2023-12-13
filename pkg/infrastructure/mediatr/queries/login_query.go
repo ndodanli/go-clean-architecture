@@ -31,11 +31,10 @@ type LoginQueryResponse struct {
 }
 
 func (h *LoginQueryHandler) Handle(echoCtx echo.Context, query *LoginQuery) *baseres.Result[*LoginQueryResponse, error, struct{}] {
-	result := baseres.NewResult[*LoginQueryResponse, error, struct{}]()
+	result := baseres.NewResult[*LoginQueryResponse, error, struct{}](nil)
 	ctx := echoCtx.Request().Context()
 	authRepo := h.UOW.AuthRepo(ctx, h.TM)
 	repoRes, err := authRepo.GetIdAndPasswordWithUsername(query.Username)
-
 	if err != nil {
 		return result.Err(err)
 	}
@@ -44,12 +43,21 @@ func (h *LoginQueryHandler) Handle(echoCtx echo.Context, query *LoginQuery) *bas
 		return result.Err(httperr.UsernameOrPasswordIncorrectError)
 	}
 
+	authorizeResponse, err := h.AppServices.JWTService.Authorize(ctx, h.UOW.DB(), repoRes.ID, echoCtx.Path(), echoCtx.Request().Method)
+	if err != nil {
+		return result.Err(err)
+	}
+
+	if !authorizeResponse.IsAuthorized {
+		return result.Err(httperr.UnauthorizedError)
+	}
+
 	err = bcrypt.CompareHashAndPassword([]byte(repoRes.Password), []byte(query.Password))
 	if err != nil {
 		if !errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
 			return result.Err(err)
 		} else {
-			return result.Err(httperr.PasswordCannotBeSameAsOldError)
+			return result.Err(httperr.UsernameOrPasswordIncorrectError)
 		}
 	}
 
