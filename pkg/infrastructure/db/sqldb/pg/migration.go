@@ -1,4 +1,4 @@
-package postgresql
+package pg
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 
 func Migrate(ctx context.Context, db *pgxpool.Pool, logger *logger.ApiLogger) {
 	currentFilePath, _ := os.Getwd()
-	migrationFilePath := currentFilePath + "/pkg/infrastructure/db/sqldb/postgresql/migration.sql"
+	migrationFilePath := currentFilePath + "/pkg/infrastructure/db/sqldb/pg/migration.sql"
 	c, ioErr := os.ReadFile(migrationFilePath)
 	if ioErr != nil {
 		panic(ioErr)

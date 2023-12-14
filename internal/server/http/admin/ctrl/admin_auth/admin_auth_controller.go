@@ -36,6 +36,7 @@ func NewAdminAuthController(group *echo.Group, logger logger.ILogger) (*AdminAut
 	c.cGroup.GET("/refreshToken/:refreshToken", c.RefreshToken)
 	c.cGroup.GET("/getRolesAndEndpoints", c.GetRolesAndEndpoints)
 	c.cGroup.POST("/addOrUpdateRole", c.AddOrUpdateRole)
+	c.cGroup.DELETE("/deleteRole/:roleId", c.DeleteRole)
 
 	return c, nil
 }
@@ -104,6 +105,18 @@ func (ct *AdminAuthController) AddOrUpdateRole(c echo.Context) error {
 		return err
 	}
 	res := mediatr.Send[*adminqueries.AddOrUpdateRoleQuery, *baseres.Result[*adminqueries.AddOrUpdateRoleQueryResponse, error, struct{}]](c, &query)
+	if res.IsErr() {
+		return res.GetErr()
+	}
+	return c.JSON(http.StatusOK, res)
+}
+
+func (ct *AdminAuthController) DeleteRole(c echo.Context) error {
+	var query adminqueries.DeleteRoleQuery
+	if err := utils.BindAndValidate(c, &query); err != nil {
+		return err
+	}
+	res := mediatr.Send[*adminqueries.DeleteRoleQuery, *baseres.Result[*adminqueries.DeleteRoleQueryResponse, error, struct{}]](c, &query)
 	if res.IsErr() {
 		return res.GetErr()
 	}

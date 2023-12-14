@@ -6,7 +6,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/ndodanli/go-clean-architecture/configs"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/ndodanli/go-clean-architecture/pkg/servers"
@@ -39,7 +39,7 @@ func SetupTestEnv() *TestEnv {
 	appLogger.InitLogger()
 	appLogger.Info(fmt.Sprintf("AppVersion: %s, LogLevel: %s, Mode: %s", cfg.Server.APP_VERSION, cfg.Logger.LEVEL, cfg.Server.APP_ENV), nil, "app")
 	ctx, cancel := context.WithCancel(context.Background())
-	conn := postgresql.InitPgxPool(cfg, appLogger)
+	conn := pg.InitPgxPool(cfg, appLogger)
 
 	//postgresql.Migrate(ctx, conn, appLogger)
 
@@ -88,7 +88,7 @@ var (
 	db          *pgxpool.Pool
 	log         *logger.ApiLogger
 	appServices *services.AppServices
-	ts          *postgresql.TxSessionManager
+	ts          *pg.TxSessionManager
 )
 
 func setupTest() func() {
@@ -99,7 +99,7 @@ func setupTest() func() {
 	db = testEnv.DB
 	log = testEnv.Log
 	appServices = testEnv.AppServices
-	ts = postgresql.NewTxSessionManager(db)
+	ts = pg.NewTxSessionManager(db)
 
 	// Disable logs
 	return func() {

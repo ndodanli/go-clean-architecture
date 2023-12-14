@@ -3,6 +3,7 @@ package servers
 import (
 	"github.com/labstack/echo/v4"
 	adminauthctrl "github.com/ndodanli/go-clean-architecture/internal/server/http/admin/ctrl/admin_auth"
+	adminuserctrl "github.com/ndodanli/go-clean-architecture/internal/server/http/admin/ctrl/admin_user"
 	authctrl "github.com/ndodanli/go-clean-architecture/internal/server/http/ctrl/auth"
 	testctrl "github.com/ndodanli/go-clean-architecture/internal/server/http/ctrl/test"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
@@ -23,9 +24,13 @@ func RegisterControllers(e *echo.Group, logger logger.ILogger) error {
 	if err != nil {
 		return err
 	}
+	_, err = adminuserctrl.NewAdminUserController(adminGroup, logger)
+	if err != nil {
+		return err
+	}
 
 	userGroup := e.Group("")
-	// Users
+	// AppUsers
 	_, err = authctrl.NewAuthController(userGroup, logger)
 	if err != nil {
 		return err

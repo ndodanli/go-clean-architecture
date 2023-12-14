@@ -7,10 +7,13 @@ type AppUser struct {
 	Username            string                   `db:"username" json:"username"`
 	Email               string                   `db:"email" json:"email"`
 	Password            string                   `db:"password" json:"password"`
+	FirstName           string                   `db:"first_name" json:"firstName"`
+	LastName            string                   `db:"last_name" json:"lastName"`
+	PhoneNumber         string                   `db:"phone_number" json:"phoneNumber"`
 	EmailConfirmed      bool                     `db:"email_confirmed" json:"emailConfirmed"`
 	FpEmailConfirmation EmailConfirmationDetails `db:"fp_email_confirmation" json:"fpEmailConfirmationDetails"`
 	EmailConfirmation   EmailConfirmationDetails `db:"email_confirmation" json:"emailConfirmationDetails"`
-	Roles               []int                    `db:"roles" json:"roles"`
+	RoleIds             []int                    `db:"role_ids" json:"roles"`
 
 	CreatedAt time.Time `db:"created_at" json:"createdAt"`
 	UpdatedAt time.Time `db:"updated_at" json:"updatedAt"`

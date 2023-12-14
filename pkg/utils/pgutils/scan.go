@@ -4,24 +4,19 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5"
-	apperr "github.com/ndodanli/go-clean-architecture/pkg/errors/app_errors"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/ndodanli/go-clean-architecture/pkg/utils"
 	"reflect"
 	"time"
 )
 
-func ScanRowToStruct(row pgx.Row, dest interface{}, columns []string) error {
-	values, err := getScanValues(dest, columns)
-	if err != nil {
-		return err
-	}
-	return row.Scan(values...)
+func IsNoRowsError(err error) bool {
+	return errors.Is(err, pgx.ErrNoRows)
 }
 
-func ScanRowsToStruct(rows pgx.Rows, destSlice interface{}, columns []string) error {
+func ScanRowsToStructs(rows pgx.Rows, destSlice interface{}) error {
 	start := time.Now()
 	defer rows.Close()
-
 	destValue := reflect.ValueOf(destSlice)
 	if destValue.Kind() != reflect.Ptr || destValue.Elem().Kind() != reflect.Slice {
 		return errors.New("destination must be a pointer to a slice")
@@ -37,7 +32,7 @@ func ScanRowsToStruct(rows pgx.Rows, destSlice interface{}, columns []string) er
 	}
 
 	destStruct := reflect.New(destType).Interface()
-	scanValues, err := getScanValues(destStruct, columns)
+	scanValues, err := getScanValues(destStruct, rows.FieldDescriptions())
 	if err != nil {
 		return err
 	}
@@ -58,56 +53,38 @@ func ScanRowsToStruct(rows pgx.Rows, destSlice interface{}, columns []string) er
 	destValue.Elem().Set(resultSlice)
 
 	elapsed := time.Since(start)
-	fmt.Println("ScanRowsToStruct took nanoseconds: ", elapsed.Nanoseconds())
+	fmt.Println("ScanRowsToStructs took nanoseconds: ", elapsed.Nanoseconds())
 
 	return nil
 }
 
-func getScanValues(dest interface{}, columns []string) ([]interface{}, error) {
+func getScanValues(dest interface{}, fieldDescriptions []pgconn.FieldDescription) ([]interface{}, error) {
 	start := time.Now()
 	destValue := reflect.ValueOf(dest).Elem()
 	destType := destValue.Type()
+	returnedColumns := utils.ArrayMap(fieldDescriptions, func(fieldDescription pgconn.FieldDescription) interface{} {
+		return fieldDescription.Name
+	})
 
 	fields := make(map[string]reflect.Value)
-	fieldsWithDbTags := make(map[string]reflect.Value)
-	var fieldOrder []reflect.Value
 	for i := 0; i < destValue.NumField(); i++ {
 		field := destType.Field(i)
 		dbTag := field.Tag.Get("db")
-		if dbTag == "" {
-			dbTag = utils.ToSnakeCase(field.Name)
-		}
 		if dbTag != "" {
-			fieldsWithDbTags[dbTag] = destValue.Field(i)
+			// if db tag is in returned columns
+			fields[dbTag] = destValue.Field(i)
 		}
-
-		fields[field.Name] = destValue.Field(i)
-		fieldOrder = append(fieldOrder, destValue.Field(i))
 	}
+	values := make([]interface{}, len(returnedColumns))
 
-	var values []interface{}
-	if len(columns) > 0 {
-		values = make([]interface{}, len(columns))
-		for i, colName := range columns {
-			field, ok := fields[colName]
-			if !ok {
-				field, ok = fieldsWithDbTags[colName]
-			}
-			if ok {
-				values[i] = field.Addr().Interface()
-			} else {
-				//var dummy interface{}
-				//values[i] = &dummy
-				// return an error instead
-				return nil, apperr.FieldNotFoundWithColumnName
-			}
-		}
-	} else {
-		values = make([]interface{}, len(fieldOrder))
-		for i, field := range fieldOrder {
+	for i := 0; i < len(returnedColumns); i++ {
+		if field, ok := fields[returnedColumns[i].(string)]; !ok {
+			return nil, fmt.Errorf("column %s not found in struct", returnedColumns[i])
+		} else {
 			values[i] = field.Addr().Interface()
 		}
 	}
+
 	elapsed := time.Since(start)
 	fmt.Println("ScanRowToStruct took nanoseconds: ", elapsed.Nanoseconds())
 

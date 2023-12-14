@@ -4,6 +4,9 @@ create table if not exists app_user
     id                            bigserial primary key,
     username                      varchar(50)  not null,
     password                      varchar(255) not null,
+    first_name                    varchar(50)  not null,
+    last_name                     varchar(50)  not null,
+    phone_number                  varchar(50)  not null,
     email                         varchar(50)  not null,
     email_confirmed               bool         not null default false,
     email_confirmation    jsonb        not null default '{
@@ -23,3 +26,5 @@ create table if not exists app_user
 
 create unique index if not exists app_user_email_uidx
     on app_user (email);
+create unique index if not exists app_user_username_uidx
+    on app_user (username);

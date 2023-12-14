@@ -4,13 +4,13 @@ import (
 	"context"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/repo"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg"
 )
 
 type IUnitOfWork interface {
 	DB() *pgxpool.Pool
-	AppUserRepo(ctx context.Context, tm *postgresql.TxSessionManager) repo.IAppUserRepo
-	AuthRepo(ctx context.Context, tm *postgresql.TxSessionManager) repo.IAuthRepo
+	AppUserRepo(ctx context.Context, tm *pg.TxSessionManager) repo.IAppUserRepo
+	AuthRepo(ctx context.Context, tm *pg.TxSessionManager) repo.IAuthRepo
 }
 
 type UnitOfWork struct {
@@ -27,10 +27,10 @@ func (uow UnitOfWork) DB() *pgxpool.Pool {
 	return uow.db
 }
 
-func (uow UnitOfWork) AppUserRepo(ctx context.Context, tm *postgresql.TxSessionManager) repo.IAppUserRepo {
+func (uow UnitOfWork) AppUserRepo(ctx context.Context, tm *pg.TxSessionManager) repo.IAppUserRepo {
 	return repo.NewAppUserRepo(uow.db, ctx, tm)
 }
 
-func (uow UnitOfWork) AuthRepo(ctx context.Context, tm *postgresql.TxSessionManager) repo.IAuthRepo {
+func (uow UnitOfWork) AuthRepo(ctx context.Context, tm *pg.TxSessionManager) repo.IAuthRepo {
 	return repo.NewAuthRepo(uow.db, ctx, tm)
 }

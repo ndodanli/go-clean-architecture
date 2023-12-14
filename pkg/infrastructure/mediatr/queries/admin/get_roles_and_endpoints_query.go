@@ -3,8 +3,8 @@ package adminqueries
 import (
 	"github.com/labstack/echo/v4"
 	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
-	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/unit_of_work"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg"
+	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg/unit_of_work"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/ndodanli/go-clean-architecture/pkg/utils/pgutils"
@@ -14,7 +14,7 @@ type GetRolesAndEndpointsQueryHandler struct {
 	UOW         uow.IUnitOfWork
 	AppServices *services.AppServices
 	Logger      logger.ILogger
-	TM          *postgresql.TxSessionManager
+	TM          *pg.TxSessionManager
 }
 
 type GetRolesAndEndpointsQuery struct {
@@ -53,7 +53,7 @@ func (h *GetRolesAndEndpointsQueryHandler) Handle(echoCtx echo.Context, query *G
 	if err != nil {
 		return result.Err(err)
 	}
-	err = pgutils.ScanRowsToStruct(allEndpointsRows, &allEndpoints, []string{"EndpointId", "EndpointName", "EndpointMethod"})
+	err = pgutils.ScanRowsToStructs(allEndpointsRows, &allEndpoints)
 	if err != nil {
 		return result.Err(err)
 	}
@@ -64,7 +64,7 @@ func (h *GetRolesAndEndpointsQueryHandler) Handle(echoCtx echo.Context, query *G
 	if err != nil {
 		return result.Err(err)
 	}
-	err = pgutils.ScanRowsToStruct(rolesRows, &allRoles, []string{"RoleId", "RoleName", "EndpointIds"})
+	err = pgutils.ScanRowsToStructs(rolesRows, &allRoles)
 	if err != nil {
 		return result.Err(err)
 	}

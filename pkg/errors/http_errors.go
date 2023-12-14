@@ -29,6 +29,12 @@ var (
 			ShouldLogAsError: true,
 		})
 	}
+	NotFoundError = func(searchedItem string) *echo.HTTPError {
+		return echo.NewHTTPError(http.StatusNotFound, &ErrorData{
+			Status:  404,
+			Message: searchedItem + " not found",
+		})
+	}
 )
 
 // Static errors
@@ -55,6 +61,7 @@ var (
 	PasswordCannotBeSameAsOldError             *echo.HTTPError
 	EmailAlreadyConfirmedError                 *echo.HTTPError
 	EndpointIdsAreNotValid                     *echo.HTTPError
+	RoleNotFoundError                          *echo.HTTPError
 )
 
 func Init() {
@@ -138,5 +145,9 @@ func Init() {
 	EndpointIdsAreNotValid = echo.NewHTTPError(http.StatusBadRequest, &ErrorData{
 		Status:  400,
 		Message: "Endpoint ids are not valid",
+	})
+	RoleNotFoundError = echo.NewHTTPError(http.StatusBadRequest, &ErrorData{
+		Status:  404,
+		Message: "Role not found",
 	})
 }

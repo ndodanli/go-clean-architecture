@@ -1,4 +1,4 @@
-package queries
+package adminqueries
 
 import (
 	"github.com/labstack/echo/v4"

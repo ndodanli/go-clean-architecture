@@ -3,11 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 	"github.com/ndodanli/go-clean-architecture/configs"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg"
 	oauthcfg "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/oauth_cfg"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
@@ -16,15 +15,6 @@ import (
 	"github.com/ndodanli/go-clean-architecture/pkg/utils/gracefulexit"
 	"log"
 )
-
-type TestSt struct {
-	Name    string
-	Address string
-	Phone   string
-	Age     int
-	Boolean bool
-	Uuid    uuid.UUID
-}
 
 func main() {
 	log.Println("Starting api server")
@@ -41,9 +31,9 @@ func main() {
 	appLogger.InitLogger()
 	appLogger.Info(fmt.Sprintf("AppVersion: %s, LogLevel: %s, Mode: %s", cfg.Server.APP_VERSION, cfg.Logger.LEVEL, cfg.Server.APP_ENV), nil, "app")
 
-	conn := postgresql.InitPgxPool(cfg, appLogger)
+	conn := pg.InitPgxPool(cfg, appLogger)
 
-	postgresql.Migrate(ctx, conn, appLogger)
+	pg.Migrate(ctx, conn, appLogger)
 
 	newServer := servers.NewServer(cfg, &ctx, appLogger)
 

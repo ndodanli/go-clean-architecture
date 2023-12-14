@@ -14,7 +14,7 @@ import (
 	res "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	cstmvalidator "github.com/ndodanli/go-clean-architecture/pkg/core/validator"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg"
 	mw "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/middleware"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
@@ -106,6 +106,7 @@ func (s *server) NewHttpServer(ctx context.Context, db *pgxpool.Pool, logger log
 		address := fmt.Sprintf("%s:%s", s.cfg.Http.HOST, s.cfg.Http.PORT)
 		routes := e.Routes()
 		err := syncRoutesToDB(db, routes)
+		err = insertDefaultAdminAppUser(db, &s.cfg.DefaultAdminAppUser)
 		if err != nil {
 			lifetime.LoggerSingleton.Error("Error while upserting routes to db", err, "app")
 			os.Exit(1)
@@ -185,7 +186,7 @@ func getRequestResponseMiddleware(logger logger.ILogger) func(next echo.HandlerF
 			// Release all tx sessions if there are any
 			txSessions := c.Get(constant.General.TxSessionManagerKey)
 			if txSessions != nil {
-				panicErr := txSessions.(*postgresql.TxSessionManager).ReleaseAllTxSessions(c.Request().Context(), err)
+				panicErr := txSessions.(*pg.TxSessionManager).ReleaseAllTxSessions(c.Request().Context(), err)
 				if panicErr != nil {
 					logger.Error("Error while releasing tx sessions", panicErr, c.Get(constant.General.TraceIDKey).(string))
 				}
@@ -279,7 +280,7 @@ func registerScopedInstances(db *pgxpool.Pool) func(next echo.HandlerFunc) echo.
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			// Session manager
-			txSessionManager := postgresql.NewTxSessionManager(db)
+			txSessionManager := pg.NewTxSessionManager(db)
 			c.Set(constant.General.TxSessionManagerKey, txSessionManager)
 			c.Set(constant.General.DBKey, db)
 			return next(c)
@@ -302,6 +303,7 @@ func handleIpExtraction(e *echo.Echo, cfg *configs.Config) {
 
 func syncRoutesToDB(db *pgxpool.Pool, routes []*echo.Route) error {
 	ctx := context.Background()
+
 	insertQuery := "INSERT INTO endpoint (name, method) VALUES "
 	values := []interface{}{}
 
@@ -337,6 +339,47 @@ func syncRoutesToDB(db *pgxpool.Pool, routes []*echo.Route) error {
 	updateQuery += ") AND deleted_at = '0001-01-01 00:00:00'"
 
 	_, err = db.Exec(ctx, updateQuery, values...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func insertDefaultAdminAppUser(db *pgxpool.Pool, defaultAdminAppUser *configs.DefaultAdminAppUser) error {
+	ctx := context.Background()
+	var allEndpointIds []int64
+	allEndpointIdsRows, err := db.Query(ctx, "SELECT id FROM endpoint")
+	defer allEndpointIdsRows.Close()
+	if err != nil {
+		return err
+	}
+	for allEndpointIdsRows.Next() {
+		var id int64
+		err = allEndpointIdsRows.Scan(&id)
+		if err != nil {
+			return err
+		}
+		allEndpointIds = append(allEndpointIds, id)
+	}
+
+	// Insert default admin role
+	var roleId int64
+	err = db.QueryRow(ctx, "INSERT INTO role (name, endpoint_ids) VALUES ($1, $2) ON CONFLICT (name) DO UPDATE SET endpoint_ids = $2 WHERE role.name = $1 RETURNING id", defaultAdminAppUser.USERNAME, allEndpointIds).Scan(&roleId)
+
+	query := `
+		INSERT INTO app_user (username, password, email, first_name, last_name, phone_number, role_ids)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		ON CONFLICT (username) DO UPDATE SET
+			password = $2,
+			email = $3,
+			first_name = $4,
+			last_name = $5,
+			phone_number = $6,
+			role_ids = $7
+		WHERE app_user.username = $1`
+
+	_, err = db.Exec(ctx, query, defaultAdminAppUser.USERNAME, defaultAdminAppUser.PASSWORD, defaultAdminAppUser.EMAIL, defaultAdminAppUser.FIRST_NAME, defaultAdminAppUser.LAST_NAME, defaultAdminAppUser.PHONE_NUMBER, []int64{roleId})
 	if err != nil {
 		return err
 	}

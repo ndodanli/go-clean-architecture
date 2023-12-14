@@ -37,5 +37,12 @@ func RegisterMediatrHandlers() error {
 		return err
 	}
 
+	err = mediatr.RegisterRequestHandler[
+		*adminqueries.DeleteRoleQuery, *baseres.Result[*adminqueries.DeleteRoleQueryResponse, error, struct{}],
+	](&adminqueries.DeleteRoleQueryHandler{})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

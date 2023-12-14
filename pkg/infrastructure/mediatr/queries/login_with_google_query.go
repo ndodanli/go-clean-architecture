@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"github.com/labstack/echo/v4"
 	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
-	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/unit_of_work"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg"
+	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg/unit_of_work"
 	oauthcfg "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/oauth_cfg"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
@@ -17,7 +17,7 @@ type LoginWithGoogleQueryHandler struct {
 	UOW         uow.IUnitOfWork
 	AppServices *services.AppServices
 	Logger      logger.ILogger
-	TM          *postgresql.TxSessionManager
+	TM          *pg.TxSessionManager
 }
 
 type LoginWithGoogleQuery struct {

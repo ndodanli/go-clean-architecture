@@ -1,16 +1,22 @@
 server:
-  PROJECT_NAME: "Auth Service"
-  SERVICE_NAME: "app_user-broker"
+  PROJECT_NAME: "XXX Project"
+  SERVICE_NAME: "xxx-service"
   APP_ENV: "dev"
   APP_DEBUG: true
   TIMEOUT: 15
-  APP_SECRET: 'PSST_VERY_SECRET_JWT_SECRET'
   JWT_TOKEN_EXPIRE_TIME: 8760
   APP_VERSION: 1.0.0
   READ_TIMEOUT: 5
   WRITE_TIMEOUT: 5
   MAX_CONN_IDLE: 5
   MAX_CONN_AGE: 5
+
+auth:
+  JWT_SECRET: "fwesg34gh34h345h54h"
+  JWT_ISSUER: "xxx-service"
+  JWT_AUDIENCES: "*,aud1,aud2" #comma separated, no spaces eg: "aud1,aud2,aud3"
+  JWT_EXPIRATION_IN_SECONDS: 6000000000 # 10 minutes
+  JWT_REFRESH_EXPIRATION_IN_SECONDS: 604800 # 7 days
 
 swagger:
   SWAGGER_BASIC_AUTH_USERNAME:
@@ -23,7 +29,7 @@ cloud:
 
 http:
   HOST: "127.0.0.1"
-  PORT: "5005"
+  PORT: "8080"
   TIMEOUT: 15
   READ_TIMEOUT: 5
   WRITE_TIMEOUT: 5
@@ -52,9 +58,12 @@ postgresql:
   HOST: "127.0.0.1"
   PORT: 5432
   USER: "postgres"
-  PASS: "qweq"
+  PASS: "1q2w3e"
   DEFAULT_DB: "postgres"
+  MIN_CONN: 0
   MAX_CONN: 10
+  MAX_CONN_LIFETIME: 3600 #second
+  MAX_CONN_IDLE_TIME: 1800 #second
   DRIVER: "pgx"
 
 mysql:
@@ -82,14 +91,15 @@ mongodb:
   MONGO_DB_ATLAS: "mongodb+srv://{USER_NAME}:{USER_PASS}@{DB_HOST}/{DEFAULT_DB}?retryWrites=true&w=majority"
 
 redis:
-  HOST: "127.0.0.1"
-  PORT: 18349
-  USER: "default"
-  PASS: "PASS"
-  DEFAULT_DB: 1
+  IP: "127.0.0.1"
+  PORT: 6379
+  USERNAME: ""
+  PASSWORD: ""
+  DEFAULT_DB: 0
   MIN_IDLE_CONN: 200
   POOL_SIZE: 12000
   POOL_TIMEOUT: 240
+  SERVER_CA_BASE64: ""
 
 clickhouse:
   HOST: "127.0.0.1"
@@ -109,3 +119,22 @@ nats:
 
 rabbitmq:
   URI: "amqp://admin:password@127.0.0.1:5672/"
+
+sendgrid:
+  API_KEY: ""
+  FROM_NAME: "Nizam Dodanli"
+  FROM_EMAIL: "nizam1@nizamdodanli.com"
+
+google_oauth2:
+  CLIENT_ID: ""
+  CLIENT_SECRET: ""
+  REDIRECT_URI: ""
+  SCOPES: ""
+
+default_admin_app_user:
+  USERNAME: ""
+  PASSWORD: ""
+  EMAIL: "ndodanli14@gmail.com"
+  FIRST_NAME: "Nizam"
+  LAST_NAME: "Dodanli"
+

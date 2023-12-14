@@ -5,8 +5,8 @@ import (
 	"github.com/labstack/echo/v4"
 	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
-	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/unit_of_work"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg"
+	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg/unit_of_work"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/ndodanli/go-clean-architecture/pkg/utils/pgutils"
@@ -16,7 +16,7 @@ type AddOrUpdateRoleQueryHandler struct {
 	UOW         uow.IUnitOfWork
 	AppServices *services.AppServices
 	Logger      logger.ILogger
-	TM          *postgresql.TxSessionManager
+	TM          *pg.TxSessionManager
 }
 
 type AddOrUpdateRoleQuery struct {
@@ -33,16 +33,15 @@ func (h *AddOrUpdateRoleQueryHandler) Handle(echoCtx echo.Context, query *AddOrU
 	result := baseres.NewResult[*AddOrUpdateRoleQueryResponse, error, struct{}](&AddOrUpdateRoleQueryResponse{})
 	ctx := echoCtx.Request().Context()
 
-	roleId, err := postgresql.ExecDefaultTx(ctx, h.TM, func(tx pgx.Tx) (int64, error) {
+	roleId, err := pg.ExecDefaultTx(ctx, h.TM, func(tx pgx.Tx) (int64, error) {
 		// check if endpoint ids are valid
 		var endpointIdsStruct []struct {
 			Id int64 `json:"id"`
 		}
 		rows, err := tx.Query(ctx, `SELECT id FROM endpoint WHERE id = ANY($1)`, query.EndpointIds)
-		err = pgutils.ScanRowsToStruct(
+		err = pgutils.ScanRowsToStructs(
 			rows,
 			&endpointIdsStruct,
-			[]string{"id"},
 		)
 		if err != nil {
 			return -1, err
@@ -52,25 +51,29 @@ func (h *AddOrUpdateRoleQueryHandler) Handle(echoCtx echo.Context, query *AddOrU
 			return -1, httperr.EndpointIdsAreNotValid
 		}
 
-		var roleIdStruct struct {
+		var roleIdStruct []struct {
 			Id int64 `json:"id"`
 		}
-		err = pgutils.ScanRowToStruct(
-			tx.QueryRow(ctx, `INSERT INTO role (name, description,endpoint_ids) 
+		rows, err = tx.Query(ctx, `INSERT INTO role (name, description,endpoint_ids) 
 									VALUES ($1, $2, $3)
 									ON CONFLICT (name) DO UPDATE
      								SET description = $2,
          							endpoint_ids = $3
 									RETURNING id
-									`, query.RoleName, query.Description, query.EndpointIds),
+									`, query.RoleName, query.Description, query.EndpointIds)
+		err = pgutils.ScanRowsToStructs(
+			rows,
 			&roleIdStruct,
-			[]string{"id"},
 		)
 		if err != nil {
 			return -1, err
 		}
 
-		return roleIdStruct.Id, nil
+		if len(roleIdStruct) == 0 {
+			return -1, httperr.NotFoundError("Role")
+		}
+
+		return roleIdStruct[0].Id, nil
 	})
 	if err != nil {
 		return result.Err(err)

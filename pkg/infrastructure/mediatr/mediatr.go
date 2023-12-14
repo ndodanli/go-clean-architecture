@@ -7,8 +7,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/ndodanli/go-clean-architecture/pkg/constant"
 	res "github.com/ndodanli/go-clean-architecture/pkg/core/response"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
-	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/unit_of_work"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg"
+	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg/unit_of_work"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"github.com/ndodanli/go-clean-architecture/pkg/servers/lifetime"
 	"github.com/pkg/errors"
@@ -209,7 +209,7 @@ func Send[TRequest any, TResponse any](echoCtx echo.Context, request TRequest) T
 
 		switch fieldType {
 		case reflect.TypeOf(lifetime.TxSessionManagerType):
-			field.Set(reflect.ValueOf(echoCtx.Get(constant.General.TxSessionManagerKey).(*postgresql.TxSessionManager)))
+			field.Set(reflect.ValueOf(echoCtx.Get(constant.General.TxSessionManagerKey).(*pg.TxSessionManager)))
 		}
 	}
 

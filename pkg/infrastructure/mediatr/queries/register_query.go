@@ -3,8 +3,8 @@ package queries
 import (
 	"github.com/labstack/echo/v4"
 	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
-	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/unit_of_work"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg"
+	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg/unit_of_work"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 )
@@ -13,7 +13,7 @@ type RegisterQueryHandler struct {
 	UOW         uow.IUnitOfWork
 	AppServices *services.AppServices
 	Logger      logger.ILogger
-	TM          *postgresql.TxSessionManager
+	TM          *pg.TxSessionManager
 }
 
 type RegisterQuery struct {

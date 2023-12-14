@@ -7,8 +7,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
-	entity "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/entity/app_user"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg"
+	entity "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg/entity/app_user"
 	"github.com/ndodanli/go-clean-architecture/pkg/utils"
 	"github.com/ndodanli/go-clean-architecture/pkg/utils/pgutils"
 	"go/types"
@@ -19,15 +19,16 @@ type IAppUserRepo interface {
 	PatchAppUser(appUserID int64, updateProps map[string]interface{}) (*types.Nil, error)
 	FindOneById(id int64, include []string) (*entity.AppUser, error)
 	FindOneByEmail(email string, include []string) (*entity.AppUser, error)
+	IsUserExist(id int64) (bool, error)
 }
 
 type AppUserRepo struct {
 	db  *pgxpool.Pool
 	ctx context.Context
-	tm  *postgresql.TxSessionManager
+	tm  *pg.TxSessionManager
 }
 
-func NewAppUserRepo(db *pgxpool.Pool, ctx context.Context, tm *postgresql.TxSessionManager) IAppUserRepo {
+func NewAppUserRepo(db *pgxpool.Pool, ctx context.Context, tm *pg.TxSessionManager) IAppUserRepo {
 	return &AppUserRepo{
 		db:  db,
 		ctx: ctx,
@@ -35,9 +36,30 @@ func NewAppUserRepo(db *pgxpool.Pool, ctx context.Context, tm *postgresql.TxSess
 	}
 }
 
+func (r *AppUserRepo) IsUserExist(id int64) (bool, error) {
+	return pg.ExecDefaultTx(r.ctx, r.tm, func(tx pgx.Tx) (bool, error) {
+		var res []struct {
+			Exists bool `db:"exists"`
+		}
+		query := `SELECT EXISTS(SELECT 1 FROM app_user WHERE id = $1 AND deleted_at = '0001-01-01 00:00:00')`
+
+		rows, err := tx.Query(r.ctx, query, id)
+		err = pgutils.ScanRowsToStructs(rows, &res)
+		if err != nil {
+			return false, err
+		}
+
+		if len(res) == 0 || !res[0].Exists {
+			return false, nil
+		}
+
+		return true, nil
+	})
+}
+
 func (r *AppUserRepo) FindOneByEmail(email string, include []string) (*entity.AppUser, error) {
-	return postgresql.ExecDefaultTx(r.ctx, r.tm, func(tx pgx.Tx) (*entity.AppUser, error) {
-		var res entity.AppUser
+	return pg.ExecDefaultTx(r.ctx, r.tm, func(tx pgx.Tx) (*entity.AppUser, error) {
+		var res []entity.AppUser
 		var query string
 		if len(include) > 0 {
 			query = `SELECT ` + strings.Join(include, ", ") + ` FROM app_user WHERE email = $1`
@@ -46,26 +68,26 @@ func (r *AppUserRepo) FindOneByEmail(email string, include []string) (*entity.Ap
 		}
 		query += ` AND deleted_at = '0001-01-01 00:00:00' LIMIT 1`
 
-		err := pgutils.ScanRowToStruct(
-			tx.QueryRow(r.ctx, query, email),
+		rows, err := tx.Query(r.ctx, query, email)
+		err = pgutils.ScanRowsToStructs(
+			rows,
 			&res,
-			include,
 		)
-
 		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
-				return nil, nil
-			}
 			return nil, err
 		}
 
-		return &res, nil
+		if len(res) == 0 {
+			return nil, nil
+		}
+
+		return &res[0], nil
 	})
 }
 
 func (r *AppUserRepo) FindOneById(id int64, include []string) (*entity.AppUser, error) {
-	return postgresql.ExecDefaultTx(r.ctx, r.tm, func(tx pgx.Tx) (*entity.AppUser, error) {
-		var res entity.AppUser
+	return pg.ExecDefaultTx(r.ctx, r.tm, func(tx pgx.Tx) (*entity.AppUser, error) {
+		var res []entity.AppUser
 		var query string
 		if len(include) > 0 {
 			query = `SELECT ` + strings.Join(include, ", ") + ` FROM app_user WHERE id = $1`
@@ -75,22 +97,23 @@ func (r *AppUserRepo) FindOneById(id int64, include []string) (*entity.AppUser, 
 
 		query += ` AND deleted_at = '0001-01-01 00:00:00' LIMIT 1`
 
-		row := tx.QueryRow(r.ctx, query, id)
-		err := pgutils.ScanRowToStruct(row, &res, include)
+		rows, err := tx.Query(r.ctx, query, id)
+		err = pgutils.ScanRowsToStructs(rows, &res)
 		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
-				return nil, nil
-			}
 			return nil, err
 		}
 
-		return &res, nil
+		if len(res) == 0 {
+			return nil, nil
+		}
+
+		return &res[0], nil
 	})
 
 }
 
 func (r *AppUserRepo) PatchAppUser(appUserID int64, updateProps map[string]interface{}) (*types.Nil, error) {
-	return postgresql.ExecDefaultTx(r.ctx, r.tm, func(tx pgx.Tx) (*types.Nil, error) {
+	return pg.ExecDefaultTx(r.ctx, r.tm, func(tx pgx.Tx) (*types.Nil, error) {
 		updateQuery := "UPDATE app_user SET"
 		values := []interface{}{appUserID}
 

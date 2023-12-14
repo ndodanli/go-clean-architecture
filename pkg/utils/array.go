@@ -85,3 +85,12 @@ func ArrayForEach[T any](slice []T, callback func(T)) {
 		callback(value)
 	}
 }
+
+func ArrayContains[T comparable](slice []T, target T) bool {
+	for _, value := range slice {
+		if value == target {
+			return true
+		}
+	}
+	return false
+}

@@ -5,8 +5,8 @@ import (
 	"github.com/labstack/echo/v4"
 	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
 	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql"
-	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/postgresql/unit_of_work"
+	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg"
+	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg/unit_of_work"
 	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
 	"github.com/ndodanli/go-clean-architecture/pkg/logger"
 	"golang.org/x/crypto/bcrypt"
@@ -16,14 +16,14 @@ type ConfirmForgotPasswordCodeQueryHandler struct {
 	UOW         uow.IUnitOfWork
 	AppServices *services.AppServices
 	Logger      logger.ILogger
-	TM          *postgresql.TxSessionManager
+	TM          *pg.TxSessionManager
 }
 
 type ConfirmForgotPasswordCodeQuery struct {
-	Email              string `body:"email" validate:"required,email"`
-	Code               string `body:"code" validate:"required"`
-	NewPassword        string `body:"newPassword" validate:"required"`
-	NewPasswordConfirm string `body:"newPasswordConfirm" validate:"required"`
+	Email              string `json:"email" validate:"required,email"`
+	Code               string `json:"code" validate:"required"`
+	NewPassword        string `json:"newPassword" validate:"required"`
+	NewPasswordConfirm string `json:"newPasswordConfirm" validate:"required"`
 }
 
 type ConfirmForgotPasswordCodeQueryResponse struct {
