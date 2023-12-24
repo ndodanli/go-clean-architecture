@@ -4,7 +4,8 @@ type generalCns struct {
 	UnitOfWorkKey       string
 	TraceIDKey          string
 	TxSessionManagerKey string
-	AuthUser            string
+	AuthUserId          string
+	AuthUserRoleIds     string
 	DBKey               string
 }
 
@@ -12,8 +13,9 @@ var General = generalCns{
 	UnitOfWorkKey:       "g1",
 	TraceIDKey:          "g2",
 	TxSessionManagerKey: "g3",
-	AuthUser:            "g4",
-	DBKey:               "g5",
+	AuthUserId:          "g4",
+	AuthUserRoleIds:     "g5",
+	DBKey:               "g6",
 }
 
 type redisCns struct {

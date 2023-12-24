@@ -2,11 +2,11 @@ package servers
 
 import (
 	"github.com/labstack/echo/v4"
-	adminauthctrl "github.com/ndodanli/go-clean-architecture/internal/server/http/admin/ctrl/admin_auth"
-	adminuserctrl "github.com/ndodanli/go-clean-architecture/internal/server/http/admin/ctrl/admin_user"
-	authctrl "github.com/ndodanli/go-clean-architecture/internal/server/http/ctrl/auth"
-	testctrl "github.com/ndodanli/go-clean-architecture/internal/server/http/ctrl/test"
-	"github.com/ndodanli/go-clean-architecture/pkg/logger"
+	adminauthctrl "github.com/ndodanli/backend-api/internal/server/http/admin/ctrl/admin_auth"
+	adminuserctrl "github.com/ndodanli/backend-api/internal/server/http/admin/ctrl/admin_user"
+	authctrl "github.com/ndodanli/backend-api/internal/server/http/ctrl/auth"
+	testctrl "github.com/ndodanli/backend-api/internal/server/http/ctrl/test"
+	"github.com/ndodanli/backend-api/pkg/logger"
 )
 
 type AppManager struct {

@@ -3,13 +3,13 @@ package adminqueries
 import (
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
-	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
-	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg"
-	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg/unit_of_work"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
-	"github.com/ndodanli/go-clean-architecture/pkg/logger"
-	"github.com/ndodanli/go-clean-architecture/pkg/utils/pgutils"
+	baseres "github.com/ndodanli/backend-api/pkg/core/response"
+	httperr "github.com/ndodanli/backend-api/pkg/errors"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/db/sqldb/pg"
+	uow "github.com/ndodanli/backend-api/pkg/infrastructure/db/sqldb/pg/unit_of_work"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/services"
+	"github.com/ndodanli/backend-api/pkg/logger"
+	"github.com/ndodanli/backend-api/pkg/utils/pgutils"
 )
 
 type DeleteRoleQueryHandler struct {

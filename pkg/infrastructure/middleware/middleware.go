@@ -5,21 +5,21 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v4"
-	"github.com/ndodanli/go-clean-architecture/configs"
-	"github.com/ndodanli/go-clean-architecture/pkg/constant"
-	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
+	"github.com/ndodanli/backend-api/configs"
+	"github.com/ndodanli/backend-api/pkg/constant"
+	httperr "github.com/ndodanli/backend-api/pkg/errors"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/services"
 	"strconv"
 	"strings"
 )
 
 var (
-	Authenticate func(next echo.HandlerFunc) echo.HandlerFunc
-	TraceID      func(next echo.HandlerFunc) echo.HandlerFunc
+	Auth    func(next echo.HandlerFunc) echo.HandlerFunc
+	TraceID func(next echo.HandlerFunc) echo.HandlerFunc
 )
 
 func Init(cfg *configs.Config, appServices *services.AppServices, db *pgxpool.Pool) {
-	Authenticate = getJWTMiddleware(cfg, appServices.JWTService, db)
+	Auth = getJWTMiddleware(cfg, appServices.JWTService, db)
 	TraceID = getTraceIDMiddleware()
 }
 
@@ -66,10 +66,12 @@ func getJWTMiddleware(cfg *configs.Config, jwtService services.IJWTService, db *
 				return httperr.UnauthorizedError
 			}
 
-			c.Set(constant.General.AuthUser, &services.AuthUser{
-				ID:      subInt64,
-				RoleIds: authorizeResponse.AppUserRoleIds,
-			})
+			if authorizeResponse.IsBlocked {
+				return httperr.UserBlockedError
+			}
+
+			c.Set(constant.General.AuthUserId, subInt64)
+			c.Set(constant.General.AuthUserRoleIds, authorizeResponse.AppUserRoleIds)
 
 			return next(c)
 		}

@@ -3,12 +3,12 @@ package queries
 import (
 	"errors"
 	"github.com/labstack/echo/v4"
-	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
-	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg"
-	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg/unit_of_work"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
-	"github.com/ndodanli/go-clean-architecture/pkg/logger"
+	baseres "github.com/ndodanli/backend-api/pkg/core/response"
+	httperr "github.com/ndodanli/backend-api/pkg/errors"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/db/sqldb/pg"
+	uow "github.com/ndodanli/backend-api/pkg/infrastructure/db/sqldb/pg/unit_of_work"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/services"
+	"github.com/ndodanli/backend-api/pkg/logger"
 	"golang.org/x/crypto/bcrypt"
 	"strconv"
 )

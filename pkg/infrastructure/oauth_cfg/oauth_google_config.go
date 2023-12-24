@@ -1,7 +1,7 @@
 package oauthcfg
 
 import (
-	"github.com/ndodanli/go-clean-architecture/configs"
+	"github.com/ndodanli/backend-api/configs"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"strings"

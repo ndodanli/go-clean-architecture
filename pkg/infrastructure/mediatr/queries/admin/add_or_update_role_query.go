@@ -3,13 +3,13 @@ package adminqueries
 import (
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
-	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
-	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg"
-	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg/unit_of_work"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
-	"github.com/ndodanli/go-clean-architecture/pkg/logger"
-	"github.com/ndodanli/go-clean-architecture/pkg/utils/pgutils"
+	baseres "github.com/ndodanli/backend-api/pkg/core/response"
+	httperr "github.com/ndodanli/backend-api/pkg/errors"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/db/sqldb/pg"
+	uow "github.com/ndodanli/backend-api/pkg/infrastructure/db/sqldb/pg/unit_of_work"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/services"
+	"github.com/ndodanli/backend-api/pkg/logger"
+	"github.com/ndodanli/backend-api/pkg/utils/pgutils"
 )
 
 type AddOrUpdateRoleQueryHandler struct {
@@ -35,9 +35,7 @@ func (h *AddOrUpdateRoleQueryHandler) Handle(echoCtx echo.Context, query *AddOrU
 
 	roleId, err := pg.ExecDefaultTx(ctx, h.TM, func(tx pgx.Tx) (int64, error) {
 		// check if endpoint ids are valid
-		var endpointIdsStruct []struct {
-			Id int64 `json:"id"`
-		}
+		var endpointIdsStruct []pg.IdStruct
 		rows, err := tx.Query(ctx, `SELECT id FROM endpoint WHERE id = ANY($1)`, query.EndpointIds)
 		err = pgutils.ScanRowsToStructs(
 			rows,
@@ -51,9 +49,7 @@ func (h *AddOrUpdateRoleQueryHandler) Handle(echoCtx echo.Context, query *AddOrU
 			return -1, httperr.EndpointIdsAreNotValid
 		}
 
-		var roleIdStruct []struct {
-			Id int64 `json:"id"`
-		}
+		var roleIdStruct []pg.IdStruct
 		rows, err = tx.Query(ctx, `INSERT INTO role (name, description,endpoint_ids) 
 									VALUES ($1, $2, $3)
 									ON CONFLICT (name) DO UPDATE

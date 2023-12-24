@@ -5,8 +5,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/ndodanli/go-clean-architecture/configs"
-	"github.com/ndodanli/go-clean-architecture/pkg/utils"
+	"github.com/ndodanli/backend-api/configs"
+	"github.com/ndodanli/backend-api/pkg/utils"
 	"strings"
 	"time"
 )
@@ -44,13 +44,15 @@ func NewJWTService(ac configs.Auth) IJWTService {
 type AuthorizeResponse struct {
 	IsAuthorized   bool
 	AppUserRoleIds []int64
+	IsBlocked      bool
 }
 
 func (js *JWTService) Authorize(ctx context.Context, db *pgxpool.Pool, appUserId int64, endpoint string, endpointMethod string) (*AuthorizeResponse, error) {
 	var isAuthorized bool
 	var appUserRoleIds []int64
+	var isBlocked bool
 	err := db.QueryRow(ctx, `SELECT * FROM check_authorization($1, $2, $3)`,
-		appUserId, endpoint, endpointMethod).Scan(&isAuthorized, &appUserRoleIds)
+		appUserId, endpoint, endpointMethod).Scan(&isAuthorized, &appUserRoleIds, &isBlocked)
 
 	if err != nil {
 		return nil, err
@@ -59,6 +61,7 @@ func (js *JWTService) Authorize(ctx context.Context, db *pgxpool.Pool, appUserId
 	return &AuthorizeResponse{
 		IsAuthorized:   isAuthorized,
 		AppUserRoleIds: appUserRoleIds,
+		IsBlocked:      isBlocked,
 	}, nil
 }
 

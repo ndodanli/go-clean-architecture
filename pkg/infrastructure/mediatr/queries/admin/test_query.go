@@ -2,11 +2,11 @@ package adminqueries
 
 import (
 	"github.com/labstack/echo/v4"
-	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg"
-	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg/unit_of_work"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
-	"github.com/ndodanli/go-clean-architecture/pkg/logger"
+	baseres "github.com/ndodanli/backend-api/pkg/core/response"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/db/sqldb/pg"
+	uow "github.com/ndodanli/backend-api/pkg/infrastructure/db/sqldb/pg/unit_of_work"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/services"
+	"github.com/ndodanli/backend-api/pkg/logger"
 	"reflect"
 )
 
@@ -58,7 +58,7 @@ func (h *TestQueryHandler) Handle(echoCtx echo.Context, query *TestQuery) *baser
 		"username": "testfdsfd",
 	}
 
-	_, err = appUserRepo.PatchAppUser(1, updateProps)
+	_, err = appUserRepo.PatchUser(1, updateProps)
 	if err != nil {
 		return result.Err(err)
 	}

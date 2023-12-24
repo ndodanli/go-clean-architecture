@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"github.com/ndodanli/go-clean-architecture/configs"
+	"github.com/ndodanli/backend-api/configs"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"

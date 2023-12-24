@@ -62,6 +62,7 @@ var (
 	EmailAlreadyConfirmedError                 *echo.HTTPError
 	EndpointIdsAreNotValid                     *echo.HTTPError
 	RoleNotFoundError                          *echo.HTTPError
+	UserBlockedError                           *echo.HTTPError
 )
 
 func Init() {
@@ -149,5 +150,9 @@ func Init() {
 	RoleNotFoundError = echo.NewHTTPError(http.StatusBadRequest, &ErrorData{
 		Status:  404,
 		Message: "Role not found",
+	})
+	UserBlockedError = echo.NewHTTPError(http.StatusForbidden, &ErrorData{
+		Status:  403,
+		Message: "Your account has been blocked",
 	})
 }

@@ -3,8 +3,8 @@ package services
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ndodanli/go-clean-architecture/configs"
-	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
+	"github.com/ndodanli/backend-api/configs"
+	httperr "github.com/ndodanli/backend-api/pkg/errors"
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	"log"

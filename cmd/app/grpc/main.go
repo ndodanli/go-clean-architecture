@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
-	"github.com/ndodanli/go-clean-architecture/configs"
-	"github.com/ndodanli/go-clean-architecture/pkg/logger"
-	"github.com/ndodanli/go-clean-architecture/pkg/servers"
-	"github.com/ndodanli/go-clean-architecture/pkg/utils/gracefulexit"
+	"github.com/ndodanli/backend-api/configs"
+	"github.com/ndodanli/backend-api/pkg/logger"
+	"github.com/ndodanli/backend-api/pkg/servers"
+	"github.com/ndodanli/backend-api/pkg/utils/gracefulexit"
 	"google.golang.org/grpc/reflection"
 	"log"
 )

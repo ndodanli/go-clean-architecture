@@ -1,8 +1,8 @@
 package lifetime
 
 import (
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/db/sqldb/pg"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/services"
 )
 
 var (

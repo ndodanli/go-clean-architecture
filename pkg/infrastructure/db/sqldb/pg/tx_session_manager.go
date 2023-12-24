@@ -5,7 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/ndodanli/go-clean-architecture/pkg/constant"
+	"github.com/ndodanli/backend-api/pkg/constant"
 	"sync"
 )
 
@@ -62,25 +62,6 @@ func (ts *TxSessionManager) beginAndSetTxSession(ctx context.Context, correlatio
 	ts.sessions[correlationID] = newTx
 
 	return newTx, nil
-}
-
-func ExecDefaultTx[T any](ctx context.Context, ts *TxSessionManager, txFunc func(tx pgx.Tx) (T, error)) (T, error) {
-	ts.m.Lock()
-	var data T
-
-	if ts.defaultTx == nil || ts.defaultTx.Conn().PgConn().TxStatus() != constant.PostgreSQLTXStatuses.InTransaction || ts.defaultTx.Conn().PgConn().TxStatus() == constant.PostgreSQLTXStatuses.FailedTransaction {
-		var err error
-		ts.defaultTx, err = ts.db.Begin(ctx)
-		if err != nil {
-			return data, err
-		}
-	}
-	ts.m.Unlock()
-
-	var dataErr error
-	data, dataErr = txFunc(ts.defaultTx)
-
-	return data, dataErr
 }
 
 func ExecTx[T any](ctx context.Context, ts *TxSessionManager, correlationID uuid.UUID, txFunc func(tx pgx.Tx) (T, error)) (T, error) {
@@ -182,29 +163,39 @@ func ExecTxReturnSID[T any](ctx context.Context, ts *TxSessionManager, correlati
 	return data, dataErr, correlationID
 }
 
-func handleTransaction(tx pgx.Tx, ctx context.Context, err error) error {
-	var panicErr error
-	if p := recover(); p != nil {
-		panicErr = tx.Rollback(ctx)
-	} else if err != nil {
-		panicErr = tx.Rollback(ctx)
-	} else {
-		panicErr = tx.Commit(ctx)
-	}
+func (ts *TxSessionManager) ReleaseTxSession(correlationID uuid.UUID, ctx context.Context) error {
+	ts.m.Lock()
+	defer ts.m.Unlock()
+	tx := ts.sessions[correlationID]
+	delete(ts.sessions, correlationID)
+	err := handleTransaction(tx, ctx, nil)
+	return err
+}
 
-	if panicErr != nil && panicErr.Error() == "conn busy" {
-		isConnectionClosed := tx.Conn().PgConn().IsClosed()
-		if !isConnectionClosed {
-			closeErr := tx.Conn().Close(ctx)
-			if closeErr != nil {
-				panicErr = closeErr
+func ExecDefaultTx[T any](ctx context.Context, ts *TxSessionManager, txFunc func(tx pgx.Tx) (T, error)) (T, error) {
+	ts.m.Lock()
+	var data T
+
+	if ts.defaultTx == nil || ts.defaultTx.Conn().PgConn().TxStatus() != constant.PostgreSQLTXStatuses.InTransaction {
+		if ts.defaultTx != nil && ts.defaultTx.Conn().PgConn().TxStatus() == constant.PostgreSQLTXStatuses.FailedTransaction {
+			panicErr := ts.defaultTx.Rollback(ctx)
+			if panicErr != nil {
+				return data, panicErr
 			}
+		}
 
-			panicErr = tx.Rollback(ctx)
+		var err error
+		ts.defaultTx, err = ts.db.Begin(ctx)
+		if err != nil {
+			return data, err
 		}
 	}
+	ts.m.Unlock()
 
-	return panicErr
+	var dataErr error
+	data, dataErr = txFunc(ts.defaultTx)
+
+	return data, dataErr
 }
 
 func (ts *TxSessionManager) ReleaseAllTxSessionsForTestEnv(ctx context.Context, err error) error {
@@ -234,12 +225,14 @@ func (ts *TxSessionManager) ReleaseAllTxSessions(ctx context.Context, err error)
 	defer ts.m.Unlock()
 
 	var panicErr error
+
 	if ts.defaultTx != nil && (ts.defaultTx.Conn().PgConn().TxStatus() == constant.PostgreSQLTXStatuses.InTransaction || ts.defaultTx.Conn().PgConn().TxStatus() == constant.PostgreSQLTXStatuses.FailedTransaction) {
 		panicErr = handleTransaction(ts.defaultTx, ctx, err)
 		if panicErr != nil {
 			return panicErr
 		}
 	}
+
 	for correlationID, tx := range ts.sessions {
 		delete(ts.sessions, correlationID)
 		if tx.Conn().PgConn().TxStatus() == constant.PostgreSQLTXStatuses.InTransaction {
@@ -253,13 +246,44 @@ func (ts *TxSessionManager) ReleaseAllTxSessions(ctx context.Context, err error)
 	return nil
 }
 
-func (ts *TxSessionManager) ReleaseTxSession(correlationID uuid.UUID, ctx context.Context) error {
+func (ts *TxSessionManager) ReleaseDefaultTxSession(ctx context.Context, err error) error {
 	ts.m.Lock()
 	defer ts.m.Unlock()
-	tx := ts.sessions[correlationID]
-	delete(ts.sessions, correlationID)
-	err := handleTransaction(tx, ctx, nil)
-	return err
+
+	var panicErr error
+	if ts.defaultTx != nil && (ts.defaultTx.Conn().PgConn().TxStatus() == constant.PostgreSQLTXStatuses.InTransaction || ts.defaultTx.Conn().PgConn().TxStatus() == constant.PostgreSQLTXStatuses.FailedTransaction) {
+		panicErr = handleTransaction(ts.defaultTx, ctx, err)
+		if panicErr != nil {
+			return panicErr
+		}
+	}
+
+	return nil
+}
+
+func handleTransaction(tx pgx.Tx, ctx context.Context, err error) error {
+	var panicErr error
+	if p := recover(); p != nil {
+		panicErr = tx.Rollback(ctx)
+	} else if err != nil {
+		panicErr = tx.Rollback(ctx)
+	} else {
+		panicErr = tx.Commit(ctx)
+	}
+
+	if panicErr != nil && panicErr.Error() == "conn busy" {
+		isConnectionClosed := tx.Conn().PgConn().IsClosed()
+		if !isConnectionClosed {
+			closeErr := tx.Conn().Close(ctx)
+			if closeErr != nil {
+				panicErr = closeErr
+			}
+
+			panicErr = tx.Rollback(ctx)
+		}
+	}
+
+	return panicErr
 }
 
 func handleTransactionForTestEnv(tx pgx.Tx, ctx context.Context, err error) error {
@@ -270,6 +294,18 @@ func handleTransactionForTestEnv(tx pgx.Tx, ctx context.Context, err error) erro
 		panicErr = tx.Rollback(ctx)
 	} else {
 		panicErr = tx.Rollback(ctx)
+	}
+
+	if panicErr != nil && panicErr.Error() == "conn busy" {
+		isConnectionClosed := tx.Conn().PgConn().IsClosed()
+		if !isConnectionClosed {
+			closeErr := tx.Conn().Close(ctx)
+			if closeErr != nil {
+				panicErr = closeErr
+			}
+
+			panicErr = tx.Rollback(ctx)
+		}
 	}
 
 	return panicErr

@@ -5,12 +5,12 @@ import (
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/goccy/go-reflect"
 	"github.com/labstack/echo/v4"
-	"github.com/ndodanli/go-clean-architecture/pkg/constant"
-	res "github.com/ndodanli/go-clean-architecture/pkg/core/response"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg"
-	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg/unit_of_work"
-	"github.com/ndodanli/go-clean-architecture/pkg/logger"
-	"github.com/ndodanli/go-clean-architecture/pkg/servers/lifetime"
+	"github.com/ndodanli/backend-api/pkg/constant"
+	res "github.com/ndodanli/backend-api/pkg/core/response"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/db/sqldb/pg"
+	uow "github.com/ndodanli/backend-api/pkg/infrastructure/db/sqldb/pg/unit_of_work"
+	"github.com/ndodanli/backend-api/pkg/logger"
+	"github.com/ndodanli/backend-api/pkg/servers/lifetime"
 	"github.com/pkg/errors"
 )
 

@@ -2,8 +2,8 @@ package servers
 
 import (
 	"context"
-	"github.com/ndodanli/go-clean-architecture/configs"
-	"github.com/ndodanli/go-clean-architecture/pkg/logger"
+	"github.com/ndodanli/backend-api/configs"
+	"github.com/ndodanli/backend-api/pkg/logger"
 	"time"
 )
 
@@ -14,7 +14,7 @@ const (
 	gzipLevel      = 5
 	stackSize      = 4 << 10 // 4 KB
 	bodyLimit      = "3M"
-	timeout        = 3000 * time.Second
+	timeout        = 120 * time.Second
 )
 
 // server

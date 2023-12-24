@@ -3,7 +3,7 @@ package cstmbinder
 import (
 	"errors"
 	"github.com/labstack/echo/v4"
-	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
+	httperr "github.com/ndodanli/backend-api/pkg/errors"
 )
 
 type CustomBinder struct{}

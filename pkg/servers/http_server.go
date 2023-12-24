@@ -8,18 +8,19 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	_ "github.com/ndodanli/go-clean-architecture/api"
-	"github.com/ndodanli/go-clean-architecture/configs"
-	"github.com/ndodanli/go-clean-architecture/pkg/constant"
-	res "github.com/ndodanli/go-clean-architecture/pkg/core/response"
-	cstmvalidator "github.com/ndodanli/go-clean-architecture/pkg/core/validator"
-	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg"
-	mw "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/middleware"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
-	"github.com/ndodanli/go-clean-architecture/pkg/logger"
-	"github.com/ndodanli/go-clean-architecture/pkg/servers/lifetime"
+	_ "github.com/ndodanli/backend-api/api"
+	"github.com/ndodanli/backend-api/configs"
+	"github.com/ndodanli/backend-api/pkg/constant"
+	res "github.com/ndodanli/backend-api/pkg/core/response"
+	cstmvalidator "github.com/ndodanli/backend-api/pkg/core/validator"
+	httperr "github.com/ndodanli/backend-api/pkg/errors"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/db/sqldb/pg"
+	mw "github.com/ndodanli/backend-api/pkg/infrastructure/middleware"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/services"
+	"github.com/ndodanli/backend-api/pkg/logger"
+	"github.com/ndodanli/backend-api/pkg/servers/lifetime"
 	"github.com/swaggo/echo-swagger"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"os"
 	"strings"
@@ -189,6 +190,7 @@ func getRequestResponseMiddleware(logger logger.ILogger) func(next echo.HandlerF
 				panicErr := txSessions.(*pg.TxSessionManager).ReleaseAllTxSessions(c.Request().Context(), err)
 				if panicErr != nil {
 					logger.Error("Error while releasing tx sessions", panicErr, c.Get(constant.General.TraceIDKey).(string))
+					c.Error(panicErr)
 				}
 			}
 
@@ -203,7 +205,7 @@ func getRecoverConfig() middleware.RecoverConfig {
 		StackSize:           stackSize,
 		DisableStackAll:     false,
 		DisablePrintStack:   false,
-		DisableErrorHandler: false,
+		DisableErrorHandler: true,
 		LogLevel:            0,
 		LogErrorFunc:        nil,
 	}
@@ -282,7 +284,6 @@ func registerScopedInstances(db *pgxpool.Pool) func(next echo.HandlerFunc) echo.
 			// Session manager
 			txSessionManager := pg.NewTxSessionManager(db)
 			c.Set(constant.General.TxSessionManagerKey, txSessionManager)
-			c.Set(constant.General.DBKey, db)
 			return next(c)
 		}
 	}
@@ -367,19 +368,21 @@ func insertDefaultAdminAppUser(db *pgxpool.Pool, defaultAdminAppUser *configs.De
 	var roleId int64
 	err = db.QueryRow(ctx, "INSERT INTO role (name, endpoint_ids) VALUES ($1, $2) ON CONFLICT (name) DO UPDATE SET endpoint_ids = $2 WHERE role.name = $1 RETURNING id", defaultAdminAppUser.USERNAME, allEndpointIds).Scan(&roleId)
 
+	encryptedPassword, err := bcrypt.GenerateFromPassword([]byte(defaultAdminAppUser.PASSWORD), bcrypt.DefaultCost)
 	query := `
-		INSERT INTO app_user (username, password, email, first_name, last_name, phone_number, role_ids)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO app_user (id,username, password, email, first_name, last_name, phone_number, role_ids)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		ON CONFLICT (username) DO UPDATE SET
-			password = $2,
-			email = $3,
-			first_name = $4,
-			last_name = $5,
-			phone_number = $6,
-			role_ids = $7
-		WHERE app_user.username = $1`
+		    id = $1,
+			password = $3,
+			email = $4,
+			first_name = $5,
+			last_name = $6,
+			phone_number = $7,
+			role_ids = $8
+		WHERE app_user.username = $2`
 
-	_, err = db.Exec(ctx, query, defaultAdminAppUser.USERNAME, defaultAdminAppUser.PASSWORD, defaultAdminAppUser.EMAIL, defaultAdminAppUser.FIRST_NAME, defaultAdminAppUser.LAST_NAME, defaultAdminAppUser.PHONE_NUMBER, []int64{roleId})
+	_, err = db.Exec(ctx, query, 1, defaultAdminAppUser.USERNAME, encryptedPassword, defaultAdminAppUser.EMAIL, defaultAdminAppUser.FIRST_NAME, defaultAdminAppUser.LAST_NAME, defaultAdminAppUser.PHONE_NUMBER, []int64{roleId})
 	if err != nil {
 		return err
 	}

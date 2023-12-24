@@ -3,7 +3,7 @@ package pg
 import (
 	"context"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/ndodanli/go-clean-architecture/pkg/logger"
+	"github.com/ndodanli/backend-api/pkg/logger"
 	"os"
 )
 

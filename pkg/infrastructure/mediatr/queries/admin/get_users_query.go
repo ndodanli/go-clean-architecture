@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
-	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg"
-	entity "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg/entity/app_user"
-	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg/unit_of_work"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
-	"github.com/ndodanli/go-clean-architecture/pkg/logger"
-	"github.com/ndodanli/go-clean-architecture/pkg/utils/pgutils"
+	baseres "github.com/ndodanli/backend-api/pkg/core/response"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/db/sqldb/pg"
+	entity "github.com/ndodanli/backend-api/pkg/infrastructure/db/sqldb/pg/entity/app_user"
+	uow "github.com/ndodanli/backend-api/pkg/infrastructure/db/sqldb/pg/unit_of_work"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/services"
+	"github.com/ndodanli/backend-api/pkg/logger"
+	"github.com/ndodanli/backend-api/pkg/utils/pgutils"
+	"time"
 )
 
 type GetUsersQueryHandler struct {
@@ -22,7 +23,8 @@ type GetUsersQueryHandler struct {
 
 type GetUsersQuery struct {
 	pg.PaginationQuery
-	RoleIds []int64 `query:"roleIds" json:"roleIds"`
+	RoleIds     []int64 `query:"roleIds" json:"roleIds"`
+	EndpointIds []int64 `query:"endpointIds" json:"endpointIds"`
 }
 
 type GetUsersQueryResponse struct {
@@ -36,10 +38,37 @@ func (h *GetUsersQueryHandler) Handle(echoCtx echo.Context, query *GetUsersQuery
 	res, err := pg.ExecDefaultTx(ctx, h.TM, func(tx pgx.Tx) (*GetUsersQueryResponse, error) {
 		// assign role ids empty array if not provided
 		txRes := GetUsersQueryResponse{}
+		timeSt := time.Now()
 		qs := pg.NewQueryString(`SELECT * FROM app_user`)
 
+		if len(query.EndpointIds) > 0 {
+			// get role ids that have the given endpoint ids
+			roleIdsQs := pg.NewQueryString(`SELECT DISTINCT id FROM role`).
+				AddWhere("AND", "endpoint_ids", "&&", query.EndpointIds)
+			var roleIds []pg.IdStruct
+			roleIdsRows, err := tx.Query(ctx, roleIdsQs.String(), roleIdsQs.Args()...)
+			if err != nil {
+				return &txRes, err
+			}
+			err = pgutils.ScanRowsToStructs(roleIdsRows, &roleIds)
+			if err != nil {
+				return &txRes, err
+			}
+
+			fmt.Printf(`roleIdsQs %s`, roleIdsQs.String())
+
+			if len(roleIds) > 0 {
+				if len(query.RoleIds) == 0 {
+					query.RoleIds = make([]int64, 0)
+				}
+				for _, roleId := range roleIds {
+					query.RoleIds = append(query.RoleIds, roleId.Id)
+				}
+			}
+		}
+
 		if len(query.RoleIds) > 0 {
-			qs.AddWhere("AND", "role_ids", "@>", query.RoleIds)
+			qs.AddWhere("AND", "role_ids", "&&", query.RoleIds)
 		}
 
 		if query.SearchTerm != "" {
@@ -57,6 +86,9 @@ func (h *GetUsersQueryHandler) Handle(echoCtx echo.Context, query *GetUsersQuery
 		qs.Paginate(&query.PaginationQuery, false)
 
 		fmt.Print(qs.String())
+
+		elapsed := time.Since(timeSt)
+		fmt.Println("GetUsersQueryHandler took %s nano seconds", elapsed.Nanoseconds())
 
 		var appUsers []entity.AppUser
 		usersRows, err := tx.Query(ctx, qs.String(), qs.Args()...)

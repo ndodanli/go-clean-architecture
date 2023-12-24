@@ -2,13 +2,13 @@ package adminauthctrl
 
 import (
 	"github.com/labstack/echo/v4"
-	_ "github.com/ndodanli/go-clean-architecture/pkg/core/response"
-	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/mediatr"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/mediatr/queries"
-	adminqueries "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/mediatr/queries/admin"
-	"github.com/ndodanli/go-clean-architecture/pkg/logger"
-	"github.com/ndodanli/go-clean-architecture/pkg/utils"
+	_ "github.com/ndodanli/backend-api/pkg/core/response"
+	baseres "github.com/ndodanli/backend-api/pkg/core/response"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/mediatr"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/mediatr/queries"
+	adminqueries "github.com/ndodanli/backend-api/pkg/infrastructure/mediatr/queries/admin"
+	"github.com/ndodanli/backend-api/pkg/logger"
+	"github.com/ndodanli/backend-api/pkg/utils"
 	"net/http"
 	"os"
 )

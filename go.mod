@@ -1,4 +1,4 @@
-module github.com/ndodanli/go-clean-architecture
+module github.com/ndodanli/backend-api
 
 go 1.21.0
 

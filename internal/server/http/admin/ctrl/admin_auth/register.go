@@ -1,10 +1,10 @@
 package adminauthctrl
 
 import (
-	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/mediatr"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/mediatr/queries"
-	adminqueries "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/mediatr/queries/admin"
+	baseres "github.com/ndodanli/backend-api/pkg/core/response"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/mediatr"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/mediatr/queries"
+	adminqueries "github.com/ndodanli/backend-api/pkg/infrastructure/mediatr/queries/admin"
 )
 
 func RegisterMediatrHandlers() error {

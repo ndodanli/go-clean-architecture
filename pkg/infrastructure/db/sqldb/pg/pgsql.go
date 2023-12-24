@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/ndodanli/go-clean-architecture/configs"
-	"github.com/ndodanli/go-clean-architecture/pkg/logger"
+	"github.com/ndodanli/backend-api/configs"
+	"github.com/ndodanli/backend-api/pkg/logger"
 	pgxUUID "github.com/vgarvardt/pgx-google-uuid/v5"
 	"os"
 	"time"
@@ -16,6 +16,7 @@ func InitPgxPool(cfg *configs.Config, logger logger.ILogger) *pgxpool.Pool {
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s", cfg.Postgresql.HOST, cfg.Postgresql.PORT, cfg.Postgresql.USER, cfg.Postgresql.PASS, cfg.Postgresql.DEFAULT_DB)
 
 	pgxConfig, err := pgxpool.ParseConfig(connStr)
+	fmt.Printf("pgxConfig: %v\n", pgxConfig.ConnString())
 	if err != nil {
 		logger.Error("PostgreSQL connection failed", err, "app")
 		os.Exit(1)

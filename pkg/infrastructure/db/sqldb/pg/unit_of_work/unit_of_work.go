@@ -3,8 +3,8 @@ package uow
 import (
 	"context"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/repo"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/db/repo"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/db/sqldb/pg"
 )
 
 type IUnitOfWork interface {

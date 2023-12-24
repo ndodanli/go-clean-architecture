@@ -2,12 +2,12 @@ package testctrl
 
 import (
 	"github.com/labstack/echo/v4"
-	_ "github.com/ndodanli/go-clean-architecture/pkg/core/response"
-	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/mediatr"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/mediatr/queries"
-	mw "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/middleware"
-	"github.com/ndodanli/go-clean-architecture/pkg/logger"
+	_ "github.com/ndodanli/backend-api/pkg/core/response"
+	baseres "github.com/ndodanli/backend-api/pkg/core/response"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/mediatr"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/mediatr/queries"
+	mw "github.com/ndodanli/backend-api/pkg/infrastructure/middleware"
+	"github.com/ndodanli/backend-api/pkg/logger"
 	"net/http"
 	"os"
 )
@@ -31,7 +31,7 @@ func NewTestController(group *echo.Group, logger logger.ILogger) (*TestControlle
 		logger: logger,
 	}
 
-	ac.cGroup.GET("/test", ac.Test, mw.Authenticate)
+	ac.cGroup.GET("/test", ac.Test, mw.Auth)
 
 	return ac, nil
 }

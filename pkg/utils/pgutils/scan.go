@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/ndodanli/go-clean-architecture/pkg/utils"
+	"github.com/ndodanli/backend-api/pkg/utils"
 	"reflect"
 	"time"
 )

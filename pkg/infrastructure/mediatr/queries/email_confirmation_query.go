@@ -2,14 +2,14 @@ package queries
 
 import (
 	"github.com/labstack/echo/v4"
-	baseres "github.com/ndodanli/go-clean-architecture/pkg/core/response"
-	httperr "github.com/ndodanli/go-clean-architecture/pkg/errors"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg"
-	entity "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg/entity/app_user"
-	uow "github.com/ndodanli/go-clean-architecture/pkg/infrastructure/db/sqldb/pg/unit_of_work"
-	"github.com/ndodanli/go-clean-architecture/pkg/infrastructure/services"
-	"github.com/ndodanli/go-clean-architecture/pkg/logger"
-	"github.com/ndodanli/go-clean-architecture/pkg/utils"
+	baseres "github.com/ndodanli/backend-api/pkg/core/response"
+	httperr "github.com/ndodanli/backend-api/pkg/errors"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/db/sqldb/pg"
+	entity "github.com/ndodanli/backend-api/pkg/infrastructure/db/sqldb/pg/entity/app_user"
+	uow "github.com/ndodanli/backend-api/pkg/infrastructure/db/sqldb/pg/unit_of_work"
+	"github.com/ndodanli/backend-api/pkg/infrastructure/services"
+	"github.com/ndodanli/backend-api/pkg/logger"
+	"github.com/ndodanli/backend-api/pkg/utils"
 	"time"
 )
 
@@ -60,7 +60,7 @@ func (h *EmailConfirmationQueryHandler) Handle(echoCtx echo.Context, query *Emai
 
 	appUser.EmailConfirmation.Code = ""
 
-	_, err = appUserRepo.PatchAppUser(appUser.Id, map[string]interface{}{
+	_, err = appUserRepo.PatchUser(appUser.Id, map[string]interface{}{
 		"email_confirmed":    true,
 		"email_confirmation": appUser.EmailConfirmation,
 	})

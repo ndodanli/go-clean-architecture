@@ -1,7 +1,6 @@
 package configs
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -11,8 +10,6 @@ import (
 func exportConfig() error {
 	viper.SetConfigType("yaml")
 	var configPath string
-	allEnvironments := os.Environ()
-	fmt.Println(allEnvironments)
 	switch os.Getenv("APP_ENV") {
 	case "test":
 		configPath = "../environments/"
